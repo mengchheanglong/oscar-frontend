@@ -42,6 +42,7 @@ import { formatDate, formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { CopilotComposer } from "@/components/ai/copilot-composer";
+import { CopilotMemoryPanel, type MemoryDraft } from "@/components/ai/copilot-memory-panel";
 
 const getSourceLink = (sourceType: string, title: string, sourceId?: string) => {
   const cleanTitle = title.replace(/\s*\([^)]*\)$/, "").trim();
@@ -106,6 +107,7 @@ interface Conversation {
 }
 
 const MODES = [
+  { key: "WORKSPACE", label: "Workspace", icon: Bot, color: "text-indigo-600", desc: "Research, analysis & project work across disciplines" },
   { key: "PM", label: "Project planning", icon: Zap, color: "text-violet-600", desc: "Project status, risks & blockers" },
   { key: "DEVELOPER", label: "Development", icon: Code2, color: "text-blue-600", desc: "Architecture, APIs & code guidance" },
   { key: "QA", label: "Quality assurance", icon: TestTube, color: "text-emerald-600", desc: "Acceptance criteria & test cases" },
@@ -164,7 +166,10 @@ export default function AssistantPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [selectedMode, setSelectedMode] = useState<string>("PM");
+  const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
+  const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
+  const [memoryDraft, setMemoryDraft] = useState<MemoryDraft | null>(null);
+  useEffect(() => { setMemoryPanelOpen(false); setMemoryDraft(null); }, [currentProject?.id, user?.id]);
   const [inputContent, setInputContent] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -333,6 +338,7 @@ export default function AssistantPage() {
     setActiveConv(null);
     setMessages([]);
     setInputContent("");
+    setSelectedMode("WORKSPACE");
     setConvSearch("");
     setSendError(null);
     setFailedRequest(null);
@@ -367,6 +373,7 @@ export default function AssistantPage() {
     messageLoadRef.current++;
     setActiveConv(null);
     setMessages([]);
+    setSelectedMode("WORKSPACE");
     setIsLoadingMessages(false);
     setInputContent("");
     setSendError(null);
@@ -574,6 +581,7 @@ export default function AssistantPage() {
               <div className="min-w-0"><h1 className="text-sm font-semibold text-slate-900">AI Copilot</h1><p className="mt-0.5 truncate text-[11px] text-slate-400">{activeConv?.title || currentProject?.name || "New conversation"}</p></div>
             </div>
             <div className="flex shrink-0 items-center gap-3">
+              <button type="button" disabled={!currentProject} onClick={() => { setMemoryDraft(null); setMemoryPanelOpen(true); }} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">Memory</button>
               <span className="hidden items-center gap-1.5 text-[11px] text-slate-400 xl:flex"><ShieldCheck className="h-3.5 w-3.5" /> {currentProject?.key} sources</span>
               <button type="button" onClick={handleResetChat} disabled={isSending} aria-label="New conversation" className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"><Plus className="h-4 w-4" /><span className="hidden sm:inline">New chat</span></button>
             </div>
@@ -693,6 +701,7 @@ export default function AssistantPage() {
                         {isAssistant ? (
                           <div className="text-sm leading-7 text-slate-800">
                             <MarkdownContent content={msg.content} />
+                            {msg.status === "COMPLETED" && !msg.id.startsWith("temp-") && <button type="button" onClick={() => { setMemoryDraft({ content: msg.content, sourceMessageId: msg.id }); setMemoryPanelOpen(true); }} className="mt-3 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50">Remember…</button>}
                           </div>
                         ) : (
                           <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-white">
@@ -1020,6 +1029,7 @@ export default function AssistantPage() {
           </div>
         </dialog>
       )}
+      {memoryPanelOpen && currentProject && <CopilotMemoryPanel key={`${user?.id}:${currentProject.id}`} projectId={currentProject.id} draft={memoryDraft} onClose={() => { setMemoryPanelOpen(false); setMemoryDraft(null); }} />}
     </AppLayout>
   );
 }
