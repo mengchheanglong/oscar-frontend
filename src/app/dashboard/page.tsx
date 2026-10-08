@@ -83,9 +83,68 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadDashboard() {
-      if (!currentProject) return;
       setLoading(true);
       try {
+        if (!currentProject) {
+          // "All Projects" consolidated dashboard
+          const [allTasksRes, allReqsRes, allDocsRes] = await Promise.all([
+            api.tasks.listAll({ pageSize: 100 }).catch(() => ({ data: [] })),
+            api.requirements.listAll({ pageSize: 100 }).catch(() => ({ data: [] })),
+            api.documents.listAll({ pageSize: 10 }).catch(() => ({ data: [] })),
+          ]);
+
+          const allTasks: any[] = allTasksRes?.data || [];
+          const allReqs: any[] = allReqsRes?.data || [];
+          const allDocs: any[] = allDocsRes?.data || [];
+
+          // Compute aggregate metrics
+          const taskCounts: Record<string, number> = {
+            TODO: 0,
+            IN_PROGRESS: 0,
+            IN_REVIEW: 0,
+            DONE: 0,
+            BLOCKED: 0,
+            CANCELLED: 0,
+          };
+          let overdueCount = 0;
+          const today = new Date().toISOString().split("T")[0];
+          for (const t of allTasks) {
+            if (taskCounts[t.status] !== undefined) taskCounts[t.status]++;
+            if (t.dueDate && t.dueDate < today && t.status !== "DONE" && t.status !== "CANCELLED") {
+              overdueCount++;
+            }
+          }
+
+          const reqCounts: Record<string, number> = {
+            DRAFT: 0,
+            APPROVED: 0,
+            IN_PROGRESS: 0,
+            DONE: 0,
+          };
+          for (const r of allReqs) {
+            if (reqCounts[r.status] !== undefined) reqCounts[r.status]++;
+          }
+
+          setStats({
+            taskCountsByStatus: taskCounts,
+            overdueTasksCount: overdueCount,
+            requirementCountsByStatus: reqCounts,
+            taskProgress: {
+              total: allTasks.length,
+              completed: taskCounts.DONE,
+              percentage:
+                allTasks.length > 0
+                  ? Math.round((taskCounts.DONE / allTasks.length) * 100)
+                  : 0,
+            },
+          });
+
+          setRecentReqs(allReqs.slice(0, 3));
+          setRecentDocs(allDocs.slice(0, 3));
+          setActivity([]);
+          return;
+        }
+
         const [dashData, actEnvelope, reqsRes, docsRes] = await Promise.all([
           api.dashboard.get(currentProject.id).catch(() => null),
           api.dashboard.getActivity(currentProject.id, 1, 10).catch(() => null),
@@ -171,7 +230,7 @@ export default function DashboardPage() {
           </h1>
           <p className="text-xs text-slate-500">
             Welcome back, {userName} — here&apos;s the live overview for{" "}
-            <span className="font-semibold text-slate-800">{currentProject?.name || "your workspace"}</span>.{" "}
+            <span className="font-semibold text-slate-800">{currentProject?.name || "all workspaces"}</span>.{" "}
             {todayFormatted}
           </p>
         </div>

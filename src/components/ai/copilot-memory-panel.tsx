@@ -19,10 +19,12 @@ export interface MemoryDraft {
 
 export function CopilotMemoryPanel({
   projectId,
+  projectLabel,
   draft,
   onClose,
 }: {
   projectId: string;
+  projectLabel?: string;
   draft: MemoryDraft | null;
   onClose: () => void;
 }) {
@@ -163,7 +165,7 @@ export function CopilotMemoryPanel({
       </div>
       <div className="space-y-4 p-5">
         <p className="text-sm text-slate-500">
-          Private to you in this project. Keep goals, preferences, and useful
+          Private to you in {projectLabel || "this project"}. Keep goals, preferences, and useful
           lessons for future conversations.
         </p>
         {error && (

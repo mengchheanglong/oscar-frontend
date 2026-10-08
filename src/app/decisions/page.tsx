@@ -153,7 +153,9 @@ export default function DecisionsPage() {
   const [activeDec, setActiveDec] = useState<DecisionItem | null>(null);
 
   // Filter & Search
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(
+    currentProject ? currentProject.id : "ALL"
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   // Create Form state
@@ -190,9 +192,14 @@ export default function DecisionsPage() {
       const membersData = await api.workspace.getMembers().catch(() => []);
       setMembers(membersData || []);
 
-      // 2. Determine target projects
-      const activeProjects =
-        projects.length > 0 ? projects : currentProject ? [currentProject] : [];
+      // 2. Determine target projects:
+      // If currentProject is selected, only that project!
+      // If "All Projects" (null), fetch across all projects
+      const activeProjects = currentProject
+        ? [currentProject]
+        : projects.length > 0
+        ? projects
+        : [];
 
       if (activeProjects.length === 0) {
         setItems([]);
@@ -223,6 +230,9 @@ export default function DecisionsPage() {
       if (currentProject) {
         const reqs = await api.requirements.list(currentProject.id).catch(() => []);
         setRequirements(reqs || []);
+      } else {
+        const reqsRes = await api.requirements.listAll({ pageSize: 100 }).catch(() => ({ data: [] }));
+        setRequirements(reqsRes.data || []);
       }
     } catch (err: any) {
       console.error("Failed to load decisions:", err);
@@ -231,6 +241,10 @@ export default function DecisionsPage() {
       setLoading(false);
     }
   }, [projects, currentProject, showToast]);
+
+  useEffect(() => {
+    setSelectedProjectId(currentProject ? currentProject.id : "ALL");
+  }, [currentProject]);
 
   // Handle URL parameters for deep links (?id=..., ?create=true, ?search=...)
   useEffect(() => {

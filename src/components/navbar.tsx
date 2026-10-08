@@ -8,6 +8,7 @@ import { DropdownSelect } from "@/components/ui/dropdown-select";
 import {
   Search,
   FolderKanban,
+  Layers,
   Menu,
 } from "lucide-react";
 import { NotificationCenter } from "@/components/notification-center";
@@ -78,18 +79,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Active Project Switcher */}
           {projects.length > 0 && (
             <DropdownSelect
-              value={currentProject?.id || ""}
+              value={currentProject ? currentProject.id : "ALL"}
               onChange={(val) => {
-                const p = projects.find((proj: Project) => proj.id === val);
-                if (p) setCurrentProject(p);
+                if (val === "ALL") {
+                  setCurrentProject(null);
+                } else {
+                  const p = projects.find((proj: Project) => proj.id === val);
+                  if (p) setCurrentProject(p);
+                }
               }}
-              triggerClassName="hidden sm:flex h-9 border-codex-border/90 text-xs rounded-xl shadow-2xs font-semibold"
+              triggerClassName="h-9 border-codex-border/90 text-xs rounded-xl shadow-2xs font-semibold max-w-[140px] sm:max-w-none"
               align="right"
-              options={projects.map((p: Project) => ({
-                value: p.id,
-                label: `[${p.key}] ${p.name}`,
-                icon: <FolderKanban className="w-3.5 h-3.5 text-codex-accent shrink-0" />,
-              }))}
+              options={[
+                {
+                  value: "ALL",
+                  label: "All Projects",
+                  icon: <Layers className="w-3.5 h-3.5 text-codex-accent shrink-0" />,
+                },
+                ...projects.map((p: Project) => ({
+                  value: p.id,
+                  label: `[${p.key}] ${p.name}`,
+                  icon: <FolderKanban className="w-3.5 h-3.5 text-codex-accent shrink-0" />,
+                })),
+              ]}
             />
           )}
 

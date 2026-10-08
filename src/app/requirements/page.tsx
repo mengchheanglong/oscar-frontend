@@ -193,7 +193,9 @@ export default function RequirementsPage() {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [targetReqId, setTargetReqId] = useState<string | null>(null);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(
+    currentProject ? currentProject.id : "ALL"
+  );
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [selectedPriority, setSelectedPriority] = useState<string>("ALL");
 
@@ -233,13 +235,12 @@ export default function RequirementsPage() {
     setLoading(true);
     try {
       const [reqsRes, tasksData] = await Promise.all([
-        api.requirements.listAll({ pageSize: 100 }).catch(async () => {
-          if (currentProject) {
-            const list = await api.requirements.list(currentProject.id);
-            return { data: list || [] };
-          }
-          return { data: [] };
-        }),
+        currentProject
+          ? api.requirements
+              .list(currentProject.id)
+              .then((list) => ({ data: list || [] }))
+              .catch(async () => ({ data: [] }))
+          : api.requirements.listAll({ pageSize: 100 }).catch(async () => ({ data: [] })),
         currentProject
           ? api.tasks.list(currentProject.id).catch(() => [])
           : api.tasks.listAll({ pageSize: 100 }).then((r) => r.data || []).catch(() => []),
@@ -253,6 +254,10 @@ export default function RequirementsPage() {
       setLoading(false);
     }
   }, [currentProject, showToast]);
+
+  useEffect(() => {
+    setSelectedProjectId(currentProject ? currentProject.id : "ALL");
+  }, [currentProject]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

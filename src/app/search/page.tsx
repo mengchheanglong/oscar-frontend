@@ -81,7 +81,7 @@ const SUGGESTIONS = [
 ];
 
 export default function SearchPage() {
-  const { currentProject } = useAuth();
+  const { currentProject, projects, setCurrentProject } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [meta, setMeta] = useState<any>(null);
@@ -199,6 +199,27 @@ export default function SearchPage() {
             Instant multi-entity search across requirements, decisions, tasks, meetings, and documents with faceted counts.
           </p>
         </div>
+
+        {/* Project Required Banner if All Projects is currently active */}
+        {!currentProject && projects.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <span className="font-medium">
+              Universal search requires a target project. Select a workspace:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {projects.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setCurrentProject(p)}
+                  className="px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition-colors shadow-2xs cursor-pointer"
+                >
+                  [{p.key}] {p.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Search Mode Selector & Input Bar */}
         <div className="space-y-2.5">

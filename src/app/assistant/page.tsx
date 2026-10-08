@@ -37,12 +37,14 @@ import {
   X,
   ArrowUpRight,
   ArrowLeft,
+  FolderKanban,
 } from "lucide-react";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { CopilotComposer } from "@/components/ai/copilot-composer";
 import { CopilotMemoryPanel, type MemoryDraft } from "@/components/ai/copilot-memory-panel";
+import { DropdownSelect } from "@/components/ui/dropdown-select";
 
 const getSourceLink = (sourceType: string, title: string, sourceId?: string) => {
   const cleanTitle = title.replace(/\s*\([^)]*\)$/, "").trim();
@@ -81,6 +83,8 @@ interface CitationItem {
   locator?: string | null;
   score?: number;
   snippet?: string;
+  projectName?: string;
+  projectKey?: string;
 }
 
 interface ChatMessage {
@@ -104,6 +108,8 @@ interface Conversation {
   defaultMode: string;
   createdAt: string;
   updatedAt: string;
+  projectKey?: string;
+  projectName?: string;
 }
 
 const MODES = [
@@ -140,6 +146,13 @@ const PROMPT_SUGGESTIONS = [
   { mode: "QA", icon: TestTube, title: "Plan test coverage", desc: "Find acceptance criteria and gaps to verify.", prompt: "Help me plan test coverage based on the project requirements. Cite the acceptance criteria and identify any gaps." },
 ];
 
+const ALL_PROJECTS_PROMPT_SUGGESTIONS = [
+  { mode: "PM", icon: Zap, title: "Compare workspace progress", desc: "Compare status, milestones, and blockers across all projects.", prompt: "Compare the progress, priorities, and active blockers across all workspaces. Cite the records from each project." },
+  { mode: "DEVELOPER", icon: FileCheck2, title: "Cross-project architecture", desc: "Review shared requirements, technologies, and designs.", prompt: "Analyze the architecture, tech stacks, and specifications across all workspaces. Which requirements or patterns are shared between them?" },
+  { mode: "DEVELOPER", icon: GitPullRequest, title: "Cross-workspace decisions", desc: "Synthesize key architectural decisions across projects.", prompt: "Summarize the key architectural and technical decisions made across all workspaces, noting how each project approaches its core problems." },
+  { mode: "QA", icon: TestTube, title: "Quality & risk overview", desc: "Identify testing gaps and delivery risks across workspaces.", prompt: "Audit the test coverage, quality status, and delivery risks across all workspaces. Highlight which projects need QA attention." },
+];
+
 function getModeConfig(key: string) {
   return MODES.find((m) => m.key === key) ?? MODES[0]!;
 }
@@ -160,7 +173,7 @@ function UserAvatar({ name }: { name?: string }) {
 }
 
 export default function AssistantPage() {
-  const { currentProject, user } = useAuth();
+  const { currentProject, user, projects, setCurrentProject } = useAuth();
   const { showToast } = useToast();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -169,7 +182,8 @@ export default function AssistantPage() {
   const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
   const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
   const [memoryDraft, setMemoryDraft] = useState<MemoryDraft | null>(null);
-  useEffect(() => { setMemoryPanelOpen(false); setMemoryDraft(null); }, [currentProject?.id, user?.id]);
+  const memoryProjectId = activeConv?.projectId || currentProject?.id;
+  useEffect(() => { setMemoryPanelOpen(false); setMemoryDraft(null); }, [memoryProjectId, currentProject?.id, user?.id]);
   const [inputContent, setInputContent] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -188,6 +202,29 @@ export default function AssistantPage() {
   const draftsRef = useRef<Record<string, string>>({});
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [allProjectConvIds, setAllProjectConvIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = localStorage.getItem("aiw_all_project_convs");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  const markAsAllProjectConv = useCallback((id: string) => {
+    setAllProjectConvIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      try {
+        localStorage.setItem("aiw_all_project_convs", JSON.stringify(Array.from(next)));
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+  }, []);
 
   // Search in conversation history
   const [convSearch, setConvSearch] = useState<string>("");
@@ -213,7 +250,11 @@ export default function AssistantPage() {
 
   // Fetch complete entity records when inspecting citation in-app
   useEffect(() => {
-    if (!inspectingCitation || !currentProject) {
+    const matchedProj = projects.find(
+      (p) => p.key === inspectingCitation?.projectKey || p.name === inspectingCitation?.projectName
+    );
+    const targetProjId = matchedProj?.id || activeConv?.projectId || currentProject?.id || projects[0]?.id;
+    if (!inspectingCitation || !targetProjId) {
       setInspectingDetails(null);
       return;
     }
@@ -229,22 +270,22 @@ export default function AssistantPage() {
         if (!id) return;
 
         if (type === "TASK") {
-          const found = await api.tasks.get(currentProject.id, id);
+          const found = await api.tasks.get(targetProjId, id);
           if (!isCancelled && found) setInspectingDetails(found);
         } else if (type === "DECISION") {
-          const list = await api.decisions.list(currentProject.id);
+          const list = await api.decisions.list(targetProjId);
           const found = (Array.isArray(list) ? list : []).find((d: any) => d.id === id);
           if (!isCancelled && found) setInspectingDetails(found);
         } else if (type === "REQUIREMENT") {
-          const list = await api.requirements.list(currentProject.id);
+          const list = await api.requirements.list(targetProjId);
           const found = (Array.isArray(list) ? list : []).find((r: any) => r.id === id);
           if (!isCancelled && found) setInspectingDetails(found);
         } else if (type === "MEETING") {
-          const list = await api.meetings.list(currentProject.id);
+          const list = await api.meetings.list(targetProjId);
           const found = (Array.isArray(list) ? list : []).find((m: any) => m.id === id);
           if (!isCancelled && found) setInspectingDetails(found);
         } else if (type === "DOCUMENT") {
-          const res = await api.documents.list(currentProject.id);
+          const res = await api.documents.list(targetProjId);
           const items = Array.isArray(res) ? res : (res as any)?.data || (res as any)?.items || [];
           const found = items.find((d: any) => d.id === id);
           if (!isCancelled && found) setInspectingDetails(found);
@@ -261,7 +302,7 @@ export default function AssistantPage() {
     return () => {
       isCancelled = true;
     };
-  }, [inspectingCitation, currentProject]);
+  }, [inspectingCitation, activeConv?.projectId, currentProject?.id, projects]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageScrollRef = useRef<HTMLDivElement>(null);
@@ -284,38 +325,88 @@ export default function AssistantPage() {
   }, []);
 
   const loadConversations = useCallback(async () => {
-    if (!currentProject) return;
     const request = ++historyLoadRef.current;
     setIsLoading(true);
     setHistoryError(null);
     try {
-      const res = await api.ai.listConversations(currentProject.id);
-      if (request !== historyLoadRef.current) return;
-      const list: Conversation[] = Array.isArray(res) ? res : [];
-      setConversations(list);
-      if (list.length > 0) {
-        setActiveConv((prev) => (prev && list.some((c) => c.id === prev.id) ? prev : list[0]!));
+      if (currentProject) {
+        const res = await api.ai.listConversations(currentProject.id);
+        if (request !== historyLoadRef.current) return;
+        const list: Conversation[] = (Array.isArray(res) ? res : []).map((c) => ({
+          ...c,
+          projectKey: currentProject.key,
+          projectName: currentProject.name,
+        }));
+        setConversations(list);
+        if (list.length > 0) {
+          setActiveConv((prev) => (prev && list.some((c) => c.id === prev.id) ? prev : list[0]!));
+        } else {
+          setActiveConv(null);
+          setMessages([]);
+        }
       } else {
-        setActiveConv(null);
-        setMessages([]);
+        // All Projects mode
+        if (projects.length === 0) {
+          setConversations([]);
+          setActiveConv(null);
+          setMessages([]);
+          return;
+        }
+        const results = await Promise.allSettled(
+          projects.map(async (p) => {
+            const list = await api.ai.listConversations(p.id);
+            return (Array.isArray(list) ? list : []).map((c) => ({
+              ...c,
+              projectKey: allProjectConvIds.has(c.id) ? "ALL" : p.key,
+              projectName: allProjectConvIds.has(c.id) ? "All Workspaces" : p.name,
+            }));
+          })
+        );
+        if (request !== historyLoadRef.current) return;
+        const allConvs: Conversation[] = [];
+        for (const res of results) {
+          if (res.status === "fulfilled") {
+            allConvs.push(...res.value);
+          }
+        }
+        allConvs.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        setConversations(allConvs);
+        if (allConvs.length > 0) {
+          setActiveConv((prev) => (prev && allConvs.some((c) => c.id === prev.id) ? prev : allConvs[0]!));
+        } else {
+          setActiveConv(null);
+          setMessages([]);
+        }
       }
     } catch (err) {
       if (request === historyLoadRef.current) setHistoryError(err instanceof Error ? err.message : "Could not load conversations.");
     } finally {
       if (request === historyLoadRef.current) setIsLoading(false);
     }
-  }, [currentProject]);
+  }, [currentProject, projects, allProjectConvIds]);
 
-  const loadMessages = useCallback(async (convId: string) => {
-    if (!currentProject) return;
+  const loadMessages = useCallback(async (convId: string, convProjectId?: string) => {
+    const targetProjId = convProjectId || activeConv?.projectId || currentProject?.id || projects[0]?.id;
+    if (!targetProjId) return;
     const request = ++messageLoadRef.current;
     setMessages([]);
     setIsLoadingMessages(true);
     setMessagesError(null);
     try {
-      const res = await api.ai.listMessages(currentProject.id, convId);
+      const res = await api.ai.listMessages(targetProjId, convId);
       if (request !== messageLoadRef.current) return;
       const fetched = Array.isArray(res) ? res : [];
+      const citedProjects = new Set<string>();
+      for (const msg of fetched) {
+        if (msg.citations && Array.isArray(msg.citations)) {
+          for (const cit of msg.citations) {
+            if (cit.projectKey) citedProjects.add(cit.projectKey);
+          }
+        }
+      }
+      if (citedProjects.size > 1) {
+        markAsAllProjectConv(convId);
+      }
       setMessages((prev) => {
         // Keep any active optimistic user messages so they never vanish
         const optimistic = prev.filter((m) => m.id.startsWith("temp-"));
@@ -330,10 +421,9 @@ export default function AssistantPage() {
     } finally {
       if (request === messageLoadRef.current) setIsLoadingMessages(false);
     }
-  }, [currentProject]);
+  }, [activeConv?.projectId, currentProject?.id, projects, markAsAllProjectConv]);
 
   useEffect(() => {
-    if (!currentProject) return;
     setConversations([]);
     setActiveConv(null);
     setMessages([]);
@@ -349,7 +439,7 @@ export default function AssistantPage() {
   }, [currentProject, loadConversations, invalidateAllLoads]);
 
   useEffect(() => {
-    if (!currentProject || !activeConv) {
+    if (!activeConv) {
       setMessages([]);
       setIsLoadingMessages(false);
       return;
@@ -360,12 +450,12 @@ export default function AssistantPage() {
       setIsLoadingMessages(false);
       return;
     }
-    void loadMessages(activeConv.id);
+    void loadMessages(activeConv.id, activeConv.projectId);
     setSelectedMode(activeConv.defaultMode || "PM");
     stickToBottomRef.current = true;
     setShowScrollToLatest(false);
     return invalidateMessageLoads;
-  }, [activeConv, currentProject, loadMessages, invalidateMessageLoads]);
+  }, [activeConv, loadMessages, invalidateMessageLoads]);
 
   const handleResetChat = () => {
     if (sendInFlightRef.current) return;
@@ -399,10 +489,13 @@ export default function AssistantPage() {
   };
 
   const confirmDeleteConversation = async () => {
-    if (!currentProject || !deleteTargetId) return;
+    if (!deleteTargetId) return;
+    const targetConv = conversations.find((c) => c.id === deleteTargetId);
+    const targetProjectId = targetConv?.projectId || currentProject?.id;
+    if (!targetProjectId) return;
     setIsDeleting(true);
     try {
-      await api.ai.deleteConversation(currentProject.id, deleteTargetId);
+      await api.ai.deleteConversation(targetProjectId, deleteTargetId);
       const updated = conversations.filter((c) => c.id !== deleteTargetId);
       setConversations(updated);
       if (activeConv?.id === deleteTargetId) {
@@ -431,7 +524,9 @@ export default function AssistantPage() {
   const handleSendMessage = useCallback(
     async (textToSend?: string) => {
       const text = (textToSend !== undefined ? textToSend : inputContent).trim();
-      if (!text || sendInFlightRef.current || isLoadingMessages || !currentProject) return;
+      const targetProjectId =
+        activeConv?.projectId || currentProject?.id || projects[0]?.id;
+      if (!text || sendInFlightRef.current || isLoadingMessages || !targetProjectId) return;
       sendInFlightRef.current = true;
       messageLoadRef.current++;
       stickToBottomRef.current = true;
@@ -459,14 +554,25 @@ export default function AssistantPage() {
       let conv = activeConv;
       if (!conv) {
         try {
-          conv = await api.ai.createConversation(currentProject.id, {
+          const rawConv = await api.ai.createConversation(targetProjectId, {
             title: text.length > 45 ? text.slice(0, 42) + "..." : text,
             defaultMode: selectedMode,
           });
-          if (!conv) throw new Error("Conversation creation returned empty response");
-          skipLoadMessagesRef.current = conv.id;
-          setActiveConv(conv);
-          setConversations((prev) => [conv!, ...prev]);
+          if (!rawConv) throw new Error("Conversation creation returned empty response");
+          const targetProj = projects.find((p) => p.id === targetProjectId);
+          const isAllMode = !currentProject;
+          if (isAllMode) {
+            markAsAllProjectConv(rawConv.id);
+          }
+          const createdConv: Conversation = {
+            ...rawConv,
+            projectKey: isAllMode ? "ALL" : targetProj?.key,
+            projectName: isAllMode ? "All Workspaces" : targetProj?.name,
+          };
+          conv = createdConv;
+          skipLoadMessagesRef.current = createdConv.id;
+          setActiveConv(createdConv);
+          setConversations((prev) => [createdConv, ...prev]);
         } catch (err: any) {
           setSendError(err?.message ?? "Failed to create conversation. Are you logged in?");
           setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
@@ -486,12 +592,17 @@ export default function AssistantPage() {
       }
 
       try {
-        const res = await api.ai.postMessage(currentProject.id, conv.id, {
+        const postProjId = conv.projectId || targetProjectId;
+        const res = await api.ai.postMessage(postProjId, conv.id, {
           content: text,
           mode: selectedMode,
+          includeAllWorkspaces: !currentProject,
         });
 
         const { userMessage, assistantMessage } = res;
+        if (!currentProject && conv) {
+          markAsAllProjectConv(conv.id);
+        }
 
         setMessages((prev) => [
           ...prev.filter((m) => m.id !== optimisticId),
@@ -501,8 +612,16 @@ export default function AssistantPage() {
 
         setConversations((prev) =>
           prev.map((c) =>
-            c.id === conv!.id && c.title === "New Conversation"
-              ? { ...c, title: text.slice(0, 45) }
+            c.id === conv!.id
+              ? {
+                  ...c,
+                  title:
+                    c.title === "New Conversation" || !c.title
+                      ? text.slice(0, 45)
+                      : c.title,
+                  projectKey: !currentProject ? "ALL" : c.projectKey,
+                  projectName: !currentProject ? "All Workspaces" : c.projectName,
+                }
               : c
           )
         );
@@ -516,7 +635,7 @@ export default function AssistantPage() {
         setIsSending(false);
       }
     },
-    [activeConv, currentProject, inputContent, isLoadingMessages, selectedMode]
+    [activeConv, currentProject, projects, inputContent, isLoadingMessages, selectedMode, markAsAllProjectConv]
   );
 
   const filteredConversations = useMemo(() => {
@@ -556,19 +675,44 @@ export default function AssistantPage() {
                   <div role="alert" className="space-y-3 px-3 py-8 text-center text-xs text-slate-500"><p>Couldn’t load conversations.</p><button type="button" onClick={() => void loadConversations()} className="font-medium text-codex-accent hover:underline">Try again</button></div>
                 ) : filteredConversations.length === 0 ? (
                   <div className="space-y-2 px-3 py-10 text-center"><MessageSquare className="mx-auto h-5 w-5 text-slate-300" /><p className="text-xs font-medium text-slate-600">{convSearch ? "No matching conversations" : "No conversations yet"}</p><p className="text-[11px] leading-relaxed text-slate-400">{convSearch ? "Try a different search." : "Your conversations will appear here after you send a message."}</p></div>
-                ) : filteredConversations.map((conversation) => (
-                  <div key={conversation.id} className={`group relative mb-1 flex items-center rounded-lg ${activeConv?.id === conversation.id ? "bg-indigo-50" : "hover:bg-slate-200/50"}`}>
-                    <button type="button" aria-pressed={activeConv?.id === conversation.id} disabled={isSending}
-                      onClick={() => selectConversation(conversation)} className="min-w-0 flex-1 rounded-lg py-3 pl-3 pr-9 text-left outline-none focus-visible:ring-2 focus-visible:ring-codex-accent disabled:opacity-60">
-                      <p className={`truncate text-xs font-medium ${activeConv?.id === conversation.id ? "text-codex-accent" : "text-slate-700"}`}>{conversation.title || "Untitled conversation"}</p>
-                      <p className="mt-1 truncate text-[10px] text-slate-400">{getModeConfig(conversation.defaultMode).label} · {formatDate(conversation.updatedAt)}</p>
-                    </button>
-                    <button type="button" onClick={(event) => promptDeleteConversation(event, conversation.id)} disabled={isSending}
-                      aria-label={`Delete ${conversation.title || "conversation"}`} className="absolute right-1 rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 focus-visible:opacity-100 disabled:opacity-30 lg:opacity-0 lg:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
-                  </div>
-                ))}
+                ) : filteredConversations.map((conversation) => {
+                  const isAllConv =
+                    conversation.projectKey === "ALL" ||
+                    allProjectConvIds.has(conversation.id) ||
+                    (!currentProject && activeConv?.id === conversation.id);
+
+                  return (
+                    <div key={conversation.id} className={`group relative mb-1 flex items-center rounded-lg ${activeConv?.id === conversation.id ? "bg-indigo-50" : "hover:bg-slate-200/50"}`}>
+                      <button type="button" aria-pressed={activeConv?.id === conversation.id} disabled={isSending}
+                        onClick={() => selectConversation(conversation)} className="min-w-0 flex-1 rounded-lg py-3 pl-3 pr-9 text-left outline-none focus-visible:ring-2 focus-visible:ring-codex-accent disabled:opacity-60">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {(!currentProject || conversation.projectKey) && (
+                            isAllConv ? (
+                              <span className="shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 border border-indigo-200">
+                                ALL
+                              </span>
+                            ) : (
+                              <span className="shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                                {conversation.projectKey || "PRJ"}
+                              </span>
+                            )
+                          )}
+                          <p className={`truncate text-xs font-medium ${activeConv?.id === conversation.id ? "text-codex-accent" : "text-slate-700"}`}>{conversation.title || "Untitled conversation"}</p>
+                        </div>
+                        <p className="mt-1 truncate text-[10px] text-slate-400">{getModeConfig(conversation.defaultMode).label} · {formatDate(conversation.updatedAt)}</p>
+                      </button>
+                      <button type="button" onClick={(event) => promptDeleteConversation(event, conversation.id)} disabled={isSending}
+                        aria-label={`Delete ${conversation.title || "conversation"}`} className="absolute right-1 rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 focus-visible:opacity-100 disabled:opacity-30 lg:opacity-0 lg:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="border-t border-slate-200 px-4 py-4 text-[11px] text-slate-400"><span className="font-medium text-slate-600">{currentProject?.key}</span> · Conversations saved to this project</div>
+              <div className="border-t border-slate-200 px-4 py-4 text-[11px] text-slate-400">
+                <span className="font-medium text-slate-600">
+                  {currentProject ? currentProject.key : "All Projects"}
+                </span>{" "}
+                · {currentProject ? "Conversations saved to this project" : "Cross-workspace shared context active"}
+              </div>
             </aside>
           </>
         )}
@@ -578,12 +722,64 @@ export default function AssistantPage() {
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <Link href="/dashboard" aria-label="Back to workspace" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden"><ArrowLeft className="h-4 w-4" /></Link>
               <button type="button" onClick={() => setSidebarOpen((open) => !open)} aria-label={sidebarOpen ? "Hide chat history" : "Show chat history"} aria-expanded={sidebarOpen} aria-controls="copilot-history" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-codex-accent"><PanelLeft className="h-4 w-4" /></button>
-              <div className="min-w-0"><h1 className="text-sm font-semibold text-slate-900">AI Copilot</h1><p className="mt-0.5 truncate text-[11px] text-slate-400">{activeConv?.title || currentProject?.name || "New conversation"}</p></div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-sm font-semibold text-slate-900">AI Copilot</h1>
+                  {!currentProject && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                      <Layers className="w-3 h-3 text-indigo-500" />
+                      All Workspaces Shared Context
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 truncate text-[11px] text-slate-400">
+                  {activeConv?.title || (currentProject ? currentProject.name : "All Projects Chat")}
+                </p>
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-3">
-              <button type="button" disabled={!currentProject} onClick={() => { setMemoryDraft(null); setMemoryPanelOpen(true); }} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">Memory</button>
-              <span className="hidden items-center gap-1.5 text-[11px] text-slate-400 xl:flex"><ShieldCheck className="h-3.5 w-3.5" /> {currentProject?.key} sources</span>
-              <button type="button" onClick={handleResetChat} disabled={isSending} aria-label="New conversation" className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"><Plus className="h-4 w-4" /><span className="hidden sm:inline">New chat</span></button>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <button type="button" disabled={!memoryProjectId} onClick={() => { setMemoryDraft(null); setMemoryPanelOpen(true); }} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">Memory</button>
+              {projects.length > 0 && (
+                <DropdownSelect
+                  value={currentProject?.id ?? "ALL"}
+                  onChange={(val) => {
+                    if (val === "ALL") {
+                      setCurrentProject(null);
+                    } else {
+                      const p = projects.find((proj) => proj.id === val);
+                      if (p) setCurrentProject(p);
+                    }
+                  }}
+                  placeholder="All Projects"
+                  triggerClassName="h-8 border-slate-200 text-xs rounded-xl shadow-2xs font-semibold max-w-[140px] sm:max-w-none"
+                  options={[
+                    {
+                      value: "ALL",
+                      label: "All Projects",
+                      icon: <Layers className="w-3.5 h-3.5 text-codex-accent shrink-0" />,
+                    },
+                    ...projects.map((p) => ({
+                      value: p.id,
+                      label: `[${p.key}] ${p.name}`,
+                      icon: <FolderKanban className="w-3.5 h-3.5 text-slate-500 shrink-0" />,
+                    })),
+                  ]}
+                />
+              )}
+              <span className="hidden items-center gap-1.5 text-[11px] text-slate-400 xl:flex">
+                <ShieldCheck className="h-3.5 w-3.5" />{" "}
+                {currentProject ? `${currentProject.key} sources` : "All project sources"}
+              </span>
+              <button
+                type="button"
+                onClick={handleResetChat}
+                disabled={isSending || projects.length === 0}
+                aria-label="New conversation"
+                className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">New chat</span>
+              </button>
             </div>
           </header>
 
@@ -610,17 +806,69 @@ export default function AssistantPage() {
                   </div>
                 </div>
               </div>
+            ) : projects.length === 0 ? (
+              <div className="mx-auto max-w-md py-12 text-center">
+                <div className="mb-4 mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-codex-accent">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <h2 className="font-serif text-xl font-bold tracking-tight text-slate-900">
+                  No Project Workspaces Found
+                </h2>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  Create your first project workspace to start using AI Copilot.
+                </p>
+                <div className="mt-6 flex justify-center">
+                  <Link
+                    href="/projects"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-codex-accent text-white text-xs font-medium shadow-xs hover:bg-codex-hover"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Project</span>
+                  </Link>
+                </div>
+              </div>
             ) : messages.length === 0 && !isSending ? (
               <div className="mx-auto max-w-2xl py-6 sm:py-12">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-codex-accent"><Sparkles className="h-6 w-6" /></div>
-                <h2 className="font-serif text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">What would you like to work on?</h2>
-                <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-500">Explore your project’s knowledge, clarify requirements, and plan your next step with sources you can review.</p>
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-codex-accent">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h2 className="font-serif text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                      {!currentProject ? "All Projects Copilot" : "What would you like to work on?"}
+                    </h2>
+                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
+                      {!currentProject
+                        ? "Chat across all your project workspaces with shared context, verify requirements, and compare progress."
+                        : "Explore your project’s knowledge, clarify requirements, and plan your next step with sources you can review."}
+                    </p>
+                  </div>
+                  {!currentProject && projects.length > 0 && (
+                    <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-codex-accent text-xs font-medium">
+                      <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Shared cross-workspace context active ({projects.length} workspaces)</span>
+                    </div>
+                  )}
+                </div>
                 <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {PROMPT_SUGGESTIONS.map((suggestion) => (
-                    <button key={suggestion.title} type="button" onClick={() => { setSelectedMode(suggestion.mode); setInputContent(suggestion.prompt); requestAnimationFrame(() => textareaRef.current?.focus()); }}
-                      className="group flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-codex-accent/50 hover:bg-indigo-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-codex-accent">
+                  {(!currentProject ? ALL_PROJECTS_PROMPT_SUGGESTIONS : PROMPT_SUGGESTIONS).map((suggestion) => (
+                    <button
+                      key={suggestion.title}
+                      type="button"
+                      onClick={() => {
+                        setSelectedMode(suggestion.mode);
+                        setInputContent(suggestion.prompt);
+                        requestAnimationFrame(() => textareaRef.current?.focus());
+                      }}
+                      className="group flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-codex-accent/50 hover:bg-indigo-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-codex-accent"
+                    >
                       <suggestion.icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover:text-codex-accent" />
-                      <div><p className="text-xs font-semibold text-slate-700">{suggestion.title}</p><p className="mt-1.5 text-xs leading-relaxed text-slate-400">{suggestion.desc}</p></div>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-700">{suggestion.title}</p>
+                        <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+                          {suggestion.desc}
+                        </p>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -724,6 +972,11 @@ export default function AssistantPage() {
                                     <div className="flex items-center gap-1 pr-2">
                                       <button type="button" aria-expanded={expanded} aria-label={`${expanded ? "Hide" : "Show"} evidence from ${citation.title}`} onClick={() => setExpandedCitation(expanded ? null : citationKey)} className="flex min-w-0 flex-1 items-center gap-2 px-3 py-3 text-left text-xs text-slate-600 hover:bg-slate-100">
                                         <span className="shrink-0 font-mono text-[10px] text-slate-400">[{citation.evidenceNumber ?? index + 1}]</span>
+                                        {citation.projectKey && (
+                                          <span className="shrink-0 rounded bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700">
+                                            {citation.projectKey}
+                                          </span>
+                                        )}
                                         <Icon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                                         <span className="truncate font-medium">{citation.title}</span>
                                         <ChevronDown className={`ml-auto h-3 w-3 shrink-0 text-slate-400 ${expanded ? "rotate-180" : ""}`} />
@@ -771,7 +1024,9 @@ export default function AssistantPage() {
                     <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:300ms]" />
                   </div>
                   <span className="text-xs text-slate-600 font-medium">
-                    Reading project sources and preparing an answer…
+                    {!currentProject
+                      ? "Reading all workspace sources and preparing an answer…"
+                      : "Reading project sources and preparing an answer…"}
                   </span>
                 </div>
               </div>
@@ -785,7 +1040,7 @@ export default function AssistantPage() {
             value={inputContent} onChange={setInputContent}
             onSend={() => void handleSendMessage()}
             mode={selectedMode} onModeChange={setSelectedMode} modes={MODES}
-            sending={isSending} loading={isLoading || isLoadingMessages || !!messagesError || !currentProject}
+            sending={isSending} loading={isLoading || isLoadingMessages || !!messagesError || projects.length === 0}
             error={sendError} failedRequest={failedRequest} onDismissError={() => setSendError(null)} textareaRef={textareaRef}
           />
         </section>
@@ -828,6 +1083,11 @@ export default function AssistantPage() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
+                    {inspectingCitation.projectKey && (
+                      <span className="font-bold text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-indigo-100/90 text-indigo-800 border border-indigo-200">
+                        [{inspectingCitation.projectKey}] {inspectingCitation.projectName || ""}
+                      </span>
+                    )}
                     {inspectingDetails?.displayKey ? (
                       <span className="font-bold text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100/90 text-blue-800 border border-blue-200">
                         {inspectingDetails.displayKey}
@@ -1029,7 +1289,7 @@ export default function AssistantPage() {
           </div>
         </dialog>
       )}
-      {memoryPanelOpen && currentProject && <CopilotMemoryPanel key={`${user?.id}:${currentProject.id}`} projectId={currentProject.id} draft={memoryDraft} onClose={() => { setMemoryPanelOpen(false); setMemoryDraft(null); }} />}
+      {memoryPanelOpen && memoryProjectId && <CopilotMemoryPanel key={`${user?.id}:${memoryProjectId}`} projectId={memoryProjectId} projectLabel={projects.find((project) => project.id === memoryProjectId)?.name} draft={memoryDraft} onClose={() => { setMemoryPanelOpen(false); setMemoryDraft(null); }} />}
     </AppLayout>
   );
 }

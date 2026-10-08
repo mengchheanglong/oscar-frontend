@@ -174,7 +174,9 @@ export default function TasksPage() {
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
 
   // Filters
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(
+    currentProject ? currentProject.id : "ALL"
+  );
   const [selectedAssignee, setSelectedAssignee] = useState<string>("ALL");
   const [selectedPriority, setSelectedPriority] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -230,24 +232,24 @@ export default function TasksPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.tasks.listAll({ pageSize: 100 });
-      setTasks(res.data || []);
+      if (currentProject) {
+        const fallbackTasks = await api.tasks.list(currentProject.id);
+        setTasks(Array.isArray(fallbackTasks) ? fallbackTasks : (fallbackTasks as any)?.data || []);
+      } else {
+        const res = await api.tasks.listAll({ pageSize: 100 });
+        setTasks(res.data || []);
+      }
     } catch (err: any) {
       console.error(err);
-      if (currentProject) {
-        try {
-          const fallbackTasks = await api.tasks.list(currentProject.id);
-          setTasks(fallbackTasks || []);
-        } catch (innerErr: any) {
-          showToast(innerErr.message || "Failed to load tasks", "error");
-        }
-      } else {
-        showToast(err.message || "Failed to load tasks", "error");
-      }
+      showToast(err.message || "Failed to load tasks", "error");
     } finally {
       setLoading(false);
     }
   }, [currentProject, showToast]);
+
+  useEffect(() => {
+    setSelectedProjectId(currentProject ? currentProject.id : "ALL");
+  }, [currentProject]);
 
   useEffect(() => {
     loadData();

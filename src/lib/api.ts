@@ -255,7 +255,12 @@ export const api = {
   projects: {
     list: async () => apiRequest<any[]>("/projects"),
     get: async (id: string) => apiRequest<any>(`/projects/${id}`),
-    create: async (data: { name: string; key: string; description?: string }) =>
+    create: async (data: {
+      name: string;
+      key: string;
+      description?: string;
+      members?: Array<{ userId: string; role?: string }>;
+    }) =>
       apiRequest<any>("/projects", { method: "POST", body: JSON.stringify(data) }),
     update: async (id: string, data: { name?: string; description?: string }) =>
       apiRequest<any>(`/projects/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
@@ -264,7 +269,7 @@ export const api = {
     unarchive: async (id: string) =>
       apiRequest<any>(`/projects/${id}/unarchive`, { method: "POST" }),
     getMembers: async (id: string) => apiRequest<any[]>(`/projects/${id}/members`),
-    addMember: async (id: string, data: { email: string; accessRole: string }) =>
+    addMember: async (id: string, data: { userId?: string; email?: string; accessRole: string }) =>
       apiRequest<any>(`/projects/${id}/members`, { method: "POST", body: JSON.stringify(data) }),
     updateMemberRole: async (id: string, userId: string, data: { accessRole: string }) =>
       apiRequest<any>(`/projects/${id}/members/${userId}`, { method: "PATCH", body: JSON.stringify(data) }),
@@ -592,7 +597,7 @@ export const api = {
     postMessage: async (
       projectId: string,
       conversationId: string,
-      data: { content: string; mode?: string; sourceType?: string }
+      data: { content: string; mode?: string; sourceType?: string; includeAllWorkspaces?: boolean }
     ) =>
       apiRequest<{ userMessage: any; assistantMessage: any }>(
         `/projects/${projectId}/ai/conversations/${conversationId}/messages`,

@@ -179,7 +179,9 @@ export default function MeetingsPage() {
   const [loading, setLoading] = useState(true);
 
   // Filter & Search states
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("ALL");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(
+    currentProject ? currentProject.id : "ALL"
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -242,13 +244,9 @@ export default function MeetingsPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      let projs = projects;
+      let projs = currentProject ? [currentProject] : projects;
       if (!projs || projs.length === 0) {
         projs = (await api.projects.list()) || [];
-      }
-
-      if (projs.length === 0 && currentProject) {
-        projs = [currentProject];
       }
 
       // Fetch meetings and members concurrently
@@ -318,6 +316,10 @@ export default function MeetingsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meetings]);
+
+  useEffect(() => {
+    setSelectedProjectId(currentProject ? currentProject.id : "ALL");
+  }, [currentProject]);
 
   useEffect(() => {
     loadData();

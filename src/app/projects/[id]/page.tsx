@@ -40,9 +40,10 @@ import {
   LayoutList,
   Columns,
   ArrowLeft,
-  File,
   Image as ImageIcon,
   AlertTriangle,
+  Users,
+  Loader2,
   Info,
 } from "lucide-react";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -269,10 +270,10 @@ export default function ProjectDetailPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("CONTRIBUTOR");
   const [candidateSearch, setCandidateSearch] = useState("");
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [selectedCandidates, setSelectedCandidates] = useState<Record<string, "CONTRIBUTOR" | "MANAGER" | "VIEWER">>({});
   const [submittingMember, setSubmittingMember] = useState(false);
 
   // Ownership transfer state
@@ -298,6 +299,49 @@ export default function ProjectDetailPage() {
       setLoadingMembers(false);
     }
   }, [projectId]);
+
+  const loadCandidates = React.useCallback(async () => {
+    if (!projectId) return;
+    setLoadingCandidates(true);
+    try {
+      const res = await api.projects.getMemberCandidates(projectId);
+      if (Array.isArray(res)) {
+        setCandidates(res);
+      } else {
+        setCandidates([]);
+      }
+    } catch {
+      try {
+        const wsMembers = await api.workspace.getMembers();
+        const existingMemberIds = new Set(members.map((m: any) => m.userId || m.user?.id || m.id));
+        const eligible = wsMembers.filter((u: any) => !existingMemberIds.has(u.id));
+        setCandidates(eligible);
+      } catch {
+        setCandidates([]);
+      }
+    } finally {
+      setLoadingCandidates(false);
+    }
+  }, [projectId, members]);
+
+  useEffect(() => {
+    if (showInviteModal) {
+      setSelectedCandidates({});
+      setCandidateSearch("");
+      loadCandidates();
+    }
+  }, [showInviteModal, loadCandidates]);
+
+  const filteredCandidates = useMemo(() => {
+    if (!candidateSearch.trim()) return candidates;
+    const q = candidateSearch.toLowerCase();
+    return candidates.filter((c: any) => {
+      const name = String(c.displayName || "").toLowerCase();
+      const email = String(c.email || "").toLowerCase();
+      const role = String(c.professionalRole || "").toLowerCase();
+      return name.includes(q) || email.includes(q) || role.includes(q);
+    });
+  }, [candidates, candidateSearch]);
 
   const loadAuditLogs = React.useCallback(async (page = 1) => {
     if (!projectId) return;
@@ -604,17 +648,33 @@ export default function ProjectDetailPage() {
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail.trim()) return;
+    const selectedEntries = Object.entries(selectedCandidates);
+    if (selectedEntries.length === 0) {
+      showToast("Please select at least one team member to invite", "error");
+      return;
+    }
+
     setSubmittingMember(true);
     try {
-      await api.projects.addMember(projectId, {
-        email: inviteEmail.trim(),
-        accessRole: inviteRole,
-      });
-      showToast(`Added ${inviteEmail.trim()} as ${inviteRole}`, "success");
-      setInviteEmail("");
+      let addedCount = 0;
+      for (const [userId, role] of selectedEntries) {
+        await api.projects.addMember(projectId, {
+          userId,
+          accessRole: role,
+        });
+        addedCount++;
+      }
+
+      showToast(
+        addedCount === 1
+          ? "Team member added to project successfully!"
+          : `${addedCount} team members added to project successfully!`,
+        "success",
+      );
+      setSelectedCandidates({});
       setShowInviteModal(false);
       await loadMembers();
+      await loadAllProjectData();
     } catch (err: any) {
       showToast(err.message || "Failed to add member", "error");
     } finally {
@@ -2649,11 +2709,16 @@ export default function ProjectDetailPage() {
            ========================================================================= */}
         {showInviteModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-6 space-y-4 animate-in zoom-in-95">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <UserPlus className="w-4 h-4 text-blue-600" />
-                  <h3 className="text-sm font-bold text-slate-900 font-serif">Invite Team Member</h3>
+                  <UserPlus className="w-4 h-4 text-codex-accent" />
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 font-serif">Invite Team Members</h3>
+                    <p className="text-[11px] text-slate-400">
+                      Select colleagues from your team to add them to this workspace.
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setShowInviteModal(false)}
@@ -2664,49 +2729,164 @@ export default function ProjectDetailPage() {
               </div>
 
               <form onSubmit={handleAddMember} className="space-y-4 text-xs">
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700">Enter Email *</label>
-                  <input
-                    type="email"
-                    required
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="user@example.com"
-                    className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 shadow-2xs focus:ring-1 focus:ring-blue-500"
-                  />
+                {/* Search bar & selection counter */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-700">Available Team Members</span>
+                    {Object.keys(selectedCandidates).length > 0 && (
+                      <span className="text-[11px] font-medium text-codex-accent bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                        {Object.keys(selectedCandidates).length} selected
+                      </span>
+                    )}
+                  </div>
+
+                  {candidates.length > 3 && (
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        value={candidateSearch}
+                        onChange={(e) => setCandidateSearch(e.target.value)}
+                        placeholder="Filter members by name, email, or role..."
+                        className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-codex-accent"
+                      />
+                    </div>
+                  )}
+
+                  {loadingCandidates ? (
+                    <div className="py-8 flex flex-col items-center justify-center gap-2 text-xs text-slate-400">
+                      <Loader2 className="w-5 h-5 animate-spin text-codex-accent" />
+                      <span>Loading team members...</span>
+                    </div>
+                  ) : candidates.length === 0 ? (
+                    <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-2">
+                      <Users className="w-8 h-8 text-slate-300 mx-auto" />
+                      <p className="text-xs font-semibold text-slate-700">All team members are already in this workspace</p>
+                      <p className="text-[11px] text-slate-400">
+                        Need to bring someone new into your team? Invite them to the workspace first.
+                      </p>
+                      <div className="pt-1">
+                        <Link
+                          href="/team"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-codex-accent hover:underline"
+                        >
+                          <span>Manage Workspace Team in Team Settings</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  ) : filteredCandidates.length === 0 ? (
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
+                      No team members found matching &quot;{candidateSearch}&quot;
+                    </div>
+                  ) : (
+                    <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-xl bg-slate-50/50">
+                      {filteredCandidates.map((candidate: any) => {
+                        const isSelected = !!selectedCandidates[candidate.id];
+                        const currentRole = selectedCandidates[candidate.id] || "CONTRIBUTOR";
+                        return (
+                          <div
+                            key={candidate.id}
+                            className={`p-2.5 flex items-center justify-between gap-3 text-xs transition-colors ${
+                              isSelected ? "bg-white" : "hover:bg-slate-100/60"
+                            }`}
+                          >
+                            <label className="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  setSelectedCandidates((prev) => {
+                                    const next = { ...prev };
+                                    if (e.target.checked) {
+                                      next[candidate.id] = "CONTRIBUTOR";
+                                    } else {
+                                      delete next[candidate.id];
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                className="rounded border-slate-300 text-codex-accent focus:ring-codex-accent/20 h-3.5 w-3.5"
+                              />
+                              <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center font-bold text-[10px] text-slate-700 shrink-0">
+                                {(candidate.displayName || candidate.email || "U")[0].toUpperCase()}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-slate-800 truncate leading-tight">
+                                  {candidate.displayName || candidate.email}
+                                </p>
+                                <p className="text-[10px] text-slate-400 truncate">
+                                  {candidate.email}
+                                  {candidate.professionalRole ? ` • ${candidate.professionalRole}` : ""}
+                                </p>
+                              </div>
+                            </label>
+
+                            {isSelected && (
+                              <select
+                                value={currentRole}
+                                onChange={(e) => {
+                                  const newRole = e.target.value as "CONTRIBUTOR" | "MANAGER" | "VIEWER";
+                                  setSelectedCandidates((prev) => ({
+                                    ...prev,
+                                    [candidate.id]: newRole,
+                                  }));
+                                }}
+                                className="h-7 text-[11px] font-medium bg-white border border-slate-200 rounded-lg px-2 text-slate-700 outline-none focus:ring-1 focus:ring-codex-accent cursor-pointer shrink-0"
+                              >
+                                <option value="CONTRIBUTOR">Contributor</option>
+                                <option value="MANAGER">Manager</option>
+                                <option value="VIEWER">Viewer</option>
+                              </select>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="font-semibold text-slate-700">Access Role</label>
-                  <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 shadow-2xs cursor-pointer"
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                  <Link
+                    href="/team"
+                    className="text-[11px] text-slate-400 hover:text-codex-accent hover:underline flex items-center gap-1"
                   >
-                    <option value="CONTRIBUTOR">CONTRIBUTOR (Create & edit requirements, tasks)</option>
-                    <option value="MANAGER">MANAGER (Manage members and project workflows)</option>
-                    <option value="VIEWER">VIEWER (Read-only workspace access)</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowInviteModal(false)}
-                    className="text-xs"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={submittingMember}
-                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {submittingMember ? "Inviting..." : "Send Invitation"}
-                  </Button>
+                    <span>Manage team</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowInviteModal(false)}
+                      className="text-xs"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={submittingMember || Object.keys(selectedCandidates).length === 0}
+                      className="text-xs bg-codex-accent hover:bg-codex-hover text-white flex items-center gap-1.5"
+                    >
+                      {submittingMember ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Adding...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>
+                            {Object.keys(selectedCandidates).length <= 1
+                              ? "Add to Project"
+                              : `Add to Project (${Object.keys(selectedCandidates).length})`}
+                          </span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </form>
             </div>

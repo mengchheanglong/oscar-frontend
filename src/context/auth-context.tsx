@@ -64,10 +64,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setCurrentProject = (p: Project | null) => {
     setCurrentProjectState(p);
-    if (p && typeof window !== "undefined") {
-      localStorage.setItem("aiw_current_project", JSON.stringify(p));
-    } else if (typeof window !== "undefined") {
-      localStorage.removeItem("aiw_current_project");
+    if (typeof window !== "undefined") {
+      if (p) {
+        localStorage.setItem("aiw_current_project", JSON.stringify(p));
+      } else {
+        localStorage.setItem("aiw_current_project", "ALL");
+      }
     }
   };
 
@@ -77,9 +79,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProjects(list || []);
       if (list && list.length > 0) {
         let activeProj: Project | null = null;
+        let isExplicitAll = false;
         if (typeof window !== "undefined") {
           const saved = localStorage.getItem("aiw_current_project");
-          if (saved) {
+          if (saved === "ALL") {
+            isExplicitAll = true;
+          } else if (saved) {
             try {
               const parsed = JSON.parse(saved);
               activeProj = list.find((p: Project) => p.id === parsed.id) || null;
@@ -88,12 +93,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-        if (!activeProj) {
-          activeProj = list[0];
-        }
-        setCurrentProjectState(activeProj);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("aiw_current_project", JSON.stringify(activeProj));
+        if (isExplicitAll) {
+          setCurrentProjectState(null);
+        } else if (activeProj) {
+          setCurrentProjectState(activeProj);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("aiw_current_project", JSON.stringify(activeProj));
+          }
+        } else {
+          // Default to "All Projects"
+          setCurrentProjectState(null);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("aiw_current_project", "ALL");
+          }
         }
       }
     } catch {
@@ -148,7 +160,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null);
     setProjects([]);
-    setCurrentProject(null);
+    setCurrentProjectState(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("aiw_current_project");
+    }
     setCsrfToken(null);
   };
 

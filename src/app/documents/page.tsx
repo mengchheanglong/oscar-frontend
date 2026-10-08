@@ -188,7 +188,9 @@ export default function DocumentsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Filters
-  const [selectedProject, setSelectedProject] = useState<string>("ALL");
+  const [selectedProject, setSelectedProject] = useState<string>(
+    currentProject ? currentProject.id : "ALL"
+  );
   const [selectedType, setSelectedType] = useState<string>("ALL");
   const [selectedUploader, setSelectedUploader] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -222,8 +224,15 @@ export default function DocumentsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
+      const effectiveProjectId =
+        selectedProject !== "ALL"
+          ? selectedProject
+          : currentProject
+          ? currentProject.id
+          : undefined;
+
       const response = await api.documents.listAll({
-        projectId: selectedProject !== "ALL" ? selectedProject : undefined,
+        projectId: effectiveProjectId,
         fileType: selectedType !== "ALL" ? selectedType : undefined,
         createdBy: selectedUploader !== "ALL" ? selectedUploader : undefined,
         search: searchQuery.trim() || undefined,
@@ -278,9 +287,13 @@ export default function DocumentsPage() {
   }, [docs, targetDocId]);
 
   useEffect(() => {
+    setSelectedProject(currentProject ? currentProject.id : "ALL");
+  }, [currentProject]);
+
+  useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProject, selectedType, selectedUploader, searchQuery]);
+  }, [selectedProject, selectedType, selectedUploader, searchQuery, currentProject]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
