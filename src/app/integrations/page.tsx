@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { ConfirmModal } from "@/components/confirm-modal";
 import { GitHubWorkspace } from "@/components/integrations/github-workspace";
+import { HermesIntegration } from "@/components/integrations/hermes-integration";
 import { McpConsole } from "@/components/integrations/mcp-console";
 
 // ==========================================
@@ -174,14 +175,14 @@ function AntigravityIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 // App Types
-type ActiveView = "directory" | "mcp" | "github";
+type ActiveView = "directory" | "mcp" | "github" | "hermes";
 type CategoryFilter = "all" | "ai" | "vcs";
 
 export default function IntegrationsPage() {
   const { currentProject } = useAuth();
   const { showToast } = useToast();
 
-  // Navigation state: "directory" | "mcp" | "github"
+  // Navigation state: "directory" | "mcp" | "github" | "hermes"
   const [activeView, setActiveView] = useState<ActiveView>("directory");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [directorySearch, setDirectorySearch] = useState("");
@@ -191,7 +192,8 @@ export default function IntegrationsPage() {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const app = params.get("app");
-      if (app === "mcp") setActiveView("mcp");
+      if (app === "hermes") setActiveView("hermes");
+    else if (app === "mcp") setActiveView("mcp");
       else if (app === "github") setActiveView("github");
     }
   }, []);
@@ -623,7 +625,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
   const antigravityCommand = `agy mcp add ai-workspace -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js" -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}"`;
 
   // App catalog data
-  const installedCount = 2;
+  const integrationCount = 3;
 
   const searchQuery = directorySearch.trim().toLowerCase();
 
@@ -639,7 +641,11 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
     (!searchQuery ||
       "github issues sync git repository version control pull requests".includes(searchQuery));
 
-  const hasAnyResults = isMcpVisible || isGithubVisible;
+  const isHermesVisible =
+    (categoryFilter === "all" || categoryFilter === "ai") &&
+    (!searchQuery || "hermes agent copilot runtime research pricing task drafts".includes(searchQuery));
+
+  const hasAnyResults = isMcpVisible || isGithubVisible || isHermesVisible;
 
   return (
     <AppLayout>
@@ -664,7 +670,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
                   <h1 className="text-2xl font-bold tracking-tight text-slate-900 font-serif flex items-center gap-2.5">
                     <span>Apps & Integrations</span>
                     <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-xs font-semibold px-2 py-0.5">
-                      {installedCount} Active
+                      {integrationCount} Integrations
                     </Badge>
                   </h1>
                   <p className="text-xs text-slate-500 mt-1">
@@ -740,7 +746,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
             )}
 
             {/* SECTION: Available Integrations */}
-            {(isMcpVisible || isGithubVisible) && (
+            {hasAnyResults && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Boxes className="w-4 h-4 text-blue-600" />
@@ -750,6 +756,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {isHermesVisible && <HermesIntegration projectId={currentProject?.id} onOpen={() => navigateToView("hermes")} />}
                   {/* APP CARD 1: Model Context Protocol (MCP) */}
                   {isMcpVisible && (
                     <div
@@ -876,6 +883,8 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
         {/* ========================================================================= */}
         {/* VIEW 2: CODING AGENTS & MCP APP CONSOLE                                   */}
         {/* ========================================================================= */}
+        {activeView === "hermes" && <HermesIntegration key={currentProject?.id} projectId={currentProject?.id} detail onBack={() => navigateToView("directory")} />}
+
         {activeView === "mcp" && (
           <McpConsole
             logo={<McpIcon className="h-6 w-6" />}

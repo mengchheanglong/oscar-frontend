@@ -53,3 +53,17 @@ Pre-seeded in the development database:
 - **Bob Manager** (`bob@example.com` / `Password123!`): Project Manager in AIW
 - **Charlie QA** (`charlie@example.com` / `Password123!`): Contributor in Secure Workspace (SEC)
 - **System Admin** (`admin@example.com` / `Password123!`): Global Administrator
+
+## Hermes integration
+
+Integrations includes Hermes Agent in the AI agents category. Search for Hermes
+or open `/integrations?app=hermes` to inspect its configuration for the selected
+project. The status comes from the authenticated project runtime endpoint;
+configuration availability does not guarantee model-provider availability.
+Configured projects can open Copilot and use Agent work for evidence research,
+pricing calculations, and task drafts requiring review. Runtime configuration
+and credentials remain on the backend.
+
+Verified on develop with TypeScript, lint, a production build, and local browser
+checks for configured status, catalog search, and simulated unconfigured/error
+responses. These checks do not start model runs.
