@@ -1,6 +1,10 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
-  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
+  // Avoid standalone dependency links during local Windows build cleanup.
+  output:
+    process.env.NODE_ENV === "production" && process.platform !== "win32"
+      ? "standalone"
+      : undefined,
   async rewrites() {
     const backendUrl =
       process.env.BACKEND_INTERNAL_URL ||

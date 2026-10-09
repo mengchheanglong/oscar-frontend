@@ -63,18 +63,30 @@ function renderInline(text: string): React.ReactNode[] {
     } else if (/^\[([^\]]+)\]\(([^)]+)\)$/.test(token)) {
       const linkMatch = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (linkMatch) {
-        nodes.push(
-          <a
-            key={key}
-            href={linkMatch[2]}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 font-medium"
-          >
-            {linkMatch[1]}
-            <ExternalLink className="w-2.5 h-2.5 ml-0.5 inline" />
-          </a>
-        );
+        let safeLink = false;
+        try {
+          safeLink = ["http:", "https:"].includes(
+            new URL(linkMatch[2], "https://workspace.invalid").protocol
+          );
+        } catch {
+          // Invalid model-generated URLs render as plain text.
+        }
+        if (!safeLink) {
+          nodes.push(<span key={key}>{linkMatch[1]}</span>);
+        } else {
+          nodes.push(
+            <a
+              key={key}
+              href={linkMatch[2]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-0.5 font-medium"
+            >
+              {linkMatch[1]}
+              <ExternalLink className="w-2.5 h-2.5 ml-0.5 inline" />
+            </a>
+          );
+        }
       }
     }
     lastIndex = match.index + token.length;

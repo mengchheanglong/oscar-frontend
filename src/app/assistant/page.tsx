@@ -44,6 +44,7 @@ import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { CopilotComposer } from "@/components/ai/copilot-composer";
 import { CopilotMemoryPanel, type MemoryDraft } from "@/components/ai/copilot-memory-panel";
+import { AgentRunsPanel } from "@/components/ai/agent-runs-panel";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 
 const getSourceLink = (sourceType: string, title: string, sourceId?: string) => {
@@ -181,9 +182,10 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
   const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
+  const [agentPanelOpen, setAgentPanelOpen] = useState(false);
   const [memoryDraft, setMemoryDraft] = useState<MemoryDraft | null>(null);
   const memoryProjectId = activeConv?.projectId || currentProject?.id;
-  useEffect(() => { setMemoryPanelOpen(false); setMemoryDraft(null); }, [memoryProjectId, currentProject?.id, user?.id]);
+  useEffect(() => { setMemoryPanelOpen(false); setMemoryDraft(null); setAgentPanelOpen(false); }, [memoryProjectId, currentProject?.id, user?.id]);
   const [inputContent, setInputContent] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -738,6 +740,7 @@ export default function AssistantPage() {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <button type="button" disabled={!memoryProjectId} onClick={() => setAgentPanelOpen(true)} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">Agent work</button>
               <button type="button" disabled={!memoryProjectId} onClick={() => { setMemoryDraft(null); setMemoryPanelOpen(true); }} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">Memory</button>
               {projects.length > 0 && (
                 <DropdownSelect
@@ -1290,6 +1293,7 @@ export default function AssistantPage() {
         </dialog>
       )}
       {memoryPanelOpen && memoryProjectId && <CopilotMemoryPanel key={`${user?.id}:${memoryProjectId}`} projectId={memoryProjectId} projectLabel={projects.find((project) => project.id === memoryProjectId)?.name} draft={memoryDraft} onClose={() => { setMemoryPanelOpen(false); setMemoryDraft(null); }} />}
+      {agentPanelOpen && memoryProjectId && <AgentRunsPanel key={`${user?.id}:${memoryProjectId}`} projectId={memoryProjectId} projectLabel={projects.find((project) => project.id === memoryProjectId)?.name} onClose={() => setAgentPanelOpen(false)} />}
     </AppLayout>
   );
 }

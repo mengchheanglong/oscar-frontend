@@ -5,6 +5,7 @@ Next.js 14 App Router frontend for the AI Project Workspace, connected to the Ne
 ## Features
 
 - **Operational Copilot**: General Workspace mode for research, analysis, planning, and real project work across disciplines; specialized project modes remain available.
+- **Agent work**: Project-scoped Hermes runs with persisted progress, Markdown reports, cancellation, explicit retries, and task proposals in the existing review dialog. Requires the backend run migration and a prepared/enabled Hermes runtime; configuration is documented in the backend's `docs/HERMES_RUNTIME.md`.
 - **Private Copilot Memory**: Review, save, edit, and remove project context, working preferences, and lessons. Remember on a reply opens an editable draft before confirmation. Requires the backend's copilot-memory migration.
 - **Public Showcase & Landing Page**: Modern hero sections with Aceternity & MagicUI-inspired animations, glassmorphism, and responsive layout.
 - **Authentication & Sessions**: Server-side cookie sessions with CSRF synchronizer tokens, 1-click demo logins, and persistent auth state.
@@ -41,6 +42,10 @@ Opens on [http://localhost:3001](http://localhost:3001).
 pnpm build
 pnpm start
 ```
+
+Local Windows builds use regular Next.js output to avoid standalone dependency
+links interfering with repeated build cleanup. Linux production builds retain
+standalone output for the existing container deployment.
 
 ## Demo Accounts
 Pre-seeded in the development database:
