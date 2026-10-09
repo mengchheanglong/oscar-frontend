@@ -274,7 +274,7 @@ export default function TeamPage() {
       try {
         const res = await api.workspace.createInvite({
           email,
-          systemRole: inviteSystemRole,
+          systemRole: currentUser?.systemRole === "ADMIN" ? inviteSystemRole : "USER",
           professionalRole: inviteProfRole,
         });
         const createdInvite = (res as any)?.data || res;
@@ -382,7 +382,7 @@ export default function TeamPage() {
               Team
             </h1>
             <p className="text-xs text-slate-500 mt-1">
-              The people in your workspace, their roles, and invitations.
+              You, people who share a project with you, and invitations you sent.
             </p>
           </div>
           <button type="button" aria-expanded={showInviteForm} aria-controls="team-invite-form"
@@ -671,9 +671,11 @@ export default function TeamPage() {
                 {/* System Role */}
                 <CustomDropdown
                   labelPrefix="Access"
-                  value={inviteSystemRole}
+                  value={currentUser?.systemRole === "ADMIN" ? inviteSystemRole : "USER"}
                   onChange={(val) => setInviteSystemRole(val as any)}
-                  options={INVITE_SYSTEM_ROLE_OPTIONS}
+                  options={INVITE_SYSTEM_ROLE_OPTIONS.filter(
+                    (option) => currentUser?.systemRole === "ADMIN" || option.value === "USER"
+                  )}
                   menuWidth="min-w-[170px]"
                 />
 
