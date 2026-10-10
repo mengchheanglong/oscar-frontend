@@ -40,7 +40,7 @@ The default backend endpoint is `http://localhost:3000/api/v1`.
 pnpm dev
 ```
 
-Opens on [http://localhost:3001](http://localhost:3001).
+Opens on [http://127.0.0.1:3002](http://127.0.0.1:3002).
 
 ### 4. Build for Production
 
@@ -76,78 +76,36 @@ Verified on develop with TypeScript, lint, a production build, and local browser
 checks for configured status, catalog search, and simulated unconfigured/error
 responses. These checks do not start model runs.
 
-## Local folder sources
+## Folder workspace
 
-Under Documents > **Saved snapshots (optional)**, select a project and click **Add folder**. The compact dialog lists
-files with search and explicit selection. Open a filename for an optional preview,
-then click **Connect**. New folders start with nothing selected. **Select visible**
-adds matching files within the limits; **Clear** clears the selection. The info
-control explains transfer, indexing limits and snapshot replacement.
+Documents > **Folders > Upload folder** opens the browser folder chooser. Files
+of any format are stored as private originals with their relative paths. The
+local connection and snapshot panels have been removed, leaving one folder flow.
+The existing legacy data/endpoints remain intact.
 
-Every file extension is accepted, including extensionless and hidden files.
-UTF-8 text up to 128 KiB is indexed as content. Selected PDF and DOCX files are
-sent to the authenticated backend for text extraction only after Connect; originals
-are not stored. Other binary files and larger text files provide searchable names
-and metadata, not their contents. There is no image OCR, spreadsheet/slide
-extraction, or media transcription in this version. Original files remain unchanged.
-Selected content is stored privately in the backend and may reach the AI provider.
+Upload progress is saved on the backend. **Pause** leaves an incomplete copy;
+after reopening the page, select **Resume** and choose the same unchanged folder.
+Saved files are verified in bounded blocks and skipped; interrupted files restart
+from their beginning. Changed files require discarding the copy and uploading a
+new one. Browser file handles are not retained after a reload.
 
-Use **Rescan** on a source card to review changes and **Disconnect** to remove the
-index. New files start unselected during rescans. Browser permissions may need
-renewal. Folder access uses the directory picker on localhost or HTTPS;
-see [browser requirements](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker).
-Unsupported browsers retain document uploads.
+Backend settings control the account-wide original storage quota (20 GiB by
+default), per-file size (1 GiB), folder file count (100,000) and source count (100).
+There is no separate 2 GiB folder limit. Expand **Upload details** for the current
+policy and usage. Originals upload first; text is prepared by a durable background
+worker. The folder row shows pending preparation. Copilot searches prepared
+content; Hermes discovers and reads completed folder copies as needed, including
+bounded pages of large UTF-8 originals. Unsupported formats retain original
+downloads and an explicit metadata-only preview. Relevant read content may be
+sent to the AI provider.
 
-Limits: 100 indexed files, 512 KiB extracted text total, 128 KiB text per file,
-and 10 MiB per original. Hidden and dependency/build directories are skipped;
-individual hidden files can be explicitly selected. Scan limits remain bounded.
-Rescans are manual. Extraction/indexing errors leave the previous snapshot intact.
+These are copies, without background synchronization. Deleting a copy removes
+its stored originals and index without changing the computer's source folder.
+Cross-device access needs a reachable authenticated backend with persistent
+storage. No hosting or cloud service is provisioned. Local testing uses
+[AI Workspace](http://127.0.0.1:3002/documents) and API 127.0.0.1:3001 to avoid
+another app's localhost IPv6 listener; keep their hostnames matched for cookies.
 
-Copilot's **Folder files** source filter narrows retrieval to these sources.
-Citations include paths and revisions; the inspector labels the current index
-separately from the historical cited excerpt. Scanner checks run with
-`pnpm test:local-folders`.
-
-
-## Live source folders
-
-Documents > **Local connections (optional) > Add folder** opens the native Windows folder
-chooser on the local backend computer. Choose a directory to connect it;
-cancelling makes no connection. Manual path entry is a fallback. Hermes **Agent work** lists, searches and reads
-files as needed, including current edits, without a folder-wide indexing limit.
-Connections are private to your account/project and read-only. The local
-administrator connects folders; relevant read content may be sent to the AI provider.
-The backend must enable `LOCAL_FILES_ENABLED` on loopback outside production
-and have ripgrep installed. Local testing remains frontend 3002/backend 3001.
-
-**Saved snapshots (optional)** retains the browser selection/indexing flow for
-ordinary Copilot chat. Live folders currently work through Hermes Agent work;
-chat does not automatically read them. UTF-8, PDF and DOCX contents are supported;
-other binaries provide metadata. Live reads and searches use bounded pages,
-not an unlimited context window. Disconnect removes the grant, not your files.
-
-
-## Persistent folder uploads
-
-Documents > **Folders > Upload folder** opens the browser folder chooser. All
-selected files are uploaded as originals, preserving relative paths. Files are
-private to your account and project. Copilot chat retrieves extracted text;
-Hermes can list, search and read completed folder copies on demand. Files with
-no supported content reader stay available for original download and display
-an explicit reason in the preview. Contents used by AI may reach its provider.
-
-Limits are 5,000 files / 2 GiB per folder, 256 MiB per original and 20 folders
-per project/account across uploads and snapshots. UTF-8 text of any extension,
-PDF and DOCX are extracted up to 10 MiB original / 4 MiB extracted text per
-file; other files remain stored. Reads and file lists are paginated. Uploads
-use three concurrent per-file requests. Failed uploads can be retried while
-this page remains open; after leaving it, delete the incomplete copy and
-choose the folder again. Incomplete copies are excluded from AI retrieval.
-
-This is a saved copy, not live synchronization: later edits require another
-upload. Deleting a copy removes its server originals and private index, without
-changing the computer's source folder. The original file store currently lives
-on the backend's persistent disk. Access from another device requires hosting
-that backend with persistent storage and authentication; no hosting/deployment
-is added by this feature. PostgreSQL stores metadata and search chunks; no new
-database framework is needed. The normal browser flow needs no PowerShell.
+Checks: `pnpm test:folder-resume` verifies fingerprint compatibility, block
+boundaries, changed content and pause handling. The legacy scanner checks remain
+available with `pnpm test:local-folders`.

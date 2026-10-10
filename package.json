@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:folder-resume": "node --test test/folder-resume.test.cjs",
     "test:local-folders": "node --test test/local-folders.test.cjs"
   },
   "dependencies": {

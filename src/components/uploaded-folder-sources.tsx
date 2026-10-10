@@ -7,6 +7,7 @@ import {
   Trash2,
   ChevronRight,
 } from "lucide-react";
+import { folderResumeHash } from "@/lib/folder-resume";
 import { apiRequest, apiRequestRaw } from "@/lib/api";
 interface Folder {
   id: string;
@@ -15,12 +16,23 @@ interface Folder {
   fileCount: number;
   expectedFiles: number;
   bytes: number;
+  pendingFiles: number;
+  failedFiles: number;
 }
 interface StoredFile {
   id: string;
   path: string;
   size: number;
   reason: string | null;
+  resumeHash: string | null;
+  extractionStatus: string;
+}
+interface Settings {
+  quotaBytes: number;
+  usedBytes: number;
+  maxFileBytes: number;
+  maxFiles: number;
+  maxSources: number;
 }
 interface Page {
   files: StoredFile[];
@@ -36,6 +48,8 @@ const size = (bytes: number) =>
     ? `${(bytes / 1024).toFixed(1)} KiB`
     : `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
 export function UploadedFolderSources({ projectId }: { projectId?: string }) {
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const resumeTarget = useRef<Folder | null>(null);
   const [folders, setFolders] = useState<Folder[]>([]),
     [busy, setBusy] = useState(false),
     [progress, setProgress] = useState(0),
@@ -67,21 +81,40 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
     request = useRef<AbortController | null>(null);
   const base = `/projects/${projectId}/uploaded-folders`;
   async function refresh() {
-    const data = await apiRequest<Folder[]>(base);
-    if (alive.current) setFolders(data);
+    const [data, policy] = await Promise.all([
+      apiRequest<Folder[]>(base),
+      apiRequest<Settings>(`${base}/settings`),
+    ]);
+    if (alive.current) {
+      setFolders(data);
+      setSettings(policy);
+    }
   }
   useEffect(() => {
     alive.current = true;
     input.current?.setAttribute("webkitdirectory", "");
-    if (projectId)
-      apiRequest<Folder[]>(`/projects/${projectId}/uploaded-folders`)
-        .then((data) => {
-          if (alive.current) setFolders(data);
-        })
-        .catch((e) => {
-          if (alive.current) setError(e.message);
-        });
+    const update = () => {
+      if (projectId)
+        Promise.all([
+          apiRequest<Folder[]>(`/projects/${projectId}/uploaded-folders`),
+          apiRequest<Settings>(
+            `/projects/${projectId}/uploaded-folders/settings`,
+          ),
+        ])
+          .then(([data, policy]) => {
+            if (alive.current) {
+              setFolders(data);
+              setSettings(policy);
+            }
+          })
+          .catch((e) => {
+            if (alive.current) setError(e.message);
+          });
+    };
+    update();
+    const timer = setInterval(update, 5000);
     return () => {
+      clearInterval(timer);
       alive.current = false;
       request.current?.abort();
     };
@@ -106,6 +139,25 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
             signal: controller.signal,
           })
         ).id;
+      const existing = new Map<string, StoredFile>();
+      let pageOffset: number | null = 0;
+      while (pageOffset !== null) {
+        const page: Page = await apiRequest<Page>(
+          `${base}/${job.id}/files?limit=1000&offset=${pageOffset}`,
+          { signal: controller.signal },
+        );
+        page.files.forEach((file) => existing.set(file.path, file));
+        pageOffset = page.nextOffset;
+      }
+      const paths = new Set(
+        job.files.map((file) =>
+          file.webkitRelativePath.split("/").slice(1).join("/"),
+        ),
+      );
+      if (Array.from(existing.keys()).some((path) => !paths.has(path)))
+        throw new Error(
+          "This folder has changed. Resume with the original files or discard this copy and upload again.",
+        );
       let cursor = 0,
         done = 0;
       const workers = Array.from(
@@ -113,17 +165,27 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
         async () => {
           while (cursor < job.files.length && !controller.signal.aborted) {
             const file = job.files[cursor++];
-            const body = new FormData();
-            body.append(
-              "path",
-              file.webkitRelativePath.split("/").slice(1).join("/"),
-            );
-            body.append("file", file);
-            await apiRequest(`${base}/${job.id}/files`, {
-              method: "PUT",
-              body,
-              signal: controller.signal,
-            });
+            const path = file.webkitRelativePath.split("/").slice(1).join("/");
+            const saved = existing.get(path);
+            if (saved?.resumeHash) {
+              if (
+                saved.size !== file.size ||
+                (await folderResumeHash(file, controller.signal)) !==
+                  saved.resumeHash
+              )
+                throw new Error(
+                  `The saved file ${path} has changed. Discard this copy to upload the changed folder.`,
+                );
+            } else {
+              const body = new FormData();
+              body.append("path", path);
+              body.append("file", file);
+              await apiRequest(`${base}/${job.id}/files`, {
+                method: "PUT",
+                body,
+                signal: controller.signal,
+              });
+            }
             done++;
             if (alive.current) setProgress(done);
           }
@@ -142,7 +204,11 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
       }
     } catch (e) {
       if (alive.current) {
-        setError((e as Error).message);
+        setError(
+          controller.signal.aborted
+            ? "Upload paused. Resume when ready."
+            : (e as Error).message,
+        );
         await refresh().catch(() => {});
       }
     } finally {
@@ -151,19 +217,34 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
     }
   }
   function choose(files: File[]) {
-    if (!files.length) return;
-    const bytes = files.reduce((n, f) => n + f.size, 0);
+    if (!files.length || !settings) return;
+    const target = resumeTarget.current;
+    resumeTarget.current = null;
+    const name = files[0].webkitRelativePath.split("/")[0];
     if (
-      files.length > 5000 ||
-      bytes > 2 * 1024 ** 3 ||
-      files.some(
-        (f) => f.size > 256 * 1024 ** 2 || !f.webkitRelativePath.includes("/"),
-      )
+      target &&
+      (target.name !== name || target.expectedFiles !== files.length)
     ) {
-      setError("Choose up to 5,000 files, 2 GiB total and 256 MiB per file.");
+      setError(
+        "Choose the same folder and file count to resume. Discard the incomplete copy to start over.",
+      );
       return;
     }
-    void upload({ name: files[0].webkitRelativePath.split("/")[0], files });
+    const bytes = files.reduce((n, f) => n + f.size, 0);
+    if (
+      files.length > settings.maxFiles ||
+      bytes - (target?.bytes || 0) > settings.quotaBytes - settings.usedBytes ||
+      files.some(
+        (f) =>
+          f.size > settings.maxFileBytes || !f.webkitRelativePath.includes("/"),
+      )
+    ) {
+      setError(
+        `Upload exceeds your storage quota or file policy (${settings.maxFiles.toLocaleString()} files; ${size(settings.maxFileBytes)} per file).`,
+      );
+      return;
+    }
+    void upload({ id: target?.id, name, files });
   }
   async function loadFiles(id: string, offset = 0) {
     try {
@@ -238,13 +319,15 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
         <div>
           <h2 className="text-sm font-medium">Folders</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Saved copies for Copilot and Hermes. Originals stay intact; later
-            edits need another upload.
+            Private folder copies for your copilot.
           </p>
         </div>
         <button
-          disabled={busy || !!pending}
-          onClick={() => input.current?.click()}
+          disabled={busy || !!pending || !settings}
+          onClick={() => {
+            resumeTarget.current = null;
+            input.current?.click();
+          }}
           className="flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
         >
           <FolderPlus size={16} />
@@ -262,16 +345,34 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
           e.target.value = "";
         }}
       />
-      <p className="mt-2 text-xs text-slate-500">
-        All files in the chosen folder are uploaded, including hidden files.
-        Check for private content before choosing.
-      </p>
+      <details className="mt-2 text-xs text-slate-500">
+        <summary className="cursor-pointer">Upload details</summary>
+        <p className="mt-2">
+          All chosen files, including hidden files, are stored here. Relevant
+          content may reach your AI provider. Later edits need another upload.
+        </p>
+        {settings && (
+          <p className="mt-2">
+            {size(settings.usedBytes)} / {size(settings.quotaBytes)} stored · up
+            to {settings.maxFiles.toLocaleString()} files and{" "}
+            {size(settings.maxFileBytes)} per file.
+          </p>
+        )}
+      </details>
       {pending && (
         <div className="mt-3 flex items-center gap-3 text-sm" role="status">
           <span>
             {pending.name} · {progress}/{pending.files.length} files
             {busy ? " uploading…" : " · incomplete"}
           </span>
+          {busy && (
+            <button
+              className="underline"
+              onClick={() => request.current?.abort()}
+            >
+              Pause
+            </button>
+          )}
           {!busy && (
             <>
               <button
@@ -322,9 +423,26 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
                 <span className="truncate">{folder.name}</span>
                 <span className="ml-auto text-xs text-slate-500">
                   {folder.fileCount} files · {size(folder.bytes)}
-                  {folder.status !== "READY" && " · incomplete"}
+                  {folder.status !== "READY"
+                    ? " · incomplete"
+                    : folder.pendingFiles
+                      ? ` · preparing ${folder.pendingFiles} files`
+                      : folder.failedFiles
+                        ? ` · ${folder.failedFiles} files unavailable to AI`
+                        : ""}
                 </span>
               </button>
+              {folder.status === "UPLOADING" && !busy && (
+                <button
+                  className="text-xs underline"
+                  onClick={() => {
+                    resumeTarget.current = folder;
+                    input.current?.click();
+                  }}
+                >
+                  Resume
+                </button>
+              )}
               <button
                 disabled={busy}
                 aria-label={`Delete ${folder.name}`}
