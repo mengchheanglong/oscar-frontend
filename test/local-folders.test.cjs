@@ -40,6 +40,7 @@ const file = (name, text) => ({
   async getFile() {
     const bytes = new TextEncoder().encode(text);
     return {
+      name,
       size: bytes.length,
       async arrayBuffer() {
         return bytes.buffer;
@@ -62,39 +63,46 @@ test("reads nested text with relative paths and preserves UTF-8 content", async 
   assert.equal(result.files[0].text, "Revenue €100");
   assert.equal(result.skipped, 0);
 });
-test("does not read hidden files, credentials, dependencies, or unsupported binaries", async () => {
-  const neverRead = (name) => ({
-    kind: "file",
-    name,
-    getFile() {
-      throw new Error("Excluded file was read");
-    },
-  });
+test("accepts all filename types while skipping dependency and hidden folders", async () => {
   const result = await scanFolder(
     directory("Project", [
-      neverRead(".env"),
-      neverRead("credentials.json"),
-      neverRead("photo.png"),
-      directory("node_modules", [neverRead("index.js")]),
-      directory(".git", [neverRead("config.txt")]),
-      file("notes.md", "Allowed"),
+      file("Dockerfile", "FROM node"),
+      file(".env", "Explicit selection"),
+      file("notes.custom", "Notes"),
+      directory("node_modules", [file("skip.js", "Skip")]),
+      directory(".git", [file("config", "Skip")]),
     ]),
   );
-  assert.equal(result.files.length, 1);
-  assert.equal(result.skipped, 5);
+  assert.equal(result.files.length, 3);
+  assert.equal(result.skipped, 2);
+  assert.ok(result.files.some((f) => f.path === "Dockerfile"));
 });
-test("excludes oversized text and binary content without decoding it into evidence", async () => {
+test("keeps binary and large files as metadata and documents for deferred extraction", async () => {
   const result = await scanFolder(
     directory("Project", [
-      file("large.md", "x".repeat(131073)),
-      file("binary.txt", "a\0b"),
+      file("large.txt", "x".repeat(131073)),
+      file("photo.png", "a\0b"),
+      file("report.pdf", "%PDF"),
+      file("document.docx", "PK"),
       file("notes.txt", "Valid"),
     ]),
   );
-  assert.equal(result.files.length, 1);
-  assert.equal(result.files[0].path, "notes.txt");
-  assert.equal(result.skipped, 2);
+  assert.equal(result.files.length, 5);
+  assert.equal(result.skipped, 0);
+  assert.ok(
+    result.files
+      .find((f) => f.path === "photo.png")
+      .text.includes("metadata only"),
+  );
+  assert.ok(
+    result.files
+      .find((f) => f.path === "large.txt")
+      .text.includes("metadata only"),
+  );
+  assert.ok(result.files.find((f) => f.path === "report.pdf").original);
+  assert.ok(result.files.find((f) => f.path === "document.docx").original);
 });
+
 test("aborts an unreadable scan instead of returning a partial replacement manifest", async () => {
   await assert.rejects(
     scanFolder(

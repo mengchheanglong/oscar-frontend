@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  Info,
   X,
 } from "lucide-react";
 
@@ -162,14 +163,12 @@ export function LocalFolderSources({
       const initial = scanned.files.filter((file) =>
         source
           ? source.files.some((previous) => previous.path === file.path)
-          : scanned.files.length <= 100 &&
-            scanned.files.reduce((sum, item) => sum + item.bytes, 0) <=
-              512 * 1024,
+          : false,
       );
 
       setSelected(new Set(initial.map((file) => file.path)));
       setQuery("");
-      setActivePath(scanned.files[0]?.path ?? "");
+      setActivePath("");
     } catch (err) {
       if (alive.current && (err as Error).name !== "AbortError")
         setError((err as Error).message || "Could not read the folder.");
@@ -185,12 +184,22 @@ export function LocalFolderSources({
     setError("");
 
     try {
+      const reviewed: ScannedFile[] = [];
+      for (const file of preview.files.filter((file) =>
+        selected.has(file.path),
+      )) {
+        const text = file.original
+          ? (await localFolders.extract(projectId, file.original)).text
+          : file.text;
+        reviewed.push({ ...file, text });
+      }
+      if (!alive.current) return;
       await localFolders.sync(
         projectId,
         preview.id,
         preview.directory.name,
         preview.version,
-        preview.files.filter((file) => selected.has(file.path)),
+        reviewed,
       );
 
       if (!alive.current) return;
@@ -464,7 +473,7 @@ export function LocalFolderSources({
             event.preventDefault();
             if (!busy) setPreview(undefined);
           }}
-          className="m-auto w-[calc(100%-2rem)] max-w-5xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/50 backdrop:backdrop-blur-sm"
+          className={`m-auto w-[calc(100%-2rem)] ${activeFile ? "max-w-5xl" : "max-w-xl"} overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/50 backdrop:backdrop-blur-sm`}
         >
           <div className="flex max-h-[90dvh] flex-col">
             <header className="flex items-center gap-3 border-b border-slate-200 px-5 py-4">
@@ -476,10 +485,6 @@ export function LocalFolderSources({
                 >
                   {preview.directory.name}
                 </h3>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  Review source files · {preview.files.length} eligible ·{" "}
-                  {preview.skipped} excluded
-                </p>
               </div>
               <Button
                 variant="ghost"
@@ -491,15 +496,14 @@ export function LocalFolderSources({
                 <X className="h-4 w-4" />
               </Button>
             </header>
-            <p
-              id="folder-review-description"
-              className="border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs leading-relaxed text-slate-600"
+            <span id="folder-review-description" className="sr-only">
+              Choose files to index. Selected content is sent to the backend and
+              AI provider. PDF and DOCX text is extracted; other binary files
+              provide metadata only.
+            </span>
+            <div
+              className={`grid min-h-0 flex-1 ${activeFile ? "md:grid-cols-[340px_minmax(0,1fr)]" : ""}`}
             >
-              Choose files to share with your copilot. Selected text is stored
-              in the backend and may be sent to the AI provider. Review for
-              sensitive content before indexing.
-            </p>
-            <div className="grid min-h-0 flex-1 md:grid-cols-[340px_minmax(0,1fr)]">
               <aside className="flex min-h-0 flex-col border-b border-slate-200 md:border-b-0 md:border-r">
                 <div className="space-y-2 border-b border-slate-200 p-3">
                   <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
@@ -540,9 +544,7 @@ export function LocalFolderSources({
                 <div className="max-h-[28dvh] min-h-0 overflow-y-auto p-2 md:h-[45dvh] md:max-h-none">
                   {!visibleFiles.length && (
                     <p className="p-4 text-xs text-slate-500">
-                      {query
-                        ? "No matching files."
-                        : "No supported text files found."}
+                      {query ? "No matching files." : "No files found."}
                     </p>
                   )}
                   {Array.from(groups).map(([directory, files]) => (
@@ -583,7 +585,11 @@ export function LocalFolderSources({
                               {file.path.split("/").pop()}
                             </span>
                             <span className="ml-auto shrink-0 text-[10px] text-slate-400">
-                              {size(file.bytes)}
+                              {file.original
+                                ? "Document"
+                                : file.text.includes("metadata only.")
+                                  ? "Metadata"
+                                  : size(file.bytes)}
                             </span>
                           </button>
                         </div>
@@ -592,31 +598,37 @@ export function LocalFolderSources({
                   ))}
                 </div>
               </aside>
-              <div className="flex min-h-0 flex-col bg-slate-50/50">
-                <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3 text-xs">
-                  <FileText className="h-4 w-4 shrink-0 text-slate-400" />
-                  <span
-                    className="min-w-0 flex-1 truncate font-mono"
-                    title={activeFile?.path}
-                  >
-                    {activeFile?.path ?? "File preview"}
-                  </span>
-                  {activeFile && (
-                    <span className="shrink-0 text-slate-400">
-                      {selected.has(activeFile.path)
-                        ? "Included"
-                        : "Not included"}
+              {activeFile && (
+                <div className="flex min-h-0 flex-col bg-slate-50/50">
+                  <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3 text-xs">
+                    <FileText className="h-4 w-4 shrink-0 text-slate-400" />
+                    <span
+                      className="min-w-0 flex-1 truncate font-mono"
+                      title={activeFile?.path}
+                    >
+                      {activeFile?.path ?? "File preview"}
                     </span>
-                  )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Hide preview"
+                      onClick={() => setActivePath("")}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <pre
+                    tabIndex={0}
+                    aria-label="File text preview"
+                    className="max-h-[25dvh] min-h-0 flex-1 overflow-auto whitespace-pre p-4 font-mono text-xs leading-6 text-slate-600 md:h-[45dvh] md:max-h-none"
+                  >
+                    {activeFile?.original
+                      ? "Document text will be extracted when you connect this folder."
+                      : (activeFile?.text ??
+                        "Select a file to preview its text.")}
+                  </pre>
                 </div>
-                <pre
-                  tabIndex={0}
-                  aria-label="File text preview"
-                  className="max-h-[25dvh] min-h-0 flex-1 overflow-auto whitespace-pre p-4 font-mono text-xs leading-6 text-slate-600 md:h-[45dvh] md:max-h-none"
-                >
-                  {activeFile?.text ?? "Select a file to preview its text."}
-                </pre>
-              </div>
+              )}
             </div>
             <footer className="space-y-3 border-t border-slate-200 px-5 py-4">
               {error && (
@@ -625,19 +637,34 @@ export function LocalFolderSources({
                 </p>
               )}
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
+                <div className="flex items-center gap-2">
+                  <details className="relative text-xs text-slate-500">
+                    <summary
+                      aria-label="Indexing information"
+                      className="cursor-pointer list-none"
+                    >
+                      <Info className="h-4 w-4" />
+                    </summary>
+                    <p className="absolute bottom-7 left-0 z-10 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+                      Selected content is shared with the backend and AI
+                      provider. PDF and DOCX text is extracted. Other binary
+                      files provide metadata only. Maximum: 100 files, 10 MiB
+                      per original, 512 KiB indexed text. Indexing replaces the
+                      previous snapshot. Dependency and hidden folders are
+                      skipped.
+                    </p>
+                  </details>
                   <p
                     className={`text-xs font-medium ${selectionTooLarge ? "text-red-700" : "text-slate-700"}`}
                     aria-live="polite"
                   >
-                    {selected.size} / 100 files · {size(selectedBytes)} / 512
-                    KiB
+                    {selected.size} selected
                   </p>
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    {selectionTooLarge
-                      ? "Reduce your selection to continue."
-                      : "Select visible adds files that fit within the limits."}
-                  </p>
+                  {selectionTooLarge && (
+                    <p role="alert" className="mt-1 text-xs text-red-700">
+                      Selection exceeds the indexing limit.
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -655,23 +682,10 @@ export function LocalFolderSources({
                     }
                     onClick={indexPreview}
                   >
-                    {busy
-                      ? "Indexing…"
-                      : `Index ${selected.size} ${selected.size === 1 ? "file" : "files"}`}
+                    {busy ? "Indexing…" : "Connect"}
                   </Button>
                 </div>
               </div>
-              <details className="text-[11px] leading-relaxed text-slate-500">
-                <summary className="cursor-pointer">What gets indexed?</summary>
-                <p className="mt-2">
-                  Supported text and code files only, up to 128 KiB each. Hidden
-                  files, common credential filenames, dependencies and binaries
-                  are excluded. Indexing replaces the previous snapshot;
-                  unselected or removed files leave the index. New files require
-                  selection. The saved snapshot stays available after this page
-                  closes.
-                </p>
-              </details>
             </footer>
           </div>
         </dialog>

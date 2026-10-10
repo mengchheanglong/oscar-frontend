@@ -24,8 +24,17 @@ export interface ScannedFile {
   path: string;
   text: string;
   bytes: number;
+  original?: File;
 }
 export const localFolders = {
+  extract: async (projectId: string, file: File) => {
+    const body = new FormData();
+    body.append("file", file);
+    return apiRequest<{ text: string }>(
+      `/projects/${projectId}/local-folders/extract`,
+      { method: "POST", body },
+    );
+  },
   list: (projectId: string) =>
     apiRequest<FolderSource[]>(`/projects/${projectId}/local-folders`),
   sync: (
@@ -52,36 +61,6 @@ export const localFolders = {
     }),
 };
 
-const extensions = new Set([
-  "md",
-  "txt",
-  "rst",
-  "csv",
-  "ts",
-  "tsx",
-  "js",
-  "jsx",
-  "mjs",
-  "cjs",
-  "json",
-  "yaml",
-  "yml",
-  "toml",
-  "py",
-  "sql",
-  "html",
-  "css",
-  "scss",
-  "go",
-  "rs",
-  "java",
-  "cs",
-  "c",
-  "cpp",
-  "h",
-  "rb",
-  "php",
-]);
 const excludedDirectories = new Set([
   "node_modules",
   "vendor",
@@ -108,28 +87,13 @@ export function allowedLocalPath(path: string): boolean {
     parts.some(
       (part) =>
         !part ||
-        part.startsWith(".") ||
+        part === "." ||
+        part === ".." ||
         excludedDirectories.has(part.toLowerCase()),
     )
   )
     return false;
-  const name = parts[parts.length - 1].toLowerCase();
-  if (
-    /(^|[._-])(secret|secrets|credential|credentials|token|tokens|password|passwords|private)([._-]|$)/.test(
-      name,
-    )
-  )
-    return false;
-  if (
-    [
-      "package-lock.json",
-      "pnpm-lock.yaml",
-      "yarn.lock",
-      "composer.lock",
-    ].includes(name)
-  )
-    return false;
-  return extensions.has(name.split(".").pop() ?? "");
+  return true;
 }
 
 export async function scanFolder(
@@ -165,8 +129,21 @@ export async function scanFolder(
           continue;
         }
         const file = await entry.getFile();
-        if (file.size > 128 * 1024) {
+        if (file.size > 10 * 1024 * 1024) {
           skipped++;
+          continue;
+        }
+        const document = /\.(pdf|docx)$/i.test(file.name);
+        if (document || file.size > 128 * 1024) {
+          const text = `File: ${path}\nSize: ${file.size} bytes\nContent not indexed; file metadata only.`;
+          files.push({
+            path,
+            text,
+            bytes: new TextEncoder().encode(text).length,
+            original: document ? file : undefined,
+          });
+          if (files.length > 2000)
+            throw new Error("Too many files. Select a smaller folder.");
           continue;
         }
         const buffer = await file.arrayBuffer();
@@ -174,19 +151,21 @@ export async function scanFolder(
         try {
           text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
         } catch {
-          skipped++;
-          continue;
+          text = "\0";
         }
         if (text.includes("\0")) {
-          skipped++;
-          continue;
+          text = `File: ${path}\nSize: ${file.size} bytes\nContent not indexed; file metadata only.`;
         }
         total += new TextEncoder().encode(text).length;
         if (files.length >= 2000 || total > 16 * 1024 * 1024)
           throw new Error(
             "Folder scan exceeds 2,000 text files or 16 MiB. Select a smaller subfolder.",
           );
-        files.push({ path, text, bytes: file.size });
+        files.push({
+          path,
+          text,
+          bytes: new TextEncoder().encode(text).length,
+        });
       }
     }
   }

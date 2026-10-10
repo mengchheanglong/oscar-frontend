@@ -78,25 +78,30 @@ responses. These checks do not start model runs.
 
 ## Local folder sources
 
-In Documents, select a project and click **Add folder**. Review the
-folder groups and text previews in the review dialog. Search paths, select files,
-then click **Index**. **Select visible** adds matching files that fit within the
-100-file and 512-KiB limits; **Clear** removes the selection. Files remain on your
-computer; selected text and relative paths are
-stored as a private project snapshot on the backend and may reach the AI provider
-when Copilot or Hermes uses them. Directory access is read-only.
+In Documents, select a project and click **Add folder**. The compact dialog lists
+files with search and explicit selection. Open a filename for an optional preview,
+then click **Connect**. New folders start with nothing selected. **Select visible**
+adds matching files within the limits; **Clear** clears the selection. The info
+control explains transfer, indexing limits and snapshot replacement.
 
-Use **Rescan** on a source card to review changes and **Disconnect** to remove the index.
-New files start unselected during rescans. The browser can remember folder access,
-but may ask for permission again. Unsupported browsers keep the existing upload
-flow. Folder access uses the browser directory picker on localhost or HTTPS;
+Every file extension is accepted, including extensionless and hidden files.
+UTF-8 text up to 128 KiB is indexed as content. Selected PDF and DOCX files are
+sent to the authenticated backend for text extraction only after Connect; originals
+are not stored. Other binary files and larger text files provide searchable names
+and metadata, not their contents. There is no image OCR, spreadsheet/slide
+extraction, or media transcription in this version. Original files remain unchanged.
+Selected content is stored privately in the backend and may reach the AI provider.
+
+Use **Rescan** on a source card to review changes and **Disconnect** to remove the
+index. New files start unselected during rescans. Browser permissions may need
+renewal. Folder access uses the directory picker on localhost or HTTPS;
 see [browser requirements](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker).
+Unsupported browsers retain document uploads.
 
-This version handles UTF-8 text and code, with a maximum of 100 selected files and
-512 KiB per source. Hidden paths, common credential filenames, dependency/build
-directories, binaries, and files over 128 KiB are excluded. Review for sensitive
-content before indexing. Scans are manual; there is no background watcher or file
-editing. Existing document uploads remain available for PDF/DOCX and other files.
+Limits: 100 indexed files, 512 KiB extracted text total, 128 KiB text per file,
+and 10 MiB per original. Hidden and dependency/build directories are skipped;
+individual hidden files can be explicitly selected. Scan limits remain bounded.
+Rescans are manual. Extraction/indexing errors leave the previous snapshot intact.
 
 Copilot's **Local files** source filter narrows retrieval to these sources.
 Citations include paths and revisions; the inspector labels the current index
