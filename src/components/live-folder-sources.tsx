@@ -11,21 +11,26 @@ interface Folder {
 export function LiveFolderSources({ projectId }: { projectId?: string }) {
   const [folders, setFolders] = useState<Folder[]>([]),
     [available, setAvailable] = useState(false),
+    [nativePicker, setNativePicker] = useState(false),
     [adding, setAdding] = useState(false),
     [path, setPath] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const dialog = useRef<HTMLDialogElement>(null),
-    alive = useRef(true);
+    alive = useRef(true),
+    pickerRequest = useRef<AbortController | null>(null);
   useEffect(() => {
     alive.current = true;
     if (projectId)
-      apiRequest<{ available: boolean; folders: Folder[] }>(
-        `/projects/${projectId}/local-folders/live`,
-      )
+      apiRequest<{
+        available: boolean;
+        nativePickerAvailable: boolean;
+        folders: Folder[];
+      }>(`/projects/${projectId}/local-folders/live`)
         .then((r) => {
           if (alive.current) {
             setAvailable(r.available);
+            setNativePicker(r.nativePickerAvailable);
             setFolders(r.folders);
           }
         })
@@ -34,6 +39,7 @@ export function LiveFolderSources({ projectId }: { projectId?: string }) {
         });
     return () => {
       alive.current = false;
+      pickerRequest.current?.abort();
     };
   }, [projectId]);
   useEffect(() => {
@@ -41,6 +47,30 @@ export function LiveFolderSources({ projectId }: { projectId?: string }) {
     if (adding) element?.showModal();
     return () => element?.close();
   }, [adding]);
+  async function chooseFolder() {
+    if (!projectId || busy) return;
+    if (!nativePicker) {
+      setAdding(true);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const controller = new AbortController();
+    pickerRequest.current = controller;
+    try {
+      const { folder } = await apiRequest<{ folder: Folder | null }>(
+        `/projects/${projectId}/local-folders/live/pick`,
+        { method: "POST", signal: controller.signal },
+      );
+      if (alive.current && folder)
+        setFolders((old) => [...old.filter((f) => f.id !== folder.id), folder]);
+    } catch (e) {
+      if (alive.current) setError((e as Error).message);
+    } finally {
+      if (pickerRequest.current === controller) pickerRequest.current = null;
+      if (alive.current) setBusy(false);
+    }
+  }
   async function connect(event: React.FormEvent) {
     event.preventDefault();
     if (!projectId || busy) return;
@@ -92,7 +122,7 @@ export function LiveFolderSources({ projectId }: { projectId?: string }) {
             />
           </h2>
           <p className="mt-1 text-xs text-slate-500">
-            Read on demand with Hermes · private to you
+            Read-only with Hermes · relevant content may reach your AI provider
           </p>
         </div>
         <Button
@@ -100,18 +130,28 @@ export function LiveFolderSources({ projectId }: { projectId?: string }) {
           disabled={!projectId || !available || busy}
           onClick={() => {
             setError("");
-            setAdding(true);
+            void chooseFolder();
           }}
           className="gap-2"
         >
           <FolderPlus className="h-4 w-4" />
-          Add folder
+          {busy && pickerRequest.current ? "Choosing folder…" : "Add folder"}
         </Button>
       </div>
       {!adding && error && (
-        <p role="alert" className="mt-3 text-xs text-red-700">
-          {error}
-        </p>
+        <div className="mt-3 flex items-center gap-3 text-xs">
+          <p role="alert" className="text-red-700">
+            {error}
+          </p>
+          {available && (
+            <button
+              className="shrink-0 underline"
+              onClick={() => setAdding(true)}
+            >
+              Enter path
+            </button>
+          )}
+        </div>
       )}
       {!available && projectId && (
         <p className="mt-3 text-xs text-slate-500">

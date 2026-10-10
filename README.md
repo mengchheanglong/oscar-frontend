@@ -111,8 +111,9 @@ separately from the historical cited excerpt. Scanner checks run with
 
 ## Live source folders
 
-Documents > **Source folders > Add folder** connects an absolute folder path
-on the local backend computer. Hermes **Agent work** lists, searches and reads
+Documents > **Source folders > Add folder** opens the native Windows folder
+chooser on the local backend computer. Choose a directory to connect it;
+cancelling makes no connection. Manual path entry is a fallback. Hermes **Agent work** lists, searches and reads
 files as needed, including current edits, without a folder-wide indexing limit.
 Connections are private to your account/project and read-only. The local
 administrator connects folders; relevant read content may be sent to the AI provider.
