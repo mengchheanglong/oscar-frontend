@@ -305,7 +305,7 @@ export function AgentRunsPanel({
                         <li key={e.chunkId}>
                           {e.title} ·{" "}
                           {e.revision === 0
-                            ? "Local file version"
+                            ? "File version"
                             : `revision ${e.revision}`}{" "}
                           · {e.locator}
                           <span className="block break-all text-slate-400">

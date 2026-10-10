@@ -128,7 +128,7 @@ const MODES = [
 const SOURCE_OPTIONS = [
   { value: "", label: "All project sources", icon: Filter },
   { value: "DOCUMENT", label: "Documents", icon: FileText },
-  { value: "LOCAL_FILE", label: "Local files", icon: FileText },
+  { value: "LOCAL_FILE", label: "Folder files", icon: FileText },
   { value: "REQUIREMENT", label: "Requirements", icon: FileCheck2 },
   { value: "DECISION", label: "Decisions", icon: GitPullRequest },
   { value: "TASK", label: "Tasks", icon: CheckSquare },

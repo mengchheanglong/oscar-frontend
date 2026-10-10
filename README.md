@@ -78,7 +78,7 @@ responses. These checks do not start model runs.
 
 ## Local folder sources
 
-In Documents, select a project and click **Add folder**. The compact dialog lists
+Under Documents > **Saved snapshots (optional)**, select a project and click **Add folder**. The compact dialog lists
 files with search and explicit selection. Open a filename for an optional preview,
 then click **Connect**. New folders start with nothing selected. **Select visible**
 adds matching files within the limits; **Clear** clears the selection. The info
@@ -103,7 +103,7 @@ and 10 MiB per original. Hidden and dependency/build directories are skipped;
 individual hidden files can be explicitly selected. Scan limits remain bounded.
 Rescans are manual. Extraction/indexing errors leave the previous snapshot intact.
 
-Copilot's **Local files** source filter narrows retrieval to these sources.
+Copilot's **Folder files** source filter narrows retrieval to these sources.
 Citations include paths and revisions; the inspector labels the current index
 separately from the historical cited excerpt. Scanner checks run with
 `pnpm test:local-folders`.
@@ -111,7 +111,7 @@ separately from the historical cited excerpt. Scanner checks run with
 
 ## Live source folders
 
-Documents > **Source folders > Add folder** opens the native Windows folder
+Documents > **Local connections (optional) > Add folder** opens the native Windows folder
 chooser on the local backend computer. Choose a directory to connect it;
 cancelling makes no connection. Manual path entry is a fallback. Hermes **Agent work** lists, searches and reads
 files as needed, including current edits, without a folder-wide indexing limit.
@@ -125,3 +125,29 @@ ordinary Copilot chat. Live folders currently work through Hermes Agent work;
 chat does not automatically read them. UTF-8, PDF and DOCX contents are supported;
 other binaries provide metadata. Live reads and searches use bounded pages,
 not an unlimited context window. Disconnect removes the grant, not your files.
+
+
+## Persistent folder uploads
+
+Documents > **Folders > Upload folder** opens the browser folder chooser. All
+selected files are uploaded as originals, preserving relative paths. Files are
+private to your account and project. Copilot chat retrieves extracted text;
+Hermes can list, search and read completed folder copies on demand. Files with
+no supported content reader stay available for original download and display
+an explicit reason in the preview. Contents used by AI may reach its provider.
+
+Limits are 5,000 files / 2 GiB per folder, 256 MiB per original and 20 folders
+per project/account across uploads and snapshots. UTF-8 text of any extension,
+PDF and DOCX are extracted up to 10 MiB original / 4 MiB extracted text per
+file; other files remain stored. Reads and file lists are paginated. Uploads
+use three concurrent per-file requests. Failed uploads can be retried while
+this page remains open; after leaving it, delete the incomplete copy and
+choose the folder again. Incomplete copies are excluded from AI retrieval.
+
+This is a saved copy, not live synchronization: later edits require another
+upload. Deleting a copy removes its server originals and private index, without
+changing the computer's source folder. The original file store currently lives
+on the backend's persistent disk. Access from another device requires hosting
+that backend with persistent storage and authentication; no hosting/deployment
+is added by this feature. PostgreSQL stores metadata and search chunks; no new
+database framework is needed. The normal browser flow needs no PowerShell.

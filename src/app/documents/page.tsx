@@ -1,4 +1,5 @@
 "use client";
+import { UploadedFolderSources } from "@/components/uploaded-folder-sources";
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -594,10 +595,19 @@ export default function DocumentsPage() {
           </button>
         </div>
 
-        <LiveFolderSources
-          key={`live:${user?.id}:${currentProject?.id}`}
+        <UploadedFolderSources
+          key={`uploads:${user?.id}:${currentProject?.id}`}
           projectId={currentProject?.id}
         />
+        <details className="mb-5">
+          <summary className="mb-3 cursor-pointer text-xs text-slate-500">
+            Local connections (optional)
+          </summary>
+          <LiveFolderSources
+            key={`live:${user?.id}:${currentProject?.id}`}
+            projectId={currentProject?.id}
+          />
+        </details>
         <details className="mb-5">
           <summary className="mb-3 cursor-pointer text-xs text-slate-500">
             Saved snapshots (optional)
