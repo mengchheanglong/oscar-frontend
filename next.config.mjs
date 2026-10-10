@@ -8,8 +8,10 @@ const nextConfig = {
   async rewrites() {
     const backendUrl =
       process.env.BACKEND_INTERNAL_URL ||
-      process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-      "http://localhost:3001";
+      (process.env.NEXT_PUBLIC_API_URL?.startsWith("http")
+        ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "")
+        : undefined) ||
+      "http://127.0.0.1:3001";
     return [
       {
         source: "/api/v1/:path*",

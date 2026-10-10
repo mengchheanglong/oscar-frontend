@@ -103,8 +103,11 @@ These are copies, without background synchronization. Deleting a copy removes
 its stored originals and index without changing the computer's source folder.
 Cross-device access needs a reachable authenticated backend with persistent
 storage. No hosting or cloud service is provisioned. Local testing uses
-[AI Workspace](http://127.0.0.1:3002/documents) and API 127.0.0.1:3001 to avoid
-another app's localhost IPv6 listener; keep their hostnames matched for cookies.
+[AI Workspace](http://localhost:3002/documents) with
+`NEXT_PUBLIC_API_URL=/api/v1` and `BACKEND_INTERNAL_URL=http://127.0.0.1:3001`.
+The frontend proxies API requests to the isolated local backend. Login cookies
+stay on the frontend's origin, so both localhost and 127.0.0.1 work. The explicit
+IPv4 backend address avoids another app's localhost IPv6 listener.
 
 Checks: `pnpm test:folder-resume` verifies fingerprint compatibility, block
 boundaries, changed content and pause handling. The legacy scanner checks remain
