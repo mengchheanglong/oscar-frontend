@@ -21,23 +21,29 @@ Next.js 14 App Router frontend for the AI Project Workspace, connected to the Ne
 ## Getting Started
 
 ### 1. Install Dependencies
+
 ```bash
 pnpm install
 ```
 
 ### 2. Configure Environment
+
 ```bash
 cp .env.example .env.local
 ```
+
 The default backend endpoint is `http://localhost:3000/api/v1`.
 
 ### 3. Run Development Server
+
 ```bash
 pnpm dev
 ```
+
 Opens on [http://localhost:3001](http://localhost:3001).
 
 ### 4. Build for Production
+
 ```bash
 pnpm build
 pnpm start
@@ -48,7 +54,9 @@ links interfering with repeated build cleanup. Linux production builds retain
 standalone output for the existing container deployment.
 
 ## Demo Accounts
+
 Pre-seeded in the development database:
+
 - **Alice Developer** (`alice@example.com` / `Password123!`): Project Owner of Alpha Workspace (AIW)
 - **Bob Manager** (`bob@example.com` / `Password123!`): Project Manager in AIW
 - **Charlie QA** (`charlie@example.com` / `Password123!`): Contributor in Secure Workspace (SEC)
@@ -70,13 +78,15 @@ responses. These checks do not start model runs.
 
 ## Local folder sources
 
-In Documents, select a project and click **Connect local folder**. Review the
-eligible paths and text previews, select files, then click **Index selected
-files**. Files remain on your computer; selected text and relative paths are
+In Documents, select a project and click **Add folder**. Review the
+folder groups and text previews in the review dialog. Search paths, select files,
+then click **Index**. **Select visible** adds matching files that fit within the
+100-file and 512-KiB limits; **Clear** removes the selection. Files remain on your
+computer; selected text and relative paths are
 stored as a private project snapshot on the backend and may reach the AI provider
 when Copilot or Hermes uses them. Directory access is read-only.
 
-Use **Rescan folder** to review changes and **Disconnect** to remove the index.
+Use **Rescan** on a source card to review changes and **Disconnect** to remove the index.
 New files start unselected during rescans. The browser can remember folder access,
 but may ask for permission again. Unsupported browsers keep the existing upload
 flow. Folder access uses the browser directory picker on localhost or HTTPS;
