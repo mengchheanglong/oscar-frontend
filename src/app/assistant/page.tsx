@@ -69,6 +69,8 @@ const getSourceLink = (sourceType: string, title: string, sourceId?: string) => 
       return `/meetings${qs}`;
     case "DOCUMENT":
       return `/documents${qs}`;
+    case "LOCAL_FILE":
+      return "/documents";
     default:
       return `/search?q=${encodeURIComponent(cleanTitle || sourceId || "")}`;
   }
@@ -126,6 +128,7 @@ const MODES = [
 const SOURCE_OPTIONS = [
   { value: "", label: "All project sources", icon: Filter },
   { value: "DOCUMENT", label: "Documents", icon: FileText },
+  { value: "LOCAL_FILE", label: "Local files", icon: FileText },
   { value: "REQUIREMENT", label: "Requirements", icon: FileCheck2 },
   { value: "DECISION", label: "Decisions", icon: GitPullRequest },
   { value: "TASK", label: "Tasks", icon: CheckSquare },
@@ -291,6 +294,12 @@ export default function AssistantPage() {
           const items = Array.isArray(res) ? res : (res as any)?.data || (res as any)?.items || [];
           const found = items.find((d: any) => d.id === id);
           if (!isCancelled && found) setInspectingDetails(found);
+        } else if (type === "LOCAL_FILE") {
+          const sources = await api.ingestion.listSources(targetProjId, { sourceType: "LOCAL_FILE" });
+          const source = sources.find((item) => item.sourceId === id);
+          if (!source) throw new Error("Local source is no longer indexed.");
+          const found = await api.ingestion.getSource(targetProjId, source.id);
+          if (!isCancelled) setInspectingDetails(found);
         }
       } catch (err) {
         if (!isCancelled) setInspectError("The full source record couldn’t be loaded. You can still review the evidence excerpt or open the source.");
@@ -1249,6 +1258,13 @@ export default function AssistantPage() {
                   )}
 
                   {/* DOCUMENT DETAILS */}
+                  {inspectingCitation.sourceType === "LOCAL_FILE" && (
+                    <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/80 p-3.5">
+                      <p className="font-semibold">Current indexed file · revision {inspectingDetails.sourceRevision}</p>
+                      <p className="text-slate-500">This snapshot may be newer than the cited excerpt. Rescan its folder in Documents to update it.</p>
+                      <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all">{inspectingDetails.chunks?.map((chunk: { text: string }) => chunk.text).join("\n\n")}</pre>
+                    </div>
+                  )}
                   {inspectingCitation.sourceType === "DOCUMENT" && (
                     <div className="space-y-2 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200">
                       <div className="flex flex-wrap items-center gap-2 text-[11px]">

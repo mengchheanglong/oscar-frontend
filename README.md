@@ -67,3 +67,28 @@ and credentials remain on the backend.
 Verified on develop with TypeScript, lint, a production build, and local browser
 checks for configured status, catalog search, and simulated unconfigured/error
 responses. These checks do not start model runs.
+
+## Local folder sources
+
+In Documents, select a project and click **Connect local folder**. Review the
+eligible paths and text previews, select files, then click **Index selected
+files**. Files remain on your computer; selected text and relative paths are
+stored as a private project snapshot on the backend and may reach the AI provider
+when Copilot or Hermes uses them. Directory access is read-only.
+
+Use **Rescan folder** to review changes and **Disconnect** to remove the index.
+New files start unselected during rescans. The browser can remember folder access,
+but may ask for permission again. Unsupported browsers keep the existing upload
+flow. Folder access uses the browser directory picker on localhost or HTTPS;
+see [browser requirements](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker).
+
+This version handles UTF-8 text and code, with a maximum of 100 selected files and
+512 KiB per source. Hidden paths, common credential filenames, dependency/build
+directories, binaries, and files over 128 KiB are excluded. Review for sensitive
+content before indexing. Scans are manual; there is no background watcher or file
+editing. Existing document uploads remain available for PDF/DOCX and other files.
+
+Copilot's **Local files** source filter narrows retrieval to these sources.
+Citations include paths and revisions; the inspector labels the current index
+separately from the historical cited excerpt. Scanner checks run with
+`pnpm test:local-folders`.

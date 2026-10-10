@@ -6,7 +6,8 @@
     "dev": "next dev -p 3002",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:local-folders": "node --test test/local-folders.test.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

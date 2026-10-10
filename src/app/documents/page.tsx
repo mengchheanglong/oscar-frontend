@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/app-layout";
 import { FilterDropdown, FilterOption } from "@/components/ui/filter-dropdown";
 import { api } from "@/lib/api";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
+import { LocalFolderSources } from "@/components/local-folder-sources";
 import { DocumentIndexStatus } from "@/components/document-index-status";
 import {
   Upload,
@@ -157,7 +158,7 @@ const TYPE_FILTER_OPTIONS: FilterOption[] = [
 ];
 
 export default function DocumentsPage() {
-  const { currentProject, projects } = useAuth();
+  const { currentProject, projects, user } = useAuth();
   const { showToast } = useToast();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -576,7 +577,7 @@ export default function DocumentsPage() {
               Documents
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 font-normal">
-              {filteredDocuments.length} document{filteredDocuments.length === 1 ? "" : "s"} across{" "}
+              {filteredDocuments.length} uploaded document{filteredDocuments.length === 1 ? "" : "s"} across{" "}
               {uniqueProjectsCount} active project{uniqueProjectsCount === 1 ? "" : "s"}.
             </p>
           </div>
@@ -591,6 +592,8 @@ export default function DocumentsPage() {
             <span>Upload Document</span>
           </button>
         </div>
+
+        <LocalFolderSources key={`${user?.id}:${currentProject?.id}`} userId={user?.id} projectId={currentProject?.id} />
 
         {/* FILTER TOOLBAR & VIEW SWITCHER */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pt-1">
