@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/app-layout";
 import { FilterDropdown, FilterOption } from "@/components/ui/filter-dropdown";
 import { api } from "@/lib/api";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
+import { LiveFolderSources } from "@/components/live-folder-sources";
 import { LocalFolderSources } from "@/components/local-folder-sources";
 import { DocumentIndexStatus } from "@/components/document-index-status";
 import {
@@ -593,7 +594,16 @@ export default function DocumentsPage() {
           </button>
         </div>
 
-        <LocalFolderSources key={`${user?.id}:${currentProject?.id}`} userId={user?.id} projectId={currentProject?.id} />
+        <LiveFolderSources
+          key={`live:${user?.id}:${currentProject?.id}`}
+          projectId={currentProject?.id}
+        />
+        <details className="mb-5">
+          <summary className="mb-3 cursor-pointer text-xs text-slate-500">
+            Saved snapshots (optional)
+          </summary>
+          <LocalFolderSources key={`${user?.id}:${currentProject?.id}`} userId={user?.id} projectId={currentProject?.id} />
+        </details>
 
         {/* FILTER TOOLBAR & VIEW SWITCHER */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pt-1">

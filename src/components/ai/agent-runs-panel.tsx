@@ -12,6 +12,10 @@ const toolLabels: Record<string, string> = {
   search_project_evidence: "Retrieved project evidence",
   calculate_pricing: "Calculated pricing scenario",
   request_task_review: "Prepared task for review",
+  list_local_folders: "Listed source folders",
+  list_local_files: "Found local files",
+  search_local_files: "Searched local files",
+  read_local_file: "Read local file",
 };
 
 export function AgentRunsPanel({
@@ -216,8 +220,8 @@ export function AgentRunsPanel({
                 Start work
               </button>
               <p className="text-xs text-slate-500">
-                Project evidence and pricing calculations. Record changes
-                require review.
+                Project evidence, connected folders and pricing calculations.
+                Record changes require review.
               </p>
             </div>
           </form>
@@ -299,7 +303,11 @@ export function AgentRunsPanel({
                     <ul className="mt-2 space-y-1">
                       {selected.evidence.map((e) => (
                         <li key={e.chunkId}>
-                          {e.title} · revision {e.revision} · {e.locator}
+                          {e.title} ·{" "}
+                          {e.revision === 0
+                            ? "Local file version"
+                            : `revision ${e.revision}`}{" "}
+                          · {e.locator}
                           <span className="block break-all text-slate-400">
                             {e.chunkId}
                           </span>

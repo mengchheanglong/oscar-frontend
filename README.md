@@ -107,3 +107,20 @@ Copilot's **Local files** source filter narrows retrieval to these sources.
 Citations include paths and revisions; the inspector labels the current index
 separately from the historical cited excerpt. Scanner checks run with
 `pnpm test:local-folders`.
+
+
+## Live source folders
+
+Documents > **Source folders > Add folder** connects an absolute folder path
+on the local backend computer. Hermes **Agent work** lists, searches and reads
+files as needed, including current edits, without a folder-wide indexing limit.
+Connections are private to your account/project and read-only. The local
+administrator connects folders; relevant read content may be sent to the AI provider.
+The backend must enable `LOCAL_FILES_ENABLED` on loopback outside production
+and have ripgrep installed. Local testing remains frontend 3002/backend 3001.
+
+**Saved snapshots (optional)** retains the browser selection/indexing flow for
+ordinary Copilot chat. Live folders currently work through Hermes Agent work;
+chat does not automatically read them. UTF-8, PDF and DOCX contents are supported;
+other binaries provide metadata. Live reads and searches use bounded pages,
+not an unlimited context window. Disconnect removes the grant, not your files.
