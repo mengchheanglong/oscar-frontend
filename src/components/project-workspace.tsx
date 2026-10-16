@@ -77,7 +77,9 @@ export function ProjectGlyph({ project }: { project: Pick<Project, "icon"> }) {
       {project.icon}
     </span>
   ) : (
-    <WorkspaceIcon name="folder" />
+    <span className="workspace-project-icon" aria-hidden="true">
+      <WorkspaceIcon name="folder" />
+    </span>
   );
 }
 function errorText(error: unknown) {

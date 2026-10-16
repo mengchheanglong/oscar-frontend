@@ -2091,3 +2091,21 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
     pointer-events: auto;
   }
 }
+
+/* Keep the project glyph bounded even if a global svg rule is added later. */
+.workspace-sidebar .workspace-project-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+}
+.workspace-sidebar .workspace-project-icon > svg {
+  display: block;
+  flex: 0 0 16px;
+  width: 16px !important;
+  height: 16px !important;
+  max-width: 16px;
+  max-height: 16px;
+}

@@ -250,7 +250,9 @@ export function Sidebar({
             className="workspace-nav-link"
             aria-label="Projects"
           >
-            <WorkspaceIcon name="folder" />
+            <span className="workspace-project-icon" aria-hidden="true">
+              <WorkspaceIcon name="folder" />
+            </span>
           </Link>
         ) : (
           <>
