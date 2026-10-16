@@ -15,9 +15,9 @@ export function ProjectNavigation({ active }: { active: string }) {
   return (
     <nav
       aria-label="Project navigation"
-      className="flex flex-wrap gap-1 border-b border-slate-200 pb-3 mb-6"
+      className="flex flex-wrap items-center gap-1 border-b border-slate-200 pb-3 mb-6"
     >
-      <span className="w-full text-xs text-slate-500 mb-2">
+      <span className="mr-3 max-w-[220px] truncate text-xs font-medium text-slate-500">
         {currentProject.name}
       </span>
       {links.map(([label, href]) => (
@@ -25,7 +25,7 @@ export function ProjectNavigation({ active }: { active: string }) {
           key={label}
           href={href}
           aria-current={label === active ? "page" : undefined}
-          className={`rounded-lg px-3 py-2 text-sm ${label === active ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-500 hover:bg-white/70"}`}
+          className={`rounded-lg px-3 py-2 text-sm ${label === active ? "bg-slate-200/60 font-medium text-slate-900" : "text-slate-500 hover:bg-white/70"}`}
         >
           {label}
         </Link>

@@ -118,7 +118,7 @@ available with `pnpm test:local-folders`.
 
 Home shows recent projects and the selected project's unfinished checklist,
 conversations and agent runs. It replaces the management-statistics dashboard.
-The main navigation is Home, Projects, Files, Search, AI Copilot and Settings.
+The main navigation is Home, Projects, Tasks, Files, Search, AI Copilot and Settings.
 AI Copilot, its modes, Hermes execution, memory and history recall are unchanged.
 
 Project navigation provides Overview, Tasks, Files, Decisions and Settings.
@@ -126,9 +126,8 @@ The overview contains the project brief rather than a software-delivery dashboar
 Use project files for detailed goals, requirements, research and meeting notes.
 Requirements and Meetings are removed from primary navigation and creation
 shortcuts; their existing routes, records and backend contracts are retained.
-Decisions remain available inside the current project. Tasks use a minimal
-add/complete checklist with completed and cancelled items available on demand;
-existing descriptions, due dates and other statuses remain visible.
+Decisions remain available inside the current project. Tasks offer a Kanban board and list view with creation, editing, assignees, priorities,
+due dates and project filters. Review, blocked, done and cancelled stay distinct.
 
 Project Settings contains existing edit/archive/ownership actions and project
 membership controls (add an existing account, change access, confirmed removal).
@@ -170,3 +169,22 @@ Verified with lint, TypeScript, production build, eight existing file tests,
 desktop/mobile inspection, and a real calculator run followed by a normal answer
 in the same thread after reload. The temporary QA conversation was hidden through
 the normal deletion API. No project records or proposals were created by this QA.
+
+
+## Task board refinement (2026-10-16)
+
+Tasks is restored to the sidebar and project navigation. Cards move between
+statuses by dragging or with Space and arrow keys; Enter opens the editor.
+Moving to Blocked asks for a reason before saving. Status changes are persisted;
+manual card ordering within a column is not persisted by the API. Board/list
+preference is remembered on this browser. All-project loading follows pagination.
+
+The sidebar uses quieter neutral styling, and project tabs share one compact row
+that wraps on smaller screens. Copilot behavior is unchanged.
+
+Verification: frontend lint, TypeScript and production build; local browser QA
+covered creation, keyboard movement, edit/save and reload persistence, review and
+blocked states, list preference persistence, and confirmed deletion of the temporary
+QA task. Desktop and 390px mobile layouts were inspected; mobile page width stayed
+at 390px while the board scrolls independently. AIW decision lookup returned no
+architectural decisions. No assigned task was supplied or marked complete.

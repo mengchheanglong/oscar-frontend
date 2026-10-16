@@ -9,6 +9,7 @@ import { AiWorkspaceLogo } from "@/components/ai-workspace-logo";
 import {
   LayoutDashboard,
   Folder,
+  CheckSquare,
   Files,
   Sparkles,
   Search,
@@ -27,19 +28,25 @@ interface SidebarProps {
 const NAV_ITEMS = [
   { label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { label: "Projects", href: "/projects", icon: Folder },
+  { label: "Tasks", href: "/tasks", icon: CheckSquare },
   { label: "Files", href: "/documents", icon: Files },
   { label: "Search", href: "/search", icon: Search },
   { label: "AI Copilot", href: "/assistant", icon: Sparkles },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  mobileOpen,
+  onCloseMobile,
+}) => {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
   // Get user display name and initials
-  const displayName = user?.displayName || user?.fullName || user?.email || "Unknown user";
-  const userRole = user?.professionalRole || user?.systemRole || user?.role || "Unknown role";
+  const displayName =
+    user?.displayName || user?.fullName || user?.email || "Unknown user";
+  const userRole =
+    user?.professionalRole || user?.systemRole || user?.role || "Unknown role";
   const initials =
     displayName
       .split(" ")
@@ -53,7 +60,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
         setUserMenuOpen(false);
       }
     }
@@ -69,21 +79,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
     user?.systemRole === "ADMIN"
       ? "Super Admin"
       : userRole.toUpperCase() === "DEVELOPER"
-      ? "Developer"
-      : userRole.toUpperCase() === "PM"
-      ? "Product Manager"
-      : userRole.toUpperCase() === "QA"
-      ? "QA Engineer"
-      : userRole.toUpperCase() === "INFRASTRUCTURE"
-      ? "Infrastructure"
-      : userRole.toUpperCase() === "DX"
-      ? "UX / DX"
-      : userRole.toUpperCase() === "PRESENTATION"
-      ? "Technical Writer"
-      : userRole;
+        ? "Developer"
+        : userRole.toUpperCase() === "PM"
+          ? "Product Manager"
+          : userRole.toUpperCase() === "QA"
+            ? "QA Engineer"
+            : userRole.toUpperCase() === "INFRASTRUCTURE"
+              ? "Infrastructure"
+              : userRole.toUpperCase() === "DX"
+                ? "UX / DX"
+                : userRole.toUpperCase() === "PRESENTATION"
+                  ? "Technical Writer"
+                  : userRole;
 
   const navContent = (
-    <div className="flex flex-col h-full bg-[#161927] text-white select-none overflow-hidden">
+    <div className="flex flex-col h-full bg-[#191a1c] text-white select-none overflow-hidden">
       {/* Brand Header */}
       <div className="h-16 px-6 flex items-center justify-between shrink-0 border-b border-white/[0.06]">
         <Link
@@ -111,7 +121,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
           const Icon = item.icon;
           const isActive =
             pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
+            (item.href !== "/dashboard" &&
+              pathname.startsWith(item.href + "/"));
 
           return (
             <Link
@@ -121,14 +132,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
               className={cn(
                 "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 group",
                 isActive
-                  ? "bg-codex-accent text-white font-semibold shadow-sm"
-                  : "text-slate-300 hover:text-white hover:bg-white/[0.06]"
+                  ? "bg-white/[0.10] text-white font-semibold"
+                  : "text-slate-300 hover:text-white hover:bg-white/[0.06]",
               )}
             >
               <Icon
                 className={cn(
                   "w-4 h-4 shrink-0 transition-colors",
-                  isActive ? "text-white" : "text-slate-400 group-hover:text-white"
+                  isActive
+                    ? "text-white"
+                    : "text-slate-400 group-hover:text-white",
                 )}
               />
               <span className="truncate">{item.label}</span>
@@ -138,7 +151,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
       </nav>
 
       {/* User Profile Footer - Anchored at the bottom end with Popover Menu */}
-      <div ref={userMenuRef} className="p-3 shrink-0 border-t border-white/[0.08] bg-[#161927] relative">
+      <div
+        ref={userMenuRef}
+        className="p-3 shrink-0 border-t border-white/[0.08] bg-[#191a1c] relative"
+      >
         {/* User Menu Popover */}
         {userMenuOpen && (
           <div className="absolute bottom-full mb-2 inset-x-3 bg-[#181b2a] border border-white/10 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-md">
@@ -151,7 +167,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
                 {user?.email || "Email unavailable"}
               </p>
               <p className="text-[11px] text-slate-300 font-medium mt-1 truncate">
-                Signed in as <span className="text-blue-400 font-semibold">{roleLabel}</span>
+                Signed in as{" "}
+                <span className="text-blue-400 font-semibold">{roleLabel}</span>
               </p>
             </div>
 
@@ -195,7 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
             "w-full flex items-center justify-between gap-3 p-2.5 rounded-xl border transition-all text-left group cursor-pointer",
             userMenuOpen
               ? "bg-white/[0.08] border-white/20 shadow-sm"
-              : "bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07] hover:border-white/15"
+              : "bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07] hover:border-white/15",
           )}
           aria-expanded={userMenuOpen}
           aria-label="User account menu"
@@ -217,7 +234,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
           <ChevronsUpDown
             className={cn(
               "w-4 h-4 text-slate-400 group-hover:text-slate-200 transition-transform duration-150 shrink-0",
-              userMenuOpen && "text-white rotate-180"
+              userMenuOpen && "text-white rotate-180",
             )}
           />
         </button>
@@ -228,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-60 bg-[#161927] border-r border-white/[0.08] flex-col shrink-0 h-screen max-h-screen overflow-hidden sticky top-0 z-30">
+      <aside className="hidden md:flex w-60 bg-[#191a1c] border-r border-white/[0.08] flex-col shrink-0 h-screen max-h-screen overflow-hidden sticky top-0 z-30">
         {navContent}
       </aside>
 
@@ -239,7 +256,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
             className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={onCloseMobile}
           />
-          <aside className="relative w-64 max-w-[85vw] bg-[#161927] border-r border-white/[0.1] flex flex-col h-full z-10 shadow-2xl overflow-hidden">
+          <aside className="relative w-64 max-w-[85vw] bg-[#191a1c] border-r border-white/[0.1] flex flex-col h-full z-10 shadow-2xl overflow-hidden">
             {navContent}
           </aside>
         </div>
