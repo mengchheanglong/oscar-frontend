@@ -976,7 +976,7 @@ export default function AssistantPage() {
             aria-current="page"
             onClick={handleResetChat}
           >
-            New chat
+            New Chat
           </button>
         )}
         {conversations
