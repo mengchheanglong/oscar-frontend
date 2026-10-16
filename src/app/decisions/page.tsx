@@ -70,7 +70,8 @@ interface DecisionItem {
 
 // Initials and colors are derived from recorded users.
 function getInitials(name?: string | null): string {
-  if (!name || name === "Not decided yet" || name === "Unknown user") return "—";
+  if (!name || name === "Not decided yet" || name === "Unknown user")
+    return "—";
   const trimmed = name.trim();
   const parts = trimmed.split(/\s+/);
   if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
@@ -88,8 +89,18 @@ function DecisionStatus({ status }: { status: DecisionItem["status"] }) {
     SUPERSEDED: "bg-slate-100 text-slate-600 border-slate-200",
     REJECTED: "bg-rose-50 text-rose-700 border-rose-200",
   };
-  const labels = { PROPOSED: "Proposed", ACCEPTED: "Accepted", SUPERSEDED: "Superseded" };
-  return <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${styles[status] || styles.PROPOSED}`}>{labels[status] || "Unknown"}</span>;
+  const labels = {
+    PROPOSED: "Proposed",
+    ACCEPTED: "Accepted",
+    SUPERSEDED: "Superseded",
+  };
+  return (
+    <span
+      className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${styles[status] || styles.PROPOSED}`}
+    >
+      {labels[status] || "Unknown"}
+    </span>
+  );
 }
 
 // Project pill styling matching image 1
@@ -98,13 +109,25 @@ function getProjectBadgeStyle(projectName?: string | null) {
     return "bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]";
   }
   const lower = projectName.toLowerCase();
-  if (lower.includes("ai project") || lower.includes("workspace") || lower.includes("aiw")) {
+  if (
+    lower.includes("ai project") ||
+    lower.includes("workspace") ||
+    lower.includes("aiw")
+  ) {
     return "bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]";
   }
-  if (lower.includes("onboarding") || lower.includes("revamp") || lower.includes("client")) {
+  if (
+    lower.includes("onboarding") ||
+    lower.includes("revamp") ||
+    lower.includes("client")
+  ) {
     return "bg-[#fff7ed] text-[#ea580c] border border-[#fed7aa]";
   }
-  if (lower.includes("style") || lower.includes("guide") || lower.includes("internal")) {
+  if (
+    lower.includes("style") ||
+    lower.includes("guide") ||
+    lower.includes("internal")
+  ) {
     return "bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]";
   }
   return "bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]";
@@ -149,12 +172,14 @@ export default function DecisionsPage() {
   const [loading, setLoading] = useState(true);
 
   // View state: 'list' | 'detail' | 'new' | 'edit'
-  const [viewState, setViewState] = useState<"list" | "detail" | "new" | "edit">("list");
+  const [viewState, setViewState] = useState<
+    "list" | "detail" | "new" | "edit"
+  >("list");
   const [activeDec, setActiveDec] = useState<DecisionItem | null>(null);
 
   // Filter & Search
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
-    currentProject ? currentProject.id : "ALL"
+    currentProject ? currentProject.id : "ALL",
   );
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -168,12 +193,16 @@ export default function DecisionsPage() {
   // Edit Form state
   const [editTitle, setEditTitle] = useState("");
   const [editRationale, setEditRationale] = useState("");
-  const [editStatus, setEditStatus] = useState<"PROPOSED" | "ACCEPTED" | "SUPERSEDED">("ACCEPTED");
+  const [editStatus, setEditStatus] = useState<
+    "PROPOSED" | "ACCEPTED" | "SUPERSEDED"
+  >("ACCEPTED");
   const [submittingEdit, setSubmittingEdit] = useState(false);
 
   // AI Task Proposal State
   const [activeProposal, setActiveProposal] = useState<any>(null);
-  const [generatingProposalDecId, setGeneratingProposalDecId] = useState<string | null>(null);
+  const [generatingProposalDecId, setGeneratingProposalDecId] = useState<
+    string | null
+  >(null);
 
   // Revisions Modal state
   const [revisionsList, setRevisionsList] = useState<any[]>([]);
@@ -181,7 +210,9 @@ export default function DecisionsPage() {
   const [loadingRevisions, setLoadingRevisions] = useState(false);
 
   // Delete confirmation state
-  const [deleteConfirmDec, setDeleteConfirmDec] = useState<DecisionItem | null>(null);
+  const [deleteConfirmDec, setDeleteConfirmDec] = useState<DecisionItem | null>(
+    null,
+  );
   const [deletingDec, setDeletingDec] = useState(false);
 
   // Load all decisions across all projects
@@ -198,8 +229,8 @@ export default function DecisionsPage() {
       const activeProjects = currentProject
         ? [currentProject]
         : projects.length > 0
-        ? projects
-        : [];
+          ? projects
+          : [];
 
       if (activeProjects.length === 0) {
         setItems([]);
@@ -220,7 +251,7 @@ export default function DecisionsPage() {
           } catch {
             return [];
           }
-        })
+        }),
       );
 
       const flattened = decisionsResults.flat();
@@ -228,10 +259,14 @@ export default function DecisionsPage() {
 
       // 4. Load requirements for current project
       if (currentProject) {
-        const reqs = await api.requirements.list(currentProject.id).catch(() => []);
+        const reqs = await api.requirements
+          .list(currentProject.id)
+          .catch(() => []);
         setRequirements(reqs || []);
       } else {
-        const reqsRes = await api.requirements.listAll({ pageSize: 100 }).catch(() => ({ data: [] }));
+        const reqsRes = await api.requirements
+          .listAll({ pageSize: 100 })
+          .catch(() => ({ data: [] }));
         setRequirements(reqsRes.data || []);
       }
     } catch (err: any) {
@@ -277,7 +312,7 @@ export default function DecisionsPage() {
           (d) =>
             d.id === targetId ||
             d.id.toLowerCase() === targetId.toLowerCase() ||
-            d.displayKey?.toLowerCase() === targetId.toLowerCase()
+            d.displayKey?.toLowerCase() === targetId.toLowerCase(),
         );
         if (found) {
           openDetailView(found);
@@ -301,7 +336,13 @@ export default function DecisionsPage() {
         const matchText = (item.decisionText || "").toLowerCase().includes(q);
         const matchRationale = (item.rationale || "").toLowerCase().includes(q);
         const matchId = (item.id || "").toLowerCase() === q;
-        if (!matchTitle && !matchKey && !matchText && !matchRationale && !matchId) {
+        if (
+          !matchTitle &&
+          !matchKey &&
+          !matchText &&
+          !matchRationale &&
+          !matchId
+        ) {
           return false;
         }
       }
@@ -334,7 +375,7 @@ export default function DecisionsPage() {
     setCreateProjectId(
       selectedProjectId !== "ALL"
         ? selectedProjectId
-        : currentProject?.id || projects[0]?.id || ""
+        : currentProject?.id || projects[0]?.id || "",
     );
     setCreateRequirementId("");
     setViewState("new");
@@ -368,7 +409,8 @@ export default function DecisionsPage() {
       showToast("Please enter a decision title.", "error");
       return;
     }
-    const targetProjId = createProjectId || currentProject?.id || projects[0]?.id;
+    const targetProjId =
+      createProjectId || currentProject?.id || projects[0]?.id;
     if (!targetProjId) {
       showToast("Please select a project.", "error");
       return;
@@ -383,7 +425,10 @@ export default function DecisionsPage() {
         requirementId: createRequirementId || undefined,
       });
 
-      showToast(`Recorded decision "${created.title || createTitle}" successfully!`, "success");
+      showToast(
+        `Recorded decision "${created.title || createTitle}" successfully!`,
+        "success",
+      );
       await loadData();
 
       // Open detail view for created item
@@ -391,9 +436,11 @@ export default function DecisionsPage() {
         ...created,
         projectId: targetProjId,
         projectName:
-          projects.find((p) => p.id === targetProjId)?.name || currentProject?.name,
+          projects.find((p) => p.id === targetProjId)?.name ||
+          currentProject?.name,
         projectKey:
-          projects.find((p) => p.id === targetProjId)?.key || currentProject?.key,
+          projects.find((p) => p.id === targetProjId)?.key ||
+          currentProject?.key,
       };
       openDetailView(newItem);
     } catch (err: any) {
@@ -414,13 +461,17 @@ export default function DecisionsPage() {
 
     setSubmittingEdit(true);
     try {
-      const updated = await api.decisions.update(activeDec.projectId, activeDec.id, {
-        version: activeDec.version,
-        title: editTitle.trim(),
-        decisionText: editTitle.trim(),
-        rationale: editRationale.trim() || undefined,
-        status: editStatus,
-      });
+      const updated = await api.decisions.update(
+        activeDec.projectId,
+        activeDec.id,
+        {
+          version: activeDec.version,
+          title: editTitle.trim(),
+          decisionText: editTitle.trim(),
+          rationale: editRationale.trim() || undefined,
+          status: editStatus,
+        },
+      );
 
       showToast(`Updated decision "${updated.title}" successfully!`, "success");
       await loadData();
@@ -445,7 +496,10 @@ export default function DecisionsPage() {
     if (!deleteConfirmDec) return;
     setDeletingDec(true);
     try {
-      await api.decisions.delete(deleteConfirmDec.projectId, deleteConfirmDec.id);
+      await api.decisions.delete(
+        deleteConfirmDec.projectId,
+        deleteConfirmDec.id,
+      );
       showToast("Decision deleted successfully", "success");
       setDeleteConfirmDec(null);
       setActiveDec(null);
@@ -462,9 +516,15 @@ export default function DecisionsPage() {
   const handleGenerateTaskProposal = async (dec: DecisionItem) => {
     setGeneratingProposalDecId(dec.id);
     try {
-      const res = await api.ai.generateDecisionTaskProposal(dec.projectId, dec.id);
+      const res = await api.ai.generateDecisionTaskProposal(
+        dec.projectId,
+        dec.id,
+      );
       setActiveProposal(res.proposal);
-      showToast("Generated AI task proposal! Review the suggested breakdown.", "success");
+      showToast(
+        "Generated AI task proposal! Review the suggested breakdown.",
+        "success",
+      );
     } catch (err: any) {
       showToast(err.message || "Failed to generate AI task proposal", "error");
     } finally {
@@ -489,21 +549,34 @@ export default function DecisionsPage() {
   // Helper to determine decider display name
   const getDeciderName = (item: DecisionItem): string => {
     if (!item.decidedBy && !item.decider) return "Not decided yet";
-    if (item.decider?.displayName || item.decider?.name || item.decider?.email) return item.decider.displayName || item.decider.name || item.decider.email || "Unknown user";
-    const member = members.find((person) => (person.userId || person.id) === item.decidedBy);
+    if (item.decider?.displayName || item.decider?.name || item.decider?.email)
+      return (
+        item.decider.displayName ||
+        item.decider.name ||
+        item.decider.email ||
+        "Unknown user"
+      );
+    const member = members.find(
+      (person) => (person.userId || person.id) === item.decidedBy,
+    );
     return member?.displayName || member?.email || "Unknown user";
   };
 
   const getProposerName = (item: DecisionItem): string => {
     const creator = item.creator;
-    if (creator?.displayName || creator?.name || creator?.email) return creator.displayName || creator.name || creator.email || "Unknown user";
-    const member = members.find((person) => (person.userId || person.id) === item.createdBy);
+    if (creator?.displayName || creator?.name || creator?.email)
+      return (
+        creator.displayName || creator.name || creator.email || "Unknown user"
+      );
+    const member = members.find(
+      (person) => (person.userId || person.id) === item.createdBy,
+    );
     return member?.displayName || member?.email || "Unknown user";
   };
 
   return (
     <AppLayout>
-      <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="decisions-workspace space-y-6 max-w-5xl mx-auto pb-12">
         {/* ==================================================================== */}
         {/* VIEW 1: DECISIONS LIST VIEW (IMAGE 1)                                */}
         {/* ==================================================================== */}
@@ -512,21 +585,12 @@ export default function DecisionsPage() {
             {/* Breadcrumb & Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-                  <Link
-                    href="/dashboard"
-                    className="text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    Home
-                  </Link>
-                  <span>/</span>
-                  <span className="text-slate-800 font-medium">Decisions</span>
-                </nav>
-                <h1 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 tracking-tight">
+                <h1 className="text-xl font-semibold text-slate-900 tracking-tight">
                   Decisions
                 </h1>
                 <p className="text-xs text-slate-500">
-                  {items.length} decisions across {activeProjectsCount} active project
+                  {items.length} decisions across {activeProjectsCount} active
+                  project
                   {activeProjectsCount === 1 ? "" : "s"}.
                 </p>
               </div>
@@ -547,7 +611,15 @@ export default function DecisionsPage() {
               {/* Refined Project Filter Dropdown */}
               <DropdownSelect
                 value={selectedProjectId}
-                onChange={(id) => { const project = projects.find(p => p.id === id); if (project) { setCurrentProject(project); setSelectedProjectId(id); setViewState("list"); setActiveDec(null); } }}
+                onChange={(id) => {
+                  const project = projects.find((p) => p.id === id);
+                  if (project) {
+                    setCurrentProject(project);
+                    setSelectedProjectId(id);
+                    setViewState("list");
+                    setActiveDec(null);
+                  }
+                }}
                 prefix="Project:"
                 options={[
                   ...projects.map((p) => ({
@@ -606,7 +678,10 @@ export default function DecisionsPage() {
                   <tbody className="divide-y divide-slate-100">
                     {loading ? (
                       <tr>
-                        <td colSpan={5} className="py-12 text-center text-xs text-slate-400">
+                        <td
+                          colSpan={5}
+                          className="py-12 text-center text-xs text-slate-400"
+                        >
                           Loading decisions...
                         </td>
                       </tr>
@@ -616,11 +691,13 @@ export default function DecisionsPage() {
                           <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
                             <FileCheck2 className="w-5 h-5" />
                           </div>
-                          <p className="text-xs font-semibold text-slate-700">No decisions found</p>
+                          <p className="text-xs font-semibold text-slate-700">
+                            No decisions found
+                          </p>
                           <p className="text-[11px] text-slate-400 mt-0.5">
                             {searchQuery
                               ? "Try adjusting your search query."
-                              : "Click '+ New Decision' to record your first architectural decision."}
+                              : "Record a choice, its reasons, and what you expect to happen."}
                           </p>
                         </td>
                       </tr>
@@ -630,7 +707,9 @@ export default function DecisionsPage() {
                         const proposerName = getProposerName(item);
                         const initials = getInitials(proposerName);
                         const avatarClass = getAvatarColor(proposerName);
-                        const projectPillClass = getProjectBadgeStyle(item.projectName);
+                        const projectPillClass = getProjectBadgeStyle(
+                          item.projectName,
+                        );
                         const dateText = formatDecisionDate(item.createdAt);
 
                         return (
@@ -646,7 +725,11 @@ export default function DecisionsPage() {
                               </span>
                               <div className="mt-1.5 flex items-center gap-2">
                                 <DecisionStatus status={item.status} />
-                                {item.displayKey && <span className="text-[10px] font-mono text-slate-400">{item.displayKey}</span>}
+                                {item.displayKey && (
+                                  <span className="text-[10px] font-mono text-slate-400">
+                                    {item.displayKey}
+                                  </span>
+                                )}
                               </div>
                             </td>
 
@@ -675,11 +758,21 @@ export default function DecisionsPage() {
 
                             <td className="py-3.5 px-6">
                               {item.status === "PROPOSED" ? (
-                                <span className="text-xs text-slate-500">Awaiting review</span>
+                                <span className="text-xs text-slate-500">
+                                  Awaiting review
+                                </span>
                               ) : (
                                 <div className="space-y-1">
-                                  <span className="text-xs font-medium text-slate-700">{item.decidedBy || item.decider ? deciderName : "No approval recorded"}</span>
-                                  {item.decidedAt && <p className="text-[10px] text-slate-400">{formatDecisionDate(item.decidedAt)}</p>}
+                                  <span className="text-xs font-medium text-slate-700">
+                                    {item.decidedBy || item.decider
+                                      ? deciderName
+                                      : "No approval recorded"}
+                                  </span>
+                                  {item.decidedAt && (
+                                    <p className="text-[10px] text-slate-400">
+                                      {formatDecisionDate(item.decidedAt)}
+                                    </p>
+                                  )}
                                 </div>
                               )}
                             </td>
@@ -764,23 +857,38 @@ export default function DecisionsPage() {
               <div className="lg:col-span-8 space-y-5">
                 {/* Rationale Card */}
                 <div className="bg-white border border-codex-border/80 rounded-2xl p-6 shadow-xs space-y-3">
-                  <h2 className="text-sm font-bold text-slate-900 font-serif">Rationale</h2>
+                  <h2 className="text-sm font-bold text-slate-900 font-serif">
+                    Rationale
+                  </h2>
                   <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {activeDec.rationale ||
-                      "No rationale recorded."}
+                    {activeDec.rationale || "No rationale recorded."}
                   </p>
                 </div>
 
                 {/* Related items Card */}
                 <div className="bg-white border border-codex-border/80 rounded-2xl p-6 shadow-xs space-y-3">
-                  <h2 className="text-sm font-bold text-slate-900 font-serif">Related items</h2>
+                  <h2 className="text-sm font-bold text-slate-900 font-serif">
+                    Related items
+                  </h2>
                   <div className="flex items-center gap-2 flex-wrap">
                     {activeDec.requirementId ? (
-                      <Link href={`/requirements?id=${activeDec.requirementId}`} className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs text-blue-600">
+                      <Link
+                        href={`/requirements?id=${activeDec.requirementId}`}
+                        className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs text-blue-600"
+                      >
                         <FileCheck2 className="h-3 w-3" />
-                        {activeDec.requirement?.displayKey || requirements.find((requirement) => requirement.id === activeDec.requirementId)?.displayKey || "Linked requirement"}
+                        {activeDec.requirement?.displayKey ||
+                          requirements.find(
+                            (requirement) =>
+                              requirement.id === activeDec.requirementId,
+                          )?.displayKey ||
+                          "Linked requirement"}
                       </Link>
-                    ) : <span className="text-xs text-slate-500">No linked requirement.</span>}
+                    ) : (
+                      <span className="text-xs text-slate-500">
+                        No linked requirement.
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -792,7 +900,8 @@ export default function DecisionsPage() {
                       <span>AI Task Breakdown</span>
                     </div>
                     <p className="text-[11px] text-slate-500">
-                      Use DeepSeek V4 Pro to propose engineering tasks directly from this ADR.
+                      Use DeepSeek V4 Pro to propose engineering tasks directly
+                      from this ADR.
                     </p>
                   </div>
 
@@ -827,15 +936,19 @@ export default function DecisionsPage() {
               {/* Right Column (Details Card matching Image 2) */}
               <div className="lg:col-span-4 space-y-4">
                 <div className="bg-white border border-codex-border/80 rounded-2xl p-6 shadow-xs space-y-4">
-                  <h2 className="text-sm font-bold text-slate-900 font-serif">Details</h2>
+                  <h2 className="text-sm font-bold text-slate-900 font-serif">
+                    Details
+                  </h2>
 
                   <div className="space-y-3.5 pt-1">
                     {/* Project */}
                     <div className="flex items-center justify-between text-xs gap-2">
-                      <span className="text-slate-500 font-medium">Project</span>
+                      <span className="text-slate-500 font-medium">
+                        Project
+                      </span>
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium ${getProjectBadgeStyle(
-                          activeDec.projectName
+                          activeDec.projectName,
                         )}`}
                       >
                         {activeDec.projectName || "Unknown project"}
@@ -843,15 +956,27 @@ export default function DecisionsPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-xs gap-2">
-                      <span className="text-slate-500 font-medium">Proposed by</span>
+                      <span className="text-slate-500 font-medium">
+                        Proposed by
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${getAvatarColor(getProposerName(activeDec))}`}>{getInitials(getProposerName(activeDec))}</span>
-                        <span className="text-slate-800 font-semibold">{getProposerName(activeDec)}</span>
+                        <span
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${getAvatarColor(getProposerName(activeDec))}`}
+                        >
+                          {getInitials(getProposerName(activeDec))}
+                        </span>
+                        <span className="text-slate-800 font-semibold">
+                          {getProposerName(activeDec)}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between text-xs gap-2">
-                      <span className="text-slate-500 font-medium">Created</span>
-                      <span className="text-slate-800 font-medium">{formatDecisionDate(activeDec.createdAt)}</span>
+                      <span className="text-slate-500 font-medium">
+                        Created
+                      </span>
+                      <span className="text-slate-800 font-medium">
+                        {formatDecisionDate(activeDec.createdAt)}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-xs gap-2 pt-3 border-t border-slate-100">
                       <span className="text-slate-500 font-medium">Status</span>
@@ -859,15 +984,31 @@ export default function DecisionsPage() {
                     </div>
                     {activeDec.status === "PROPOSED" ? (
                       <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs text-amber-800">
-                        Awaiting review. The approver and approval date will appear when this proposal is accepted.
+                        Awaiting review. The approver and approval date will
+                        appear when this proposal is accepted.
                       </div>
                     ) : (
                       <>
                         <div className="flex items-center justify-between text-xs gap-2">
-                          <span className="text-slate-500 font-medium">Approved by</span>
-                          <span className="text-slate-800 font-medium">{activeDec.decidedBy || activeDec.decider ? getDeciderName(activeDec) : "No approval recorded"}</span>
+                          <span className="text-slate-500 font-medium">
+                            Approved by
+                          </span>
+                          <span className="text-slate-800 font-medium">
+                            {activeDec.decidedBy || activeDec.decider
+                              ? getDeciderName(activeDec)
+                              : "No approval recorded"}
+                          </span>
                         </div>
-                        {activeDec.decidedAt && <div className="flex items-center justify-between text-xs gap-2"><span className="text-slate-500 font-medium">Approved on</span><span className="text-slate-800 font-medium">{formatDecisionDate(activeDec.decidedAt)}</span></div>}
+                        {activeDec.decidedAt && (
+                          <div className="flex items-center justify-between text-xs gap-2">
+                            <span className="text-slate-500 font-medium">
+                              Approved on
+                            </span>
+                            <span className="text-slate-800 font-medium">
+                              {formatDecisionDate(activeDec.decidedAt)}
+                            </span>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
@@ -920,7 +1061,9 @@ export default function DecisionsPage() {
               <form onSubmit={handleCreateSubmit} className="space-y-5">
                 {/* Decision title */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-800">Decision</label>
+                  <label className="block text-xs font-semibold text-slate-800">
+                    Decision
+                  </label>
                   <input
                     type="text"
                     required
@@ -933,7 +1076,9 @@ export default function DecisionsPage() {
 
                 {/* Rationale */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-800">Rationale</label>
+                  <label className="block text-xs font-semibold text-slate-800">
+                    Rationale
+                  </label>
                   <textarea
                     rows={4}
                     value={createRationale}
@@ -947,7 +1092,9 @@ export default function DecisionsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                   {/* Project */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-800">Project</label>
+                    <label className="block text-xs font-semibold text-slate-800">
+                      Project
+                    </label>
                     <DropdownSelect
                       value={createProjectId}
                       onChange={setCreateProjectId}
@@ -962,7 +1109,10 @@ export default function DecisionsPage() {
                     />
                   </div>
 
-                  <p className="text-xs leading-relaxed text-slate-500 sm:col-span-2">The system records who accepts a decision and when it is accepted.</p>
+                  <p className="text-xs leading-relaxed text-slate-500 sm:col-span-2">
+                    The system records who accepts a decision and when it is
+                    accepted.
+                  </p>
                 </div>
 
                 {/* Bottom Actions matching Image 3 */}
@@ -1031,7 +1181,9 @@ export default function DecisionsPage() {
               <form onSubmit={handleEditSubmit} className="space-y-5">
                 {/* Decision title */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-800">Decision</label>
+                  <label className="block text-xs font-semibold text-slate-800">
+                    Decision
+                  </label>
                   <input
                     type="text"
                     required
@@ -1044,7 +1196,9 @@ export default function DecisionsPage() {
 
                 {/* Rationale */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold text-slate-800">Rationale</label>
+                  <label className="block text-xs font-semibold text-slate-800">
+                    Rationale
+                  </label>
                   <textarea
                     rows={4}
                     value={editRationale}
@@ -1058,11 +1212,18 @@ export default function DecisionsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                   {/* Project */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-slate-800">Project</label>
-                    <p className="flex h-10 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700">{activeDec.projectName || "Unknown project"}</p>
+                    <label className="block text-xs font-semibold text-slate-800">
+                      Project
+                    </label>
+                    <p className="flex h-10 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700">
+                      {activeDec.projectName || "Unknown project"}
+                    </p>
                   </div>
 
-                  <p className="text-xs leading-relaxed text-slate-500 sm:col-span-2">The system records who accepts a decision and when it is accepted.</p>
+                  <p className="text-xs leading-relaxed text-slate-500 sm:col-span-2">
+                    The system records who accepts a decision and when it is
+                    accepted.
+                  </p>
                 </div>
 
                 {/* Bottom Actions matching Image 4 */}
@@ -1108,7 +1269,10 @@ export default function DecisionsPage() {
           proposal={activeProposal}
           projectId={activeDec?.projectId || currentProject?.id || ""}
           onConfirmed={async () => {
-            showToast("Successfully approved and created tasks from proposal!", "success");
+            showToast(
+              "Successfully approved and created tasks from proposal!",
+              "success",
+            );
             setActiveProposal(null);
           }}
         />
@@ -1135,7 +1299,9 @@ export default function DecisionsPage() {
 
             <div className="p-4 max-h-[60vh] overflow-y-auto space-y-3">
               {loadingRevisions ? (
-                <div className="py-8 text-center text-xs text-slate-400">Loading revisions...</div>
+                <div className="py-8 text-center text-xs text-slate-400">
+                  Loading revisions...
+                </div>
               ) : revisionsList.length === 0 ? (
                 <div className="py-8 text-center text-xs text-slate-400">
                   No revisions recorded for this decision yet.
@@ -1154,9 +1320,13 @@ export default function DecisionsPage() {
                         {formatDecisionDate(rev.createdAt)}
                       </span>
                     </div>
-                    <div className="text-xs font-semibold text-slate-800">{rev.title}</div>
+                    <div className="text-xs font-semibold text-slate-800">
+                      {rev.title}
+                    </div>
                     {rev.rationale && (
-                      <p className="text-[11px] text-slate-600 line-clamp-2">{rev.rationale}</p>
+                      <p className="text-[11px] text-slate-600 line-clamp-2">
+                        {rev.rationale}
+                      </p>
                     )}
                   </div>
                 ))

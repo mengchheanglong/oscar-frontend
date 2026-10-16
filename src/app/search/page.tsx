@@ -86,7 +86,9 @@ export default function SearchPage() {
   const [results, setResults] = useState<any[]>([]);
   const [meta, setMeta] = useState<any>(null);
   const [selectedType, setSelectedType] = useState<string>("");
-  const [searchMode, setSearchMode] = useState<"hybrid" | "semantic" | "keyword">("hybrid");
+  const [searchMode, setSearchMode] = useState<
+    "hybrid" | "semantic" | "keyword"
+  >("hybrid");
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -94,7 +96,7 @@ export default function SearchPage() {
     async (
       searchTerm: string,
       typeFilter?: string,
-      mode: "hybrid" | "semantic" | "keyword" = searchMode
+      mode: "hybrid" | "semantic" | "keyword" = searchMode,
     ) => {
       if (!currentProject || !searchTerm.trim()) return;
       setLoading(true);
@@ -106,7 +108,7 @@ export default function SearchPage() {
           typeFilter || undefined,
           1,
           25,
-          mode
+          mode,
         );
         setResults(envelope.data || []);
         setMeta(envelope.meta || null);
@@ -116,7 +118,7 @@ export default function SearchPage() {
         setLoading(false);
       }
     },
-    [currentProject, searchMode]
+    [currentProject, searchMode],
   );
 
   // Read URL query parameter (?q= or ?search=) on load and execute search
@@ -130,7 +132,9 @@ export default function SearchPage() {
         const typeParam = params.get("type");
         const modeParam = params.get("mode") as any;
         const validMode =
-          modeParam === "semantic" || modeParam === "keyword" ? modeParam : "hybrid";
+          modeParam === "semantic" || modeParam === "keyword"
+            ? modeParam
+            : "hybrid";
         if (modeParam) setSearchMode(validMode);
         if (typeParam) setSelectedType(typeParam);
         if (currentProject) {
@@ -184,7 +188,7 @@ export default function SearchPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 max-w-5xl mx-auto pb-12">
+      <div className="search-workspace space-y-6 max-w-4xl mx-auto pb-12">
         {/* Header */}
         <div className="border-b border-codex-border pb-4">
           <div className="flex items-center gap-2.5">
@@ -192,11 +196,11 @@ export default function SearchPage() {
               <SearchIcon className="w-4 h-4" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-codex-text font-serif">
-              Universal Search
+              Search
             </h1>
           </div>
           <p className="text-xs text-codex-muted mt-1">
-            Instant multi-entity search across requirements, decisions, tasks, meetings, and documents with faceted counts.
+            Find files, decisions, and tasks in your project.
           </p>
         </div>
 
@@ -204,7 +208,7 @@ export default function SearchPage() {
         {!currentProject && projects.length > 0 && (
           <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
             <span className="font-medium">
-              Universal search requires a target project. Select a workspace:
+              Choose a project for detailed results:
             </span>
             <div className="flex flex-wrap gap-1.5">
               {projects.map((p) => (
@@ -223,60 +227,57 @@ export default function SearchPage() {
 
         {/* Search Mode Selector & Input Bar */}
         <div className="space-y-2.5">
-          {/* Search Mode Selector */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Search Engine:</span>
-              <div className="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl shadow-xs gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleModeChange("hybrid")}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                    searchMode === "hybrid"
-                      ? "bg-[#161927] text-white shadow-xs font-semibold"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                  title="Reciprocal Rank Fusion: combines semantic vectors and keyword FTS for maximum recall"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Hybrid (RRF Fusion)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleModeChange("semantic")}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                    searchMode === "semantic"
-                      ? "bg-[#161927] text-white shadow-xs font-semibold"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                  title="Cosine similarity over OpenAI 1536-dimensional pgvector embeddings"
-                >
-                  <Cpu className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Semantic (pgvector)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleModeChange("keyword")}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
-                    searchMode === "keyword"
-                      ? "bg-[#161927] text-white shadow-xs font-semibold"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                  title="Exact PostgreSQL full-text search"
-                >
-                  <SearchIcon className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Keyword (FTS)</span>
-                </button>
+          <details className="search-options">
+            <summary>Search options</summary> {/* Search Mode Selector */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                  Match:
+                </span>
+                <div className="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl shadow-xs gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange("hybrid")}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+                      searchMode === "hybrid"
+                        ? "bg-[#161927] text-white shadow-xs font-semibold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                    title="Reciprocal Rank Fusion: combines semantic vectors and keyword FTS for maximum recall"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Best match</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange("semantic")}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+                      searchMode === "semantic"
+                        ? "bg-[#161927] text-white shadow-xs font-semibold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                    title="Cosine similarity over OpenAI 1536-dimensional pgvector embeddings"
+                  >
+                    <Cpu className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Meaning</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange("keyword")}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+                      searchMode === "keyword"
+                        ? "bg-[#161927] text-white shadow-xs font-semibold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                    title="Exact PostgreSQL full-text search"
+                  >
+                    <SearchIcon className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Exact words</span>
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div className="text-[11px] text-slate-400 font-mono hidden sm:block">
-              {searchMode === "hybrid" && "RRF Rank Fusion • Cosine + ts_rank"}
-              {searchMode === "semantic" && "pgvector text-embedding-3-small"}
-              {searchMode === "keyword" && "PostgreSQL Full-Text Search"}
-            </div>
-          </div>
-
+          </details>
           {/* Search Input Bar */}
           <form onSubmit={handleSearch} className="flex gap-2.5">
             <div className="relative flex-1">
@@ -435,29 +436,45 @@ export default function SearchPage() {
               Instant Workspace Search
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Search by title, project key, or text content across all 5 workspace modules in{" "}
-              <span className="text-codex-accent font-semibold">{currentProject?.name}</span>.
+              Search by title, project key, or text content across all 5
+              workspace modules in{" "}
+              <span className="text-codex-accent font-semibold">
+                {currentProject?.name}
+              </span>
+              .
             </p>
           </div>
         ) : results.length === 0 ? (
           <div className="text-center py-16 p-8 rounded-2xl border border-dashed border-slate-200 bg-white space-y-3">
-            <h3 className="text-sm font-semibold text-slate-900 font-serif">No Matching Records Found</h3>
+            <h3 className="text-sm font-semibold text-slate-900 font-serif">
+              No Matching Records Found
+            </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              No results found for &quot;<span className="text-slate-900 font-medium">{query}</span>&quot;. Try different keywords or select another filter tab.
+              No results found for &quot;
+              <span className="text-slate-900 font-medium">{query}</span>&quot;.
+              Try different keywords or select another filter tab.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="text-[11px] font-mono text-slate-400">
-              Found {results.length} result(s) for &quot;<span className="text-slate-700 font-semibold">{query}</span>&quot;
+              Found {results.length} result(s) for &quot;
+              <span className="text-slate-700 font-semibold">{query}</span>
+              &quot;
             </div>
             {results.map((item, idx) => {
               const Icon = TYPE_ICONS[item.type] || FileText;
               const baseLink = TYPE_LINKS[item.type] || "/dashboard";
               const searchParam = item.key || item.title;
-              const externalUrl = item.type === "GITHUB_ISSUE" && item.metadata?.htmlUrl ? (item.metadata.htmlUrl as string) : null;
-              const targetUrl = externalUrl || `${baseLink}?id=${item.id}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ""}`;
-              const colorClass = TYPE_COLORS[item.type] || "bg-slate-100 text-slate-700";
+              const externalUrl =
+                item.type === "GITHUB_ISSUE" && item.metadata?.htmlUrl
+                  ? (item.metadata.htmlUrl as string)
+                  : null;
+              const targetUrl =
+                externalUrl ||
+                `${baseLink}?id=${item.id}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ""}`;
+              const colorClass =
+                TYPE_COLORS[item.type] || "bg-slate-100 text-slate-700";
 
               return (
                 <Card
@@ -467,7 +484,9 @@ export default function SearchPage() {
                   <CardContent className="p-4 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono uppercase font-semibold ${colorClass}`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono uppercase font-semibold ${colorClass}`}
+                        >
                           <Icon className="w-3 h-3 mr-1" />
                           <span>{item.type}</span>
                         </span>
@@ -499,7 +518,7 @@ export default function SearchPage() {
                           href={`/assistant?prompt=${encodeURIComponent(
                             `Tell me about ${item.type.toLowerCase()} [${item.key || ""}]: "${item.title}". Context: "${
                               item.snippet || ""
-                            }".`
+                            }".`,
                           )}`}
                         >
                           <Button
@@ -513,9 +532,7 @@ export default function SearchPage() {
                           </Button>
                         </Link>
 
-                        <Link
-                          href={targetUrl}
-                        >
+                        <Link href={targetUrl}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -536,7 +553,9 @@ export default function SearchPage() {
 
                     <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
                       <span>{formatDate(item.createdAt)}</span>
-                      <span className="text-slate-400">ID: {item.id.substring(0, 8)}...</span>
+                      <span className="text-slate-400">
+                        ID: {item.id.substring(0, 8)}...
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

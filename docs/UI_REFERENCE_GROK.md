@@ -104,3 +104,32 @@ chat rename/pin after reload, instruction save without losing the draft, project
 rename/icon, sharing, and archive/restore. Three synthetic QA projects and their
 stored files were removed after verification. No live AI calls were needed for
 these UI checks. Main and deployment configuration remain unchanged.
+
+## Search and supporting pages (2026-10-16)
+
+Global search lives in the sidebar and opens a compact native dialog with All,
+Chats, and Files filters. It loads the user's own conversation titles and searches
+authorized project records across projects. Results open their owning project;
+chat links select the saved conversation without generating another answer.
+Requests ignore stale responses after changes or close, and partial failures are
+shown explicitly. Keyboard navigation, Enter, Escape, and Ctrl/Cmd+K are retained.
+The dedicated search page still provides project-level detailed results, with
+matching options collapsed by default.
+
+Removed the old global navbar, search strip, project switcher and inbox entry.
+A mobile navigation button remains. Chat project/memory controls are compact.
+Decisions uses the same typography, restrained controls and table treatment;
+mobile rows prioritize the decision itself. Team has no summary statistic cards,
+and its directory/invitation controls use the shared styling.
+
+Settings now owns the integration console directly, including Hermes, GitHub and
+MCP configuration. `/integrations` and `/settings/integrations` render that Settings
+shell; they no longer show another app layout or redirect to a separate console.
+The existing Settings and Team implementation is included as part of this change.
+Mobile Settings uses a compact section selector rather than a full navigation rail.
+
+Verification: frontend lint, TypeScript and production build; browser checks for
+sidebar search, saved-chat opening, responsive Decisions/Team, embedded integration
+navigation and mobile search. No backend contracts, credentials or database
+configuration changed. AIW accepted-decision lookup returned none; no task assigned.
+Local develop only, without pushing or deploying.

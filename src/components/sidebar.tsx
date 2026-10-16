@@ -156,20 +156,6 @@ export function Sidebar({
           </Link>
         )}
         <div className="flex items-center gap-1">
-          {!compact && (
-            <button
-              type="button"
-              aria-label="Search workspace"
-              className="workspace-icon-button"
-              onClick={() => {
-                onOpenSearch?.();
-                onCloseMobile?.();
-              }}
-            >
-              <WorkspaceIcon name="search" />
-            </button>
-          )}
-
           <button
             type="button"
             onClick={mobileOpen ? onCloseMobile : toggleCollapsed}
@@ -215,6 +201,19 @@ export function Sidebar({
             {!compact && <span>Chat</span>}
           </Link>
         )}
+        <button
+          type="button"
+          onClick={() => {
+            onOpenSearch?.();
+            onCloseMobile?.();
+          }}
+          title="Global search"
+          aria-label="Global search"
+          className="workspace-nav-link"
+        >
+          <WorkspaceIcon name="search" />
+          {!compact && <span>Search</span>}
+        </button>
         {navLinks.map((link) => {
           const isActive =
             pathname === link.href || pathname.startsWith(`${link.href}/`);

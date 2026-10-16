@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/auth-context";
-import { Navbar } from "@/components/navbar";
+import { WorkspaceIcon } from "@/components/workspace-icons";
 import { ProjectSidePanel } from "@/components/project-workspace";
 import { Sidebar } from "@/components/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -101,16 +101,17 @@ export function AppLayout({
         onOpenSearch={() => setCommandPaletteOpen(true)}
       />
 
-      {/* Main Column - fixed height with navbar and scrollable canvas */}
+      {/* Main column with independent page scrolling */}
       <div className="flex-1 flex flex-col h-screen max-h-screen min-w-0 overflow-hidden">
-        {/* Top Navbar Header - hidden on full-bleed pages like /assistant */}
         {!isFullBleed && (
-          <div className="shrink-0">
-            <Navbar
-              onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
-              onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-            />
-          </div>
+          <button
+            type="button"
+            aria-label="Open navigation"
+            onClick={() => setMobileMenuOpen(true)}
+            className="workspace-page-navigation workspace-icon-button md:hidden"
+          >
+            <WorkspaceIcon name="panel" />
+          </button>
         )}
 
         {/* Global Command Palette */}
@@ -135,7 +136,8 @@ export function AppLayout({
             pathname !== "/profile" &&
             !pathname.startsWith("/settings") &&
             pathname !== "/team" &&
-            pathname !== "/assistant" ? (
+            pathname !== "/assistant" &&
+            pathname !== "/search" ? (
               <div className="flex flex-col items-center justify-center py-20 text-center space-y-5 max-w-md mx-auto">
                 <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 text-codex-accent flex items-center justify-center shadow-sm">
                   <FolderKanban className="w-7 h-7" />

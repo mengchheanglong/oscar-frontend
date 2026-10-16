@@ -6,8 +6,10 @@ import React, {
   useRef,
   useCallback,
   useMemo,
+  Suspense,
 } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { WorkspaceIcon } from "@/components/workspace-icons";
@@ -140,6 +142,42 @@ interface Conversation {
   updatedAt: string;
   projectKey?: string;
   projectName?: string;
+}
+
+function LinkedConversation({
+  conversations,
+  onOpen,
+  onNew,
+}: {
+  conversations: Conversation[];
+  onOpen: (conversation: Conversation) => void;
+  onNew: () => void;
+}) {
+  const params = useSearchParams(),
+    handled = useRef<string | null>(null);
+  const id = params.get("conversation"),
+    fresh = params.get("new");
+  useEffect(() => {
+    const key = fresh ? "new" : id;
+    if (!key) {
+      handled.current = null;
+      return;
+    }
+    if (handled.current === key) return;
+    const conversation = conversations.find((item) => item.id === id);
+    if (!fresh && !conversation) return;
+    const frame = window.requestAnimationFrame(() => {
+      handled.current = key;
+      if (fresh) onNew();
+      else onOpen(conversation!);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("conversation");
+      url.searchParams.delete("new");
+      window.history.replaceState(null, "", url.toString());
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [id, fresh, conversations, onOpen, onNew]);
+  return null;
 }
 
 const MODES = [
@@ -995,6 +1033,13 @@ export default function AssistantPage() {
       navigationOpen={sidebarOpen}
       onCloseNavigation={closeNavigation}
     >
+      <Suspense fallback={null}>
+        <LinkedConversation
+          conversations={conversations}
+          onOpen={selectConversation}
+          onNew={handleResetChat}
+        />
+      </Suspense>
       <div className="relative flex h-full min-h-0 w-full overflow-hidden chat-canvas">
         <section
           aria-label="Copilot conversation"
@@ -1060,7 +1105,7 @@ export default function AssistantPage() {
                     },
                     ...projects.map((p) => ({
                       value: p.id,
-                      label: `[${p.key}] ${p.name}`,
+                      label: p.name,
                       icon: (
                         <FolderKanban className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       ),
