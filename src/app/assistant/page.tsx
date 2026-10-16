@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import {
   Sparkles,
+  Brain,
   Bot,
   Plus,
   Trash2,
@@ -44,7 +45,8 @@ import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { CopilotComposer } from "@/components/ai/copilot-composer";
 import { CopilotMemoryPanel, type MemoryDraft } from "@/components/ai/copilot-memory-panel";
-import { AgentRunsPanel } from "@/components/ai/agent-runs-panel";
+import { useConversationWork, ConversationWorkStatus } from "@/components/ai/conversation-work";
+import { agentRuns } from "@/lib/agent-runs";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 
 const getSourceLink = (sourceType: string, title: string, sourceId?: string) => {
@@ -97,6 +99,7 @@ interface ChatMessage {
   mode: string;
   content: string;
   status: "PENDING" | "COMPLETED" | "FAILED";
+  contextExcluded?: boolean;
   citations: CitationItem[];
   modelName?: string | null;
   promptTokens?: number | null;
@@ -115,15 +118,7 @@ interface Conversation {
   projectName?: string;
 }
 
-const MODES = [
-  { key: "WORKSPACE", label: "Workspace", icon: Bot, color: "text-indigo-600", desc: "Research, analysis & project work across disciplines" },
-  { key: "PM", label: "Project planning", icon: Zap, color: "text-violet-600", desc: "Project status, risks & blockers" },
-  { key: "DEVELOPER", label: "Development", icon: Code2, color: "text-blue-600", desc: "Architecture, APIs & code guidance" },
-  { key: "QA", label: "Quality assurance", icon: TestTube, color: "text-emerald-600", desc: "Acceptance criteria & test cases" },
-  { key: "DX", label: "Developer experience", icon: Layers, color: "text-amber-600", desc: "Developer workflow & onboarding" },
-  { key: "INFRASTRUCTURE", label: "Infrastructure", icon: Server, color: "text-cyan-600", desc: "Containers & runtime ops" },
-  { key: "PRESENTATION", label: "Reports & summaries", icon: Presentation, color: "text-pink-600", desc: "Executive summaries & reports" },
-];
+const MODES = [{key:"WORKSPACE",label:"Assistant",icon:Bot,color:"text-indigo-600",desc:"Research, analysis, and project work"}];
 
 const SOURCE_OPTIONS = [
   { value: "", label: "All project sources", icon: Filter },
@@ -144,17 +139,16 @@ const SOURCE_TYPE_ICONS: Record<string, React.ElementType> = {
 };
 
 const PROMPT_SUGGESTIONS = [
-  { mode: "PM", icon: Zap, title: "Summarize this project", desc: "Understand progress, priorities, and blockers.", prompt: "Summarize the current project status, priorities, and any blockers. Cite the project records you use." },
-  { mode: "DEVELOPER", icon: FileCheck2, title: "Explore the requirements", desc: "Turn specifications into a clear next step.", prompt: "What are the main requirements for this project, and which ones need clarification? Cite the relevant requirements and documents." },
-  { mode: "DEVELOPER", icon: GitPullRequest, title: "Review a decision", desc: "Understand the reasoning behind the architecture.", prompt: "Summarize the project’s architecture decisions. Distinguish accepted decisions from proposals and explain their tradeoffs." },
-  { mode: "QA", icon: TestTube, title: "Plan test coverage", desc: "Find acceptance criteria and gaps to verify.", prompt: "Help me plan test coverage based on the project requirements. Cite the acceptance criteria and identify any gaps." },
+ {mode:"WORKSPACE",icon:Zap,title:"Find the next step",desc:"Turn the project goal into useful actions.",prompt:"Based on this project's evidence, what should I work on next? Separate known facts from assumptions."},
+ {mode:"WORKSPACE",icon:FileText,title:"Understand a topic",desc:"Explain the ideas in your working material.",prompt:"Explain the main ideas in this project's files and how I can apply them to the project goal."},
+ {mode:"WORKSPACE",icon:GitPullRequest,title:"Compare options",desc:"Make tradeoffs and assumptions clear.",prompt:"Help me compare the project's available options. Identify tradeoffs, evidence, and assumptions that need testing."},
+ {mode:"WORKSPACE",icon:Sparkles,title:"Prepare a report",desc:"Bring the relevant evidence together.",prompt:"Prepare a concise report on this project using its sources. Include open questions and practical next actions."},
 ];
-
 const ALL_PROJECTS_PROMPT_SUGGESTIONS = [
-  { mode: "PM", icon: Zap, title: "Compare workspace progress", desc: "Compare status, milestones, and blockers across all projects.", prompt: "Compare the progress, priorities, and active blockers across all workspaces. Cite the records from each project." },
-  { mode: "DEVELOPER", icon: FileCheck2, title: "Cross-project architecture", desc: "Review shared requirements, technologies, and designs.", prompt: "Analyze the architecture, tech stacks, and specifications across all workspaces. Which requirements or patterns are shared between them?" },
-  { mode: "DEVELOPER", icon: GitPullRequest, title: "Cross-workspace decisions", desc: "Synthesize key architectural decisions across projects.", prompt: "Summarize the key architectural and technical decisions made across all workspaces, noting how each project approaches its core problems." },
-  { mode: "QA", icon: TestTube, title: "Quality & risk overview", desc: "Identify testing gaps and delivery risks across workspaces.", prompt: "Audit the test coverage, quality status, and delivery risks across all workspaces. Highlight which projects need QA attention." },
+ {mode:"WORKSPACE",icon:Zap,title:"Compare priorities",desc:"See what needs attention across projects.",prompt:"Compare priorities and blockers across my projects, using their evidence."},
+ {mode:"WORKSPACE",icon:FileText,title:"Connect ideas",desc:"Find useful connections across fields.",prompt:"Find connections between ideas in my projects. Explain how they could help the work, and cite sources."},
+ {mode:"WORKSPACE",icon:GitPullRequest,title:"Review decisions",desc:"Understand choices and their reasons.",prompt:"Summarize important decisions across my projects and the reasons behind them."},
+ {mode:"WORKSPACE",icon:Sparkles,title:"Summarize my work",desc:"Bring recent project evidence together.",prompt:"Summarize the current state of my projects, with evidence and open questions."},
 ];
 
 function getModeConfig(key: string) {
@@ -183,12 +177,15 @@ export default function AssistantPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
+  const selectedMode = "WORKSPACE";
+  const [useTools,setUseTools] = useState(false);
+  const workRequest = useRef<{conversationId:string;prompt:string;key:string}|null>(null);
   const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
-  const [agentPanelOpen, setAgentPanelOpen] = useState(false);
   const [memoryDraft, setMemoryDraft] = useState<MemoryDraft | null>(null);
   const memoryProjectId = activeConv?.projectId || currentProject?.id;
-  useEffect(() => { setMemoryPanelOpen(false); setMemoryDraft(null); setAgentPanelOpen(false); }, [memoryProjectId, currentProject?.id, user?.id]);
+  useEffect(() => { setMemoryPanelOpen(false); setMemoryDraft(null); setUseTools(false); }, [memoryProjectId, currentProject?.id, user?.id]);
+  const currentView=useRef({conversationId:activeConv?.id,projectId:currentProject?.id,userId:user?.id});
+  currentView.current={conversationId:activeConv?.id,projectId:currentProject?.id,userId:user?.id};
   const [inputContent, setInputContent] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -207,6 +204,13 @@ export default function AssistantPage() {
   const draftsRef = useRef<Record<string, string>>({});
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [excludeTarget, setExcludeTarget] = useState<{
+    projectId: string;
+    conversationId: string;
+    messageId: string;
+  } | null>(null);
+  const [isExcluding, setIsExcluding] = useState(false);
+  useEffect(() => { setExcludeTarget(null); }, [activeConv?.id, currentProject?.id, user?.id]);
   const [allProjectConvIds, setAllProjectConvIds] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
     try {
@@ -434,12 +438,16 @@ export default function AssistantPage() {
     }
   }, [activeConv?.projectId, currentProject?.id, projects, markAsAllProjectConv]);
 
+  const work = useConversationWork(activeConv?.projectId || currentProject?.id, activeConv?.id, () => {
+    if (activeConv && !sendInFlightRef.current) void loadMessages(activeConv.id,activeConv.projectId);
+  });
+
   useEffect(() => {
     setConversations([]);
     setActiveConv(null);
     setMessages([]);
     setInputContent("");
-    setSelectedMode("WORKSPACE");
+
     setConvSearch("");
     setSendError(null);
     setFailedRequest(null);
@@ -462,7 +470,7 @@ export default function AssistantPage() {
       return;
     }
     void loadMessages(activeConv.id, activeConv.projectId);
-    setSelectedMode(activeConv.defaultMode || "PM");
+
     stickToBottomRef.current = true;
     setShowScrollToLatest(false);
     return invalidateMessageLoads;
@@ -474,7 +482,7 @@ export default function AssistantPage() {
     messageLoadRef.current++;
     setActiveConv(null);
     setMessages([]);
-    setSelectedMode("WORKSPACE");
+
     setIsLoadingMessages(false);
     setInputContent("");
     setSendError(null);
@@ -532,12 +540,44 @@ export default function AssistantPage() {
     }
   };
 
+  const confirmExcludeMessage = async () => {
+    if (!excludeTarget || isExcluding || isSending) return;
+    const target = excludeTarget;
+    const request = messageLoadRef.current;
+    setIsExcluding(true);
+    try {
+      await api.ai.excludeMessageContext(target.projectId, target.conversationId, target.messageId);
+      setExcludeTarget(null);
+      showToast("Message excluded from future context", "info");
+      if (request === messageLoadRef.current) {
+        setMessages((previous) => previous.map((message) => (
+          message.id === target.messageId || message.role === "assistant"
+            ? { ...message, contextExcluded: true }
+            : message
+        )));
+      }
+      try {
+        const refreshed = await api.ai.listMessages(target.projectId, target.conversationId);
+        if (request === messageLoadRef.current) setMessages(Array.isArray(refreshed) ? refreshed : []);
+      } catch {
+        showToast("Context excluded, but messages could not refresh. Reopen this chat.", "error");
+      }
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : "Could not update message context", "error");
+    } finally {
+      setIsExcluding(false);
+    }
+  };
+
   const handleSendMessage = useCallback(
     async (textToSend?: string) => {
       const text = (textToSend !== undefined ? textToSend : inputContent).trim();
       const targetProjectId =
         activeConv?.projectId || currentProject?.id || projects[0]?.id;
-      if (!text || sendInFlightRef.current || isLoadingMessages || !targetProjectId) return;
+      if (!text || sendInFlightRef.current || work.active || isLoadingMessages || !targetProjectId) return;
+      if (useTools && (!currentProject || text.length>4000)) {setSendError("Choose a project and keep tool requests under 4,000 characters.");return;}
+      const origin={...currentView.current};
+      const inView=(conversationId=origin.conversationId)=>currentView.current.userId===origin.userId&&currentView.current.projectId===origin.projectId&&currentView.current.conversationId===conversationId;
       sendInFlightRef.current = true;
       messageLoadRef.current++;
       stickToBottomRef.current = true;
@@ -570,6 +610,8 @@ export default function AssistantPage() {
             defaultMode: selectedMode,
           });
           if (!rawConv) throw new Error("Conversation creation returned empty response");
+          if (!inView()) { sendInFlightRef.current=false;setIsSending(false);return; }
+          currentView.current.conversationId=rawConv.id;
           const targetProj = projects.find((p) => p.id === targetProjectId);
           const isAllMode = !currentProject;
           if (isAllMode) {
@@ -585,6 +627,7 @@ export default function AssistantPage() {
           setActiveConv(createdConv);
           setConversations((prev) => [createdConv, ...prev]);
         } catch (err: any) {
+          if (!inView()) {sendInFlightRef.current=false;setIsSending(false);return;}
           setSendError(err?.message ?? "Failed to create conversation. Are you logged in?");
           setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
           setFailedRequest(text);
@@ -604,12 +647,22 @@ export default function AssistantPage() {
 
       try {
         const postProjId = conv.projectId || targetProjectId;
+        if (useTools) {
+          if (!workRequest.current || workRequest.current.conversationId!==conv.id || workRequest.current.prompt!==text) workRequest.current={conversationId:conv.id,prompt:text,key:crypto.randomUUID()};
+          const run=await agentRuns.create(postProjId,text,workRequest.current.key,conv.id);
+          work.record(run);
+          const latest=await api.ai.listMessages(postProjId,conv.id);
+          if (inView(conv.id)) setMessages(latest);
+          workRequest.current=null;
+          return;
+        }
         const res = await api.ai.postMessage(postProjId, conv.id, {
           content: text,
           mode: selectedMode,
           includeAllWorkspaces: !currentProject,
         });
 
+        if (!inView(conv.id)) return;
         const { userMessage, assistantMessage } = res;
         if (!currentProject && conv) {
           markAsAllProjectConv(conv.id);
@@ -637,6 +690,7 @@ export default function AssistantPage() {
           )
         );
       } catch (err: any) {
+        if (!inView(conv.id)) return;
         setSendError(err?.message ?? "Failed to send message");
         setFailedRequest(text);
         setInputContent((draft) => draft || text);
@@ -646,7 +700,7 @@ export default function AssistantPage() {
         setIsSending(false);
       }
     },
-    [activeConv, currentProject, projects, inputContent, isLoadingMessages, selectedMode, markAsAllProjectConv]
+    [activeConv, currentProject, projects, inputContent, isLoadingMessages, selectedMode, markAsAllProjectConv, useTools, work]
   );
 
   const filteredConversations = useMemo(() => {
@@ -729,13 +783,13 @@ export default function AssistantPage() {
         )}
 
         <section aria-label="Copilot conversation" className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white">
-          <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-3 sm:px-6">
+          <header className="flex h-16 shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-slate-100 px-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <Link href="/dashboard" aria-label="Back to workspace" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden"><ArrowLeft className="h-4 w-4" /></Link>
               <button type="button" onClick={() => setSidebarOpen((open) => !open)} aria-label={sidebarOpen ? "Hide chat history" : "Show chat history"} aria-expanded={sidebarOpen} aria-controls="copilot-history" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-codex-accent"><PanelLeft className="h-4 w-4" /></button>
-              <div className="min-w-0">
+              <div className="hidden min-w-0 sm:block">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-semibold text-slate-900">AI Copilot</h1>
+                  <h1 className="whitespace-nowrap text-sm font-semibold text-slate-900">AI Copilot</h1>
                   {!currentProject && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
                       <Layers className="w-3 h-3 text-indigo-500" />
@@ -749,8 +803,7 @@ export default function AssistantPage() {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-              <button type="button" disabled={!memoryProjectId} onClick={() => setAgentPanelOpen(true)} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">Agent work</button>
-              <button type="button" disabled={!memoryProjectId} onClick={() => { setMemoryDraft(null); setMemoryPanelOpen(true); }} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40">Memory</button>
+              <button type="button" aria-label="Memory" disabled={!memoryProjectId} onClick={() => { setMemoryDraft(null); setMemoryPanelOpen(true); }} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"><Brain className="h-4 w-4 sm:hidden" /><span className="hidden sm:inline">Memory</span></button>
               {projects.length > 0 && (
                 <DropdownSelect
                   value={currentProject?.id ?? "ALL"}
@@ -763,7 +816,7 @@ export default function AssistantPage() {
                     }
                   }}
                   placeholder="All Projects"
-                  triggerClassName="h-8 border-slate-200 text-xs rounded-xl shadow-2xs font-semibold max-w-[140px] sm:max-w-none"
+                  triggerClassName="h-8 border-slate-200 text-xs rounded-xl shadow-2xs font-semibold max-w-[110px] sm:max-w-none"
                   options={[
                     {
                       value: "ALL",
@@ -868,7 +921,7 @@ export default function AssistantPage() {
                       key={suggestion.title}
                       type="button"
                       onClick={() => {
-                        setSelectedMode(suggestion.mode);
+
                         setInputContent(suggestion.prompt);
                         requestAnimationFrame(() => textareaRef.current?.focus());
                       }}
@@ -890,6 +943,7 @@ export default function AssistantPage() {
               /* Message Bubbles */
               messages.map((msg) => {
                 const isAssistant = msg.role === "assistant";
+                const run = work.runs.find(r => r.assistantMessageId === msg.id);
                 const isFailed = msg.status === "FAILED";
                 const isInsufficient =
                   msg.content.toLowerCase().includes("insufficient evidence") ||
@@ -932,6 +986,22 @@ export default function AssistantPage() {
                           </span>
                         )}
                         <span>{formatDateTime(msg.createdAt)}</span>
+                        {msg.contextExcluded ? (
+                          <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-700">Excluded from context</span>
+                        ) : msg.status === "COMPLETED" && !msg.id.startsWith("temp-") && activeConv ? (
+                          <button
+                            type="button"
+                            disabled={isSending || isExcluding}
+                            onClick={() => setExcludeTarget({
+                              projectId: activeConv.projectId,
+                              conversationId: activeConv.id,
+                              messageId: msg.id,
+                            })}
+                            className="rounded px-1.5 py-0.5 text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-codex-accent disabled:opacity-50"
+                          >
+                            Exclude from context…
+                          </button>
+                        ) : null}
                       </div>
 
                       {/* Bubble Body */}
@@ -944,6 +1014,7 @@ export default function AssistantPage() {
                             : "bg-slate-900 text-white shadow-xs"
                         }`}
                       >
+                        {run && <ConversationWorkStatus run={run} onChanged={work.refresh} canRetry={work.available&&!work.active} onRetry={prompt=>{setInputContent(prompt);setUseTools(true);textareaRef.current?.focus();}} />}
                         {isAssistant && isInsufficient && (
                           <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs">
                             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
@@ -1009,7 +1080,7 @@ export default function AssistantPage() {
                           </details>
                         )}
 
-                        {isAssistant && !isFailed && (
+                        {isAssistant && msg.status === "COMPLETED" && (
                           <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
                             <button type="button" onClick={() => void handleCopyMessage(msg.id, msg.content)} aria-label="Copy response" className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-slate-400 hover:bg-slate-50 hover:text-slate-700">
                               {copiedMsgId === msg.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}{copiedMsgId === msg.id ? "Copied" : "Copy response"}
@@ -1048,11 +1119,12 @@ export default function AssistantPage() {
           {showScrollToLatest && <button type="button" onClick={() => { stickToBottomRef.current = true; messageScrollRef.current?.scrollTo({ top: messageScrollRef.current.scrollHeight, behavior: "smooth" }); }} className="absolute bottom-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm"><ChevronDown className="h-3.5 w-3.5" /> Latest messages</button>}
           </div>
 
+          {work.error && <p role="status" className="px-6 text-xs text-amber-700">{work.error}</p>}
           <CopilotComposer
             value={inputContent} onChange={setInputContent}
             onSend={() => void handleSendMessage()}
-            mode={selectedMode} onModeChange={setSelectedMode} modes={MODES}
-            sending={isSending} loading={isLoading || isLoadingMessages || !!messagesError || projects.length === 0}
+            useTools={useTools} onUseToolsChange={setUseTools} toolsAvailable={work.available&&!!currentProject} toolsHint={!currentProject ? "Choose a project to use Hermes tools." : work.available ? "Hermes can search files, calculate, and prepare changes for review." : "Hermes is unavailable. Check Settings > Integrations."}
+            sending={isSending || work.active} loading={isLoading || isLoadingMessages || (useTools&&!work.available) || (!!activeConv && work.loading) || !!messagesError || projects.length === 0}
             error={sendError} failedRequest={failedRequest} onDismissError={() => setSendError(null)} textareaRef={textareaRef}
           />
         </section>
@@ -1060,13 +1132,21 @@ export default function AssistantPage() {
 
       {/* Confirmation Modal for Conversation Deletion */}
       <DeleteConfirmModal
+        isOpen={!!excludeTarget}
+        onClose={() => !isExcluding && setExcludeTarget(null)}
+        onConfirm={confirmExcludeMessage}
+        title="Exclude from future context?"
+        warningText="This excludes the message and generated replies that may repeat it, including replies in affected chats. Chat transcripts remain visible. Saved memories are managed separately. This cannot be undone here."
+        confirmText="Exclude from context"
+        loading={isExcluding}
+      />
+      <DeleteConfirmModal
         isOpen={!!deleteTargetId}
         onClose={() => !isDeleting && setDeleteTargetId(null)}
         onConfirm={confirmDeleteConversation}
         title="Delete conversation"
-        itemName={conversations.find((c) => c.id === deleteTargetId)?.title || "Conversation"}
         itemType="conversation"
-        warningText="This action cannot be undone. All messages and citations in this conversation will be permanently removed."
+        warningText="This hides the conversation from your history and future context. Generated replies in affected chats are also excluded from future context. Saved memories are managed separately. This cannot be undone here."
         confirmText="Delete conversation"
         loading={isDeleting}
       />
@@ -1309,7 +1389,7 @@ export default function AssistantPage() {
         </dialog>
       )}
       {memoryPanelOpen && memoryProjectId && <CopilotMemoryPanel key={`${user?.id}:${memoryProjectId}`} projectId={memoryProjectId} projectLabel={projects.find((project) => project.id === memoryProjectId)?.name} draft={memoryDraft} onClose={() => { setMemoryPanelOpen(false); setMemoryDraft(null); }} />}
-      {agentPanelOpen && memoryProjectId && <AgentRunsPanel key={`${user?.id}:${memoryProjectId}`} projectId={memoryProjectId} projectLabel={projects.find((project) => project.id === memoryProjectId)?.name} onClose={() => setAgentPanelOpen(false)} />}
+
     </AppLayout>
   );
 }

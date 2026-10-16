@@ -3,6 +3,9 @@ import { apiRequest } from "./api";
 export interface AgentRun {
   id: string;
   projectId: string;
+  conversationId: string | null;
+  userMessageId: string | null;
+  assistantMessageId: string | null;
   prompt: string;
   status: "QUEUED" | "RUNNING" | "SUCCEEDED" | "FAILED" | "CANCELLED";
   model: string;
@@ -27,12 +30,19 @@ export const agentRuns = {
     apiRequest<{ available: boolean; runtime: string; revision: string }>(
       `/projects/${projectId}/ai/runs/runtime`,
     ),
-  list: (projectId: string) =>
-    apiRequest<AgentRun[]>(`/projects/${projectId}/ai/runs`),
-  create: (projectId: string, prompt: string, idempotencyKey: string) =>
+  list: (projectId: string, conversationId?: string) =>
+    apiRequest<AgentRun[]>(
+      `/projects/${projectId}/ai/runs${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ""}`,
+    ),
+  create: (
+    projectId: string,
+    prompt: string,
+    idempotencyKey: string,
+    conversationId?: string,
+  ) =>
     apiRequest<AgentRun>(`/projects/${projectId}/ai/runs`, {
       method: "POST",
-      body: JSON.stringify({ prompt, idempotencyKey }),
+      body: JSON.stringify({ prompt, idempotencyKey, conversationId }),
     }),
   cancel: (projectId: string, id: string) =>
     apiRequest<AgentRun>(`/projects/${projectId}/ai/runs/${id}/cancel`, {

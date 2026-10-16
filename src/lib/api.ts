@@ -594,6 +594,10 @@ export const api = {
       }),
     listMessages: async (projectId: string, conversationId: string) =>
       apiRequest<any[]>(`/projects/${projectId}/ai/conversations/${conversationId}/messages`),
+    excludeMessageContext: async (projectId: string, conversationId: string, messageId: string) =>
+      apiRequestRaw(`/projects/${projectId}/ai/conversations/${conversationId}/messages/${messageId}/exclude-context`, {
+        method: "POST",
+      }),
     postMessage: async (
       projectId: string,
       conversationId: string,

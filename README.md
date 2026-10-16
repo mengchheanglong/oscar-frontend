@@ -147,3 +147,26 @@ or AI generation were performed. AIW accepted-decision lookup failed (fetch
 failed); no assigned task was supplied or marked complete. Backend continuity
 work and frontend Copilot/API edits already present were left uncommitted and
 unchanged. Only this navigation slice is committed locally on develop.
+
+## One Copilot conversation
+
+The assistant page now offers one general assistant rather than seven personas.
+Use tools in the composer enables Hermes for a selected project. Its progress,
+cancel control, report, sources and proposed-change review appear in the same
+thread. Requests and results are saved as canonical messages, so a normal answer
+can refer to a previous Hermes report. Reloading retains the work status/result.
+The separate Agent work header/dialog is no longer used. Existing saved mode
+values remain readable; new messages use Workspace behavior. Memory and context
+exclusion controls remain available.
+
+Hermes is still a bounded runtime with its existing tool allowlist. It receives
+bounded recent conversation context; full private-history tools are future work.
+Existing unthreaded runs remain available through the project API. They are not
+silently copied into chat histories or rerun. Tools require a specific project;
+ordinary All Workspaces questions remain supported. See the backend
+`docs/UNIFIED_COPILOT.md` for the new migration/API and privacy behavior.
+
+Verified with lint, TypeScript, production build, eight existing file tests,
+desktop/mobile inspection, and a real calculator run followed by a normal answer
+in the same thread after reload. The temporary QA conversation was hidden through
+the normal deletion API. No project records or proposals were created by this QA.
