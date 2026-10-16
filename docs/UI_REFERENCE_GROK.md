@@ -193,3 +193,17 @@ Verified with lint, TypeScript, formatting, and production build. Browser checks
 covered the trimmed menu, both new-chat contexts, saving instructions and reload
 persistence (temporary text restored), desktop/mobile layout, and appearance
 popover dismissal. No browser errors were reported. Backend readiness passed.
+
+
+## Quiet sidebar actions
+
+Project and chat actions use 14px SVG glyphs and compact buttons. Section actions
+and row controls appear on hover or keyboard focus; open menu triggers stay
+visible. Touch devices retain visible controls. Sidebar project/chat renames are
+inline, with explicit Save/Cancel, Enter/Escape, pending/error feedback, and the
+existing API limits. Project settings retains its rename dialog. Chat menus can
+open an existing conversation in a new tab through the supported deep link.
+
+Verified with TypeScript, lint, formatting, and browser checks for idle/hover/focus
+visibility, inline project/chat saves, cancelling a draft, and opening the correct
+conversation in a new tab. Existing names were retained. No browser errors.

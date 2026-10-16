@@ -22,6 +22,7 @@ import {
   ProjectActions,
   ProjectGlyph,
 } from "@/components/project-workspace";
+import { SidebarRename } from "@/components/sidebar-rename";
 import type { Project } from "@/context/auth-context";
 
 interface SidebarProps {
@@ -45,6 +46,7 @@ export function Sidebar({
   const { user, logout, projects, currentProject, setCurrentProject } =
     useAuth();
   const workspace = useProjectWorkspace();
+  const [renamingProject, setRenamingProject] = useState<string | null>(null);
   const [projectsOpen, setProjectsOpen] = useState(true),
     [chatsOpen, setChatsOpen] = useState(true);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
@@ -267,7 +269,7 @@ export function Sidebar({
                   <ChevronRight size={13} />
                 )}
               </button>
-              <div className="flex">
+              <div className="flex sidebar-section-actions">
                 <button
                   type="button"
                   aria-label="Archived projects"
@@ -293,47 +295,62 @@ export function Sidebar({
                 .filter((project) => project.status !== "ARCHIVED")
                 .map((project) => (
                   <div key={project.id} className="project-sidebar-group">
-                    <div className="project-sidebar-row">
-                      <button
-                        type="button"
-                        className="workspace-nav-link workspace-project"
-                        aria-pressed={currentProject?.id === project.id}
-                        aria-expanded={expandedProjects.has(project.id)}
-                        onClick={() => {
-                          setExpandedProjects((previous) => {
-                            const next = new Set(previous);
-                            if (
-                              currentProject?.id === project.id &&
-                              next.has(project.id)
-                            )
-                              next.delete(project.id);
-                            else next.add(project.id);
-                            return next;
-                          });
-                          setCurrentProject(project);
-                          router.push("/assistant");
-                          onCloseMobile?.();
-                        }}
-                      >
-                        <ProjectGlyph project={project} />
-                        <span className="truncate">{project.name}</span>
-                      </button>
-                      <ProjectActions
-                        project={project}
-                        onNewChat={() => {
-                          setExpandedProjects(
-                            (previous) =>
-                              new Set([...Array.from(previous), project.id]),
-                          );
-                          if (onNewProjectChat) onNewProjectChat(project);
-                          else {
-                            setCurrentProject(project);
-                            router.push("/assistant");
-                          }
-                          onCloseMobile?.();
+                    {renamingProject === project.id ? (
+                      <SidebarRename
+                        value={project.name}
+                        label="Project name"
+                        maxLength={100}
+                        icon={<ProjectGlyph project={project} />}
+                        onCancel={() => setRenamingProject(null)}
+                        onSave={async (name) => {
+                          await workspace.saveProject(project, { name });
+                          setRenamingProject(null);
                         }}
                       />
-                    </div>
+                    ) : (
+                      <div className="project-sidebar-row">
+                        <button
+                          type="button"
+                          className="workspace-nav-link workspace-project"
+                          aria-pressed={currentProject?.id === project.id}
+                          aria-expanded={expandedProjects.has(project.id)}
+                          onClick={() => {
+                            setExpandedProjects((previous) => {
+                              const next = new Set(previous);
+                              if (
+                                currentProject?.id === project.id &&
+                                next.has(project.id)
+                              )
+                                next.delete(project.id);
+                              else next.add(project.id);
+                              return next;
+                            });
+                            setCurrentProject(project);
+                            router.push("/assistant");
+                            onCloseMobile?.();
+                          }}
+                        >
+                          <ProjectGlyph project={project} />
+                          <span className="truncate">{project.name}</span>
+                        </button>
+                        <ProjectActions
+                          project={project}
+                          onRename={() => setRenamingProject(project.id)}
+                          onNewChat={() => {
+                            setExpandedProjects(
+                              (previous) =>
+                                new Set([...Array.from(previous), project.id]),
+                            );
+                            if (onNewProjectChat) onNewProjectChat(project);
+                            else {
+                              setCurrentProject(project);
+                              router.push("/assistant");
+                            }
+                            onCloseMobile?.();
+                          }}
+                        />
+                      </div>
+                    )}
                     {expandedProjects.has(project.id) &&
                       projectChats?.[project.id] && (
                         <div className="project-nested-chats">
@@ -373,7 +390,7 @@ export function Sidebar({
                   </button>
                   <button
                     type="button"
-                    className="workspace-icon-button"
+                    className="workspace-icon-button sidebar-section-actions"
                     aria-label="New standalone chat"
                     title="New chat"
                     onClick={() => {

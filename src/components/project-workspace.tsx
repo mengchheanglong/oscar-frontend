@@ -18,6 +18,7 @@ import {
   Maximize2,
   Minimize2,
   Pencil,
+  Ellipsis,
   Settings2,
   FileText,
   Loader2,
@@ -617,9 +618,11 @@ function ArchiveProjectsDialog({
 export function ProjectActions({
   project,
   onNewChat,
+  onRename,
 }: {
   project: Project;
   onNewChat?: () => void;
+  onRename?: () => void;
 }) {
   const workspace = useProjectWorkspace(),
     button = useRef<HTMLButtonElement>(null);
@@ -650,7 +653,7 @@ export function ProjectActions({
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
-        •••
+        <Ellipsis />
       </button>
       {open && (
         <FloatingMenu
@@ -662,7 +665,11 @@ export function ProjectActions({
             role="menuitem"
             disabled={!manage}
             onClick={() =>
-              action(() => workspace.editProject("rename", project))
+              action(() =>
+                onRename
+                  ? onRename()
+                  : workspace.editProject("rename", project),
+              )
             }
           >
             <Pencil />

@@ -975,8 +975,8 @@ html[data-workspace-theme]
   height: 20px;
 }
 .workspace-section-label .workspace-icon-button svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 /* Project and conversation controls follow the same quiet, chat-first surfaces. */
@@ -1022,12 +1022,14 @@ html[data-workspace-theme]
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 23px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 6px;
   color: var(--ws-muted);
   font-size: 12px;
-  letter-spacing: 1px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 .project-mini-action svg {
   width: 15px;
@@ -2033,5 +2035,59 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
     position: fixed;
     top: 64px;
     right: 16px;
+  }
+}
+
+/* Secondary actions stay quiet until the row is in use. */
+.project-section-heading .sidebar-section-actions {
+  opacity: 0;
+  pointer-events: none;
+}
+.project-section-heading:hover .sidebar-section-actions,
+.project-section-heading:focus-within .sidebar-section-actions,
+.project-sidebar-row:has([aria-expanded="true"].project-mini-action)
+  .project-row-actions,
+.chat-nav-row > .project-mini-action[aria-expanded="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+.workspace-sidebar .project-mini-action svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.7;
+}
+.sidebar-rename-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 38px;
+  padding: 0 5px 0 10px;
+}
+.workspace-sidebar .sidebar-rename input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  padding: 5px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ws-text);
+  font-size: 13px;
+  outline: none;
+}
+.sidebar-rename-row > svg {
+  flex-shrink: 0;
+  color: var(--ws-muted);
+}
+.sidebar-rename .project-mini-action:focus-visible {
+  outline: 1px solid var(--ws-blue);
+}
+.sidebar-rename button:disabled {
+  opacity: 0.4;
+}
+@media (hover: none) {
+  .project-section-heading .sidebar-section-actions {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

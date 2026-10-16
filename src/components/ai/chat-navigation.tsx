@@ -1,8 +1,16 @@
 "use client";
 import { useRef, useState } from "react";
-import { Pencil, Pin, PinOff, Trash2 } from "lucide-react";
+import {
+  Pencil,
+  Pin,
+  PinOff,
+  Trash2,
+  Ellipsis,
+  ExternalLink,
+} from "lucide-react";
 import { api } from "@/lib/api";
-import { WorkspaceDialog, FloatingMenu } from "@/components/workspace-overlays";
+import { FloatingMenu } from "@/components/workspace-overlays";
+import { SidebarRename } from "@/components/sidebar-rename";
 export interface NavigationChat {
   id: string;
   projectId: string;
@@ -27,7 +35,6 @@ export function ChatNavigationItem({
   const button = useRef<HTMLButtonElement>(null);
   const [menu, setMenu] = useState(false),
     [rename, setRename] = useState(false),
-    [title, setTitle] = useState(chat.title),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function update(data: { title?: string; isPinned?: boolean }) {
@@ -47,29 +54,51 @@ export function ChatNavigationItem({
   }
   return (
     <div className="chat-nav-item">
-      <div className="chat-nav-row">
-        <button
-          type="button"
-          aria-pressed={active}
-          disabled={disabled || busy}
-          onClick={onSelect}
-          className="chat-nav-select"
-        >
-          {chat.isPinned && <Pin size={13} className="shrink-0" />}
-          <span className="truncate">{chat.title || "Untitled chat"}</span>
-        </button>
-        <button
-          ref={button}
-          type="button"
-          aria-label={`Chat menu for ${chat.title || "Untitled chat"}`}
-          aria-expanded={menu}
-          disabled={disabled || busy}
-          onClick={() => setMenu((value) => !value)}
-          className="project-mini-action"
-        >
-          •••
-        </button>
-      </div>
+      {rename ? (
+        <SidebarRename
+          value={chat.title}
+          label="Chat name"
+          maxLength={200}
+          icon={chat.isPinned ? <Pin size={13} /> : undefined}
+          onCancel={() => {
+            setRename(false);
+            button.current?.focus();
+          }}
+          onSave={async (title) => {
+            const saved = await api.ai.updateConversation(
+              chat.projectId,
+              chat.id,
+              { title },
+            );
+            onChanged(saved);
+            setRename(false);
+          }}
+        />
+      ) : (
+        <div className="chat-nav-row">
+          <button
+            type="button"
+            aria-pressed={active}
+            disabled={disabled || busy}
+            onClick={onSelect}
+            className="chat-nav-select"
+          >
+            {chat.isPinned && <Pin size={13} className="shrink-0" />}
+            <span className="truncate">{chat.title || "Untitled chat"}</span>
+          </button>
+          <button
+            ref={button}
+            type="button"
+            aria-label={`Chat menu for ${chat.title || "Untitled chat"}`}
+            aria-expanded={menu}
+            disabled={disabled || busy}
+            onClick={() => setMenu((value) => !value)}
+            className="project-mini-action"
+          >
+            <Ellipsis />
+          </button>
+        </div>
+      )}
       {error && !rename && (
         <p role="alert" className="px-2 text-xs text-rose-400">
           {error}
@@ -81,12 +110,21 @@ export function ChatNavigationItem({
           onClose={() => setMenu(false)}
           label="Chat actions"
         >
+          <a
+            role="menuitem"
+            href={`/assistant?conversation=${encodeURIComponent(chat.id)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMenu(false)}
+          >
+            <ExternalLink />
+            Open new tab
+          </a>
           <button
             type="button"
             role="menuitem"
             onClick={() => {
               setMenu(false);
-              setTitle(chat.title);
               setRename(true);
             }}
           >
@@ -118,45 +156,6 @@ export function ChatNavigationItem({
           </button>
         </FloatingMenu>
       )}
-      <WorkspaceDialog
-        open={rename}
-        title="Rename chat"
-        onClose={() => setRename(false)}
-        busy={busy}
-      >
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void update({ title: title.trim() });
-          }}
-        >
-          <div className="workspace-dialog-body">
-            <input
-              autoFocus
-              required
-              maxLength={200}
-              aria-label="Chat name"
-              className="workspace-name-input"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-            />
-            {error && (
-              <p role="alert" className="workspace-form-error">
-                {error}
-              </p>
-            )}
-          </div>
-          <div className="workspace-dialog-footer justify-end">
-            <button
-              type="submit"
-              disabled={busy || !title.trim()}
-              className="workspace-pill workspace-pill-primary"
-            >
-              {busy ? "Saving…" : "Save"}
-            </button>
-          </div>
-        </form>
-      </WorkspaceDialog>
     </div>
   );
 }
