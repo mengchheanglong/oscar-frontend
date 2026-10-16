@@ -92,6 +92,7 @@ export default function SettingsWorkspace({
   const router = useRouter();
   const {
     user,
+    isLoading,
     currentProject,
     projects,
     setCurrentProject,
@@ -101,7 +102,37 @@ export default function SettingsWorkspace({
   const { theme, setTheme } = useWorkspaceTheme();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const [activeTab, setActiveTabState] = useState<SettingsTab>(initialTab);
+  const setActiveTab = (tab: SettingsTab) => {
+    setActiveTabState(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("section", tab);
+    if (tab !== "integrations") url.searchParams.delete("app");
+    window.history.replaceState(null, "", url.toString());
+  };
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+    const section = new URLSearchParams(window.location.search).get("section");
+    const sections: SettingsTab[] = [
+      "account",
+      "appearance",
+      "projects",
+      "team",
+      "integrations",
+      "api-keys",
+      "data",
+    ];
+    if (user.systemRole === "ADMIN") sections.push("admin");
+    setActiveTabState(
+      sections.includes(section as SettingsTab)
+        ? (section as SettingsTab)
+        : initialTab,
+    );
+  }, [isLoading, user, initialTab, router]);
 
   // Profile Edit State
   const [displayName, setDisplayName] = useState(user?.displayName || "");
@@ -159,24 +190,24 @@ export default function SettingsWorkspace({
   }, []);
 
   useEffect(() => {
-    if (activeTab === "api-keys") {
+    if (!isLoading && user && activeTab === "api-keys") {
       void fetchApiKeys();
     }
-  }, [activeTab, fetchApiKeys]);
+  }, [activeTab, fetchApiKeys, isLoading, user]);
 
   // Close Settings handler
-  const handleClose = useCallback(() => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push("/assistant");
-    }
-  }, [router]);
+  const handleClose = useCallback(() => router.push("/assistant"), [router]);
 
   // Handle ESC key to close
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (
+        e.key === "Escape" &&
+        !e.defaultPrevented &&
+        !document.querySelector(
+          'dialog[open], [role="dialog"], [role="listbox"], [role="menu"]',
+        )
+      ) {
         handleClose();
       }
     };
@@ -290,6 +321,13 @@ export default function SettingsWorkspace({
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  if (isLoading || !user)
+    return (
+      <div role="status" className="workspace-loading">
+        Loading workspace…
+      </div>
+    );
 
   return (
     <div className="settings-workspace min-h-screen w-full bg-[var(--ws-bg)] text-[var(--ws-text)] flex flex-col selection:bg-white/20 selection:text-white">

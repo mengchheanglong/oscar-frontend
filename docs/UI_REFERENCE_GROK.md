@@ -107,14 +107,16 @@ these UI checks. Main and deployment configuration remain unchanged.
 
 ## Search and supporting pages (2026-10-16)
 
-Global search lives in the sidebar and opens a compact native dialog with All,
-Chats, and Files filters. It loads the user's own conversation titles and searches
-authorized project records across projects. Results open their owning project;
-chat links select the saved conversation without generating another answer.
-Requests ignore stale responses after changes or close, and partial failures are
-shown explicitly. Keyboard navigation, Enter, Escape, and Ctrl/Cmd+K are retained.
-The dedicated search page still provides project-level detailed results, with
-matching options collapsed by default.
+Chat search lives in the top sidebar magnifying-glass icon, beside the collapse
+control, with Ctrl/Cmd+K. Its compact dialog searches the current user's saved
+conversation titles and opens the selected thread. It does not mix documents or
+project records into chat results. Keyboard navigation, Enter and Escape work in
+both expanded and collapsed navigation.
+
+The separate **Global search** sidebar item opens `/search`, the existing project
+information search for documents, tasks, decisions and other records. Its project
+selection and detailed matching options remain available. These are distinct
+entry points, matching the user's clarified intent.
 
 Removed the old global navbar, search strip, project switcher and inbox entry.
 A mobile navigation button remains. Chat project/memory controls are compact.
@@ -152,3 +154,21 @@ Verified with frontend lint, TypeScript and production build, plus anonymous
 desktop/mobile browser checks, both auth-form entry paths, authenticated root
 routing, unsent draft restoration/storage removal, and the unauthenticated
 assistant redirect. Temporary QA drafts were cleared. Local develop only.
+
+## Final navigation alignment
+
+Settings preserves the selected section in its URL for reloads, rejects unsigned
+access, closes back to chat, and lets nested dialogs handle Escape before closing
+the settings shell. The legacy Team URL uses the same Settings shell. Old dashboard
+links resolve to chat. Loading screens no longer show management cards/header
+placeholders. Global search no longer suggests hardcoded software-engineering demo
+queries. Task Kanban, project files, decisions, memory and Hermes remain available.
+
+The clarified search split is the current design: chat-only top icon / Ctrl+K,
+separate Global search sidebar link for document and project-record searching.
+
+Cleanup verification: lint, TypeScript, formatting and production build passed.
+Browser checks covered both search entry points, collapsed sidebar controls,
+actual project-record search with an empty result, Settings section reload,
+unsigned Settings access and the task Kanban screen. No browser errors were
+reported in that pass. No backend contract or deployment configuration changed.

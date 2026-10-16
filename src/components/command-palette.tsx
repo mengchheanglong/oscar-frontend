@@ -1,56 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useId } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Search,
-  MessageCircle,
-  Folder,
-  FileText,
-  ArrowUpRight,
-  Loader2,
-  X,
-  Plus,
-  CheckSquare,
-  Bookmark,
-} from "lucide-react";
-import { useAuth, type Project } from "@/context/auth-context";
+import { MessageCircle, Search, X } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
 import { api } from "@/lib/api";
 
-type Tab = "all" | "chats" | "files";
 interface Chat {
   id: string;
-  title: string;
   projectId: string;
+  title: string;
   updatedAt: string;
 }
-interface Result {
-  id: string;
-  title: string;
-  type: string;
-  snippet?: string;
-  project: Project;
-}
-interface Row {
-  id: string;
-  title: string;
-  subtitle?: string;
-  group: string;
-  icon: typeof Search;
-  run: () => void;
-  date?: string;
-}
-const recordPaths: Record<string, string> = {
-  TASK: "/tasks",
-  DECISION: "/decisions",
-  DOCUMENT: "/documents",
-  REQUIREMENT: "/requirements",
-  MEETING: "/meetings",
-  GITHUB_ISSUE: "/settings/integrations?app=github",
-  GITHUB_PR: "/settings/integrations?app=github&tab=pulls",
-  GITHUB_CODE: "/settings/integrations?app=github&tab=code",
-};
-function dateGroup(value: string) {
+function groupDate(value: string) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const date = new Date(value);
@@ -65,6 +27,7 @@ function dateGroup(value: string) {
         : "Earlier";
 }
 
+// Ctrl/Cmd+K searches private chat history. Project records live in /search.
 export function CommandPalette({
   isOpen,
   onClose,
@@ -72,16 +35,12 @@ export function CommandPalette({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const router = useRouter(),
-    { projects, setCurrentProject } = useAuth();
+  const { projects, setCurrentProject } = useAuth(),
+    router = useRouter();
   const [query, setQuery] = useState(""),
-    [tab, setTab] = useState<Tab>("all"),
     [chats, setChats] = useState<Chat[]>([]),
-    [records, setRecords] = useState<Result[]>([]),
-    [loadingChats, setLoadingChats] = useState(false),
-    [searching, setSearching] = useState(false),
-    [chatError, setChatError] = useState(""),
-    [searchError, setSearchError] = useState(""),
+    [loading, setLoading] = useState(false),
+    [error, setError] = useState(""),
     [selected, setSelected] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null),
     input = useRef<HTMLInputElement>(null),
@@ -92,187 +51,71 @@ export function CommandPalette({
   useEffect(() => {
     if (!isOpen) return;
     setQuery("");
-    setTab("all");
     setSelected(0);
-    const previous = document.activeElement as HTMLElement | null;
-    const node = dialog.current;
+    const node = dialog.current,
+      previous = document.activeElement as HTMLElement | null;
     if (!node) return;
     if (!node.open) node.showModal();
     input.current?.focus();
     return () => {
       node.close();
-      if (previous?.isConnected) previous.focus();
+      if (previous?.isConnected && previous.getClientRects().length)
+        previous.focus();
+      else
+        document
+          .querySelector<HTMLButtonElement>('[aria-label="Open navigation"]')
+          ?.focus();
     };
   }, [isOpen]);
   useEffect(() => {
     if (!isOpen) return;
     let active = true;
-    setLoadingChats(true);
+    setLoading(true);
     setChats([]);
-    setChatError("");
+    setError("");
     Promise.allSettled(
-      projects.map(async (project) => {
-        const rows = await api.ai.listConversations(project.id);
-        return rows as Chat[];
-      }),
+      projects.map((project) => api.ai.listConversations(project.id)),
     ).then((results) => {
       if (!active) return;
       setChats(
         results
           .flatMap((result) =>
-            result.status === "fulfilled" ? result.value : [],
+            result.status === "fulfilled" ? (result.value as Chat[]) : [],
           )
           .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
       );
       if (results.some((result) => result.status === "rejected"))
-        setChatError(
-          "Some chats could not be loaded. Close search and try again.",
-        );
-      setLoadingChats(false);
+        setError("Some chats could not be loaded. Close search and try again.");
+      setLoading(false);
     });
     return () => {
       active = false;
     };
   }, [isOpen, projects]);
+  const filtered = useMemo(
+    () =>
+      chats.filter((chat) =>
+        chat.title.toLowerCase().includes(query.trim().toLowerCase()),
+      ),
+    [chats, query],
+  );
+  useEffect(() => setSelected(0), [query]);
   useEffect(() => {
-    let active = true;
-    setRecords([]);
-    setSearchError("");
-    if (!isOpen || !query.trim() || tab === "chats") {
-      setSearching(false);
-      return;
-    }
-    setSearching(true);
-    const timer = setTimeout(async () => {
-      const results = await Promise.allSettled(
-        projects.map(async (project) => {
-          const response = await api.search.query(
-            project.id,
-            query.trim(),
-            tab === "files" ? "DOCUMENT" : undefined,
-            1,
-            8,
-            "hybrid",
-          );
-          return (response.data || []).map(
-            (record: Omit<Result, "project">) => ({ ...record, project }),
-          );
-        }),
-      );
-      if (!active) return;
-      setRecords(
-        results.flatMap((result) =>
-          result.status === "fulfilled" ? result.value : [],
-        ),
-      );
-      if (results.some((result) => result.status === "rejected"))
-        setSearchError(
-          "Some project results are unavailable. Try another search.",
-        );
-      setSearching(false);
-    }, 220);
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [query, tab, isOpen, projects]);
-  const rows = useMemo(() => {
-    const output: Row[] = [],
-      q = query.trim().toLowerCase();
-    const open = (path: string, project?: Project) => {
-      if (project) setCurrentProject(project);
-      router.push(path);
-      closeRef.current();
-    };
-    if (tab !== "files") {
-      const filtered = chats.filter(
-        (chat) => !q || chat.title.toLowerCase().includes(q),
-      );
-      for (const chat of filtered) {
-        const project = projects.find(
-          (project) => project.id === chat.projectId,
-        );
-        if (!project) continue;
-        output.push({
-          id: `chat:${chat.id}`,
-          title: chat.title || "Untitled chat",
-          subtitle: q ? project.name : undefined,
-          group: q ? "Chats" : dateGroup(chat.updatedAt),
-          icon: MessageCircle,
-          date: new Date(chat.updatedAt).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          }),
-          run: () => open(`/assistant?conversation=${chat.id}`, project),
-        });
-      }
-    }
-    if (tab !== "chats") {
-      for (const record of records) {
-        const path = recordPaths[record.type];
-        if (!path) continue;
-        output.push({
-          id: `${record.project.id}:${record.type}:${record.id}`,
-          title: record.title,
-          subtitle: `${record.project.name} · ${record.type.toLowerCase().replaceAll("_", " ")}`,
-          group: "Your work",
-          icon:
-            record.type === "TASK"
-              ? CheckSquare
-              : record.type === "DECISION"
-                ? Bookmark
-                : FileText,
-          run: () =>
-            open(
-              `${path}${path.includes("?") ? "&" : "?"}id=${encodeURIComponent(record.id)}&search=${encodeURIComponent(record.title)}`,
-              record.project,
-            ),
-        });
-      }
-      if (tab === "all")
-        for (const project of projects
-          .filter((project) => !q || project.name.toLowerCase().includes(q))
-          .slice(0, 5))
-          output.push({
-            id: `project:${project.id}`,
-            title: project.name,
-            group: "Projects",
-            icon: Folder,
-            run: () => open("/assistant", project),
-          });
-    }
-    if (tab === "all" && !q)
-      output.push(
-        {
-          id: "new",
-          title: "New chat",
-          group: "Actions",
-          icon: Plus,
-          run: () => {
-            setCurrentProject(null);
-            open("/assistant?new=1");
-          },
-        },
-        {
-          id: "files",
-          title: "Browse files",
-          group: "Actions",
-          icon: FileText,
-          run: () => open("/documents"),
-        },
-      );
-    return output;
-  }, [chats, records, query, tab, projects, router, setCurrentProject]);
-  useEffect(() => setSelected(0), [query, tab]);
-  useEffect(() => {
-    if (selected >= rows.length) setSelected(0);
+    if (selected >= filtered.length) setSelected(0);
     selectedRow.current?.scrollIntoView({ block: "nearest" });
-  }, [selected, rows.length]);
+  }, [selected, filtered.length]);
+  const open = (chat: Chat) => {
+    const project = projects.find((project) => project.id === chat.projectId);
+    if (!project) return;
+    setCurrentProject(project);
+    router.push(`/assistant?conversation=${chat.id}`);
+    onClose();
+  };
   if (!isOpen) return null;
   return (
     <dialog
       ref={dialog}
-      aria-label="Global search"
+      aria-label="Search chats"
       className="global-search-dialog"
       onCancel={(event) => {
         event.preventDefault();
@@ -286,31 +129,28 @@ export function CommandPalette({
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
           event.preventDefault();
           setSelected((value) =>
-            rows.length
-              ? (value + (event.key === "ArrowDown" ? 1 : rows.length - 1)) %
-                rows.length
+            filtered.length
+              ? (value +
+                  (event.key === "ArrowDown" ? 1 : filtered.length - 1)) %
+                filtered.length
               : 0,
           );
         } else if (
           event.key === "Enter" &&
           event.target === input.current &&
-          rows[selected]
+          filtered[selected]
         ) {
           event.preventDefault();
-          rows[selected].run();
+          open(filtered[selected]);
         }
       }}
     >
       <div className="global-search-top">
-        {searching ? (
-          <Loader2 className="animate-spin" size={18} />
-        ) : (
-          <Search size={18} />
-        )}
+        <Search size={18} />
         <input
           ref={input}
-          aria-label="Search chats and workspace"
-          placeholder="Search…"
+          aria-label="Search conversations"
+          placeholder="Search chats…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           role="combobox"
@@ -318,21 +158,9 @@ export function CommandPalette({
           aria-expanded={true}
           aria-controls={listId}
           aria-activedescendant={
-            rows[selected] ? `${listId}-${selected}` : undefined
+            filtered[selected] ? `${listId}-${selected}` : undefined
           }
         />
-        <div className="global-search-tabs" aria-label="Search category">
-          {(["all", "chats", "files"] as Tab[]).map((value) => (
-            <button
-              type="button"
-              key={value}
-              aria-pressed={tab === value}
-              onClick={() => setTab(value)}
-            >
-              {value[0].toUpperCase() + value.slice(1)}
-            </button>
-          ))}
-        </div>
         <button
           type="button"
           aria-label="Close search"
@@ -345,68 +173,74 @@ export function CommandPalette({
       <div
         id={listId}
         role="listbox"
-        aria-label="Search results"
+        aria-label="Conversations"
         className="global-search-results"
       >
-        {(chatError || searchError) && (
+        {error && (
           <p role="status" className="global-search-notice">
-            {chatError || searchError}
+            {error}
           </p>
         )}
-        {loadingChats && (
+        {loading && (
           <p role="status" className="global-search-notice">
             Loading chats…
           </p>
         )}
-        {!loadingChats && !searching && !rows.length && (
+        {!loading && !filtered.length && (
           <p className="global-search-empty">
             {query
-              ? "No results found."
-              : "Your chats and projects will appear here."}
+              ? "No matching chats."
+              : "Your conversations will appear here."}
           </p>
         )}
-        {rows.map((row, index) => {
-          const Icon = row.icon;
+        {filtered.map((chat, index) => {
+          const group = query ? "Chats" : groupDate(chat.updatedAt),
+            previousGroup = index
+              ? query
+                ? "Chats"
+                : groupDate(filtered[index - 1].updatedAt)
+              : null;
           return (
-            <div key={row.id}>
-              {(index === 0 || rows[index - 1].group !== row.group) && (
-                <p className="global-search-group">{row.group}</p>
+            <div key={chat.id}>
+              {group !== previousGroup && (
+                <p className="global-search-group">{group}</p>
               )}
               <button
-                id={`${listId}-${index}`}
                 type="button"
+                id={`${listId}-${index}`}
                 role="option"
                 aria-selected={selected === index}
                 ref={selected === index ? selectedRow : undefined}
-                className="global-search-result"
                 onMouseMove={() => setSelected(index)}
-                onClick={row.run}
+                onClick={() => open(chat)}
+                className="global-search-result"
               >
-                <Icon size={17} />
+                <MessageCircle size={17} />
                 <span>
-                  <strong>{row.title}</strong>
-                  {row.subtitle && <small>{row.subtitle}</small>}
+                  <strong>{chat.title || "Untitled chat"}</strong>
+                  {query && (
+                    <small>
+                      {
+                        projects.find(
+                          (project) => project.id === chat.projectId,
+                        )?.name
+                      }
+                    </small>
+                  )}
                 </span>
-                {row.date && <time>{row.date}</time>}
+                <time>
+                  {new Date(chat.updatedAt).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </time>
               </button>
             </div>
           );
         })}
       </div>
       <div className="global-search-bottom">
-        <span>↑ ↓ to navigate · Enter to open</span>
-        {query.trim() && (
-          <button
-            type="button"
-            onClick={() => {
-              router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-              onClose();
-            }}
-          >
-            More results
-            <ArrowUpRight size={13} />
-          </button>
-        )}
+        <span>↑ ↓ to navigate · Enter to open · Esc to close</span>
       </div>
     </dialog>
   );

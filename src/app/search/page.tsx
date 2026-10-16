@@ -70,16 +70,6 @@ const TYPE_COLORS: Record<string, string> = {
   GITHUB_CODE: "bg-indigo-50 text-indigo-800 border border-indigo-200",
 };
 
-const SUGGESTIONS = [
-  "Authentication",
-  "Verification",
-  "Session",
-  "PostgreSQL",
-  "AIW-REQ-1",
-  "Cookie",
-  "Meeting",
-];
-
 export default function SearchPage() {
   const { currentProject, projects, setCurrentProject } = useAuth();
   const [query, setQuery] = useState("");
@@ -149,11 +139,6 @@ export default function SearchPage() {
     executeSearch(query, selectedType, searchMode);
   };
 
-  const handleSuggestionClick = (term: string) => {
-    setQuery(term);
-    executeSearch(term, selectedType, searchMode);
-  };
-
   const handleTypeChange = (type: string) => {
     setSelectedType(type);
     if (query.trim()) {
@@ -196,11 +181,11 @@ export default function SearchPage() {
               <SearchIcon className="w-4 h-4" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-codex-text font-serif">
-              Search
+              Global search
             </h1>
           </div>
           <p className="text-xs text-codex-muted mt-1">
-            Find files, decisions, and tasks in your project.
+            Search documents, tasks, decisions, and project information.
           </p>
         </div>
 
@@ -285,7 +270,7 @@ export default function SearchPage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search keyword or local key (e.g. AIW-REQ-1, postgres, session, auth)..."
+                placeholder="Search files, tasks, decisions, or a record key…"
                 className="w-full pl-10 pr-10 text-xs h-10 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-codex-accent focus:border-codex-accent shadow-xs"
               />
               {query && (
@@ -306,23 +291,6 @@ export default function SearchPage() {
               {loading ? "Searching..." : "Search"}
             </Button>
           </form>
-        </div>
-
-        {/* Suggested Searches */}
-        <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500">
-          <span className="text-[11px] text-slate-400 flex items-center gap-1 font-medium">
-            <Sparkles className="w-3 h-3 text-codex-accent" /> Suggestions:
-          </span>
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => handleSuggestionClick(s)}
-              className="px-2.5 py-0.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-[11px] text-slate-600 hover:text-slate-900 transition-all font-mono shadow-2xs cursor-pointer"
-            >
-              {s}
-            </button>
-          ))}
         </div>
 
         {/* Faceted Tabs */}
@@ -433,11 +401,10 @@ export default function SearchPage() {
               <SearchIcon className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-semibold text-slate-900 font-serif">
-              Instant Workspace Search
+              Search project knowledge
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Search by title, project key, or text content across all 5
-              workspace modules in{" "}
+              Search titles and text in{" "}
               <span className="text-codex-accent font-semibold">
                 {currentProject?.name}
               </span>

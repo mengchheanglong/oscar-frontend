@@ -5,7 +5,6 @@ import { useAuth } from "@/context/auth-context";
 import { WorkspaceIcon } from "@/components/workspace-icons";
 import { ProjectSidePanel } from "@/components/project-workspace";
 import { Sidebar } from "@/components/sidebar";
-import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -59,28 +58,12 @@ export function AppLayout({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  if (isLoading) {
+  if (isLoading)
     return (
-      <div className="h-screen max-h-screen overflow-hidden flex bg-[#F4F5F7]">
-        <div className="hidden md:block w-60 bg-[#161927] shrink-0 h-screen" />
-        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-          <div className="h-16 border-b border-codex-border bg-[#F4F5F7] px-8 flex items-center shrink-0">
-            <Skeleton className="h-9 w-64 rounded-xl bg-slate-200" />
-          </div>
-          <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full space-y-6">
-            <Skeleton className="h-8 w-48 rounded-lg bg-slate-200" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Skeleton className="h-28 rounded-xl bg-white" />
-              <Skeleton className="h-28 rounded-xl bg-white" />
-              <Skeleton className="h-28 rounded-xl bg-white" />
-              <Skeleton className="h-28 rounded-xl bg-white" />
-            </div>
-            <Skeleton className="h-44 rounded-2xl bg-white" />
-          </div>
-        </div>
+      <div className="workspace-loading" role="status">
+        Loading workspace…
       </div>
     );
-  }
 
   if (!user) {
     return null;

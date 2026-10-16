@@ -1972,3 +1972,20 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
     font-size: 11px;
   }
 }
+
+.workspace-sidebar.is-collapsed .workspace-sidebar-header {
+  height: 80px;
+}
+.workspace-sidebar.is-collapsed .workspace-sidebar-header > div {
+  flex-direction: column;
+}
+
+.workspace-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  background: var(--ws-bg);
+  color: var(--ws-muted);
+  font-size: 13px;
+}
