@@ -52,7 +52,10 @@ const validatePassword = (val: string): string | null => {
   return null;
 };
 
-const validateConfirmPassword = (val: string, passVal: string): string | null => {
+const validateConfirmPassword = (
+  val: string,
+  passVal: string,
+): string | null => {
   if (!val) return "Please confirm your password.";
   if (val !== passVal) return "Passwords do not match.";
   return null;
@@ -71,6 +74,10 @@ export default function LoginPage() {
 
   // Mode state
   const [mode, setMode] = useState<AuthMode>("login");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("mode") === "register")
+      setMode("register");
+  }, []);
 
   // Account details are entered by the user.
   const [email, setEmail] = useState("");
@@ -165,7 +172,9 @@ export default function LoginPage() {
     if (touched.agreeTerms) {
       setFieldErrors((prev) => ({
         ...prev,
-        agreeTerms: next ? undefined : "You must agree to the Terms of Service to continue.",
+        agreeTerms: next
+          ? undefined
+          : "You must agree to the Terms of Service to continue.",
       }));
     }
   };
@@ -198,9 +207,13 @@ export default function LoginPage() {
       if (err instanceof ApiError || err.status) {
         if (err.status === 401) {
           if (err.code === "ACCOUNT_DISABLED") {
-            setError("Your account has been deactivated. Please contact an administrator.");
+            setError(
+              "Your account has been deactivated. Please contact an administrator.",
+            );
           } else {
-            setError("Incorrect email or password. Double-check and try again.");
+            setError(
+              "Incorrect email or password. Double-check and try again.",
+            );
             setFieldErrors({
               email: "Check your email",
               password: "Check your password",
@@ -215,7 +228,9 @@ export default function LoginPage() {
           setFieldErrors(mapped);
           setError(err.message || "Please correct the highlighted fields.");
         } else {
-          setError(err.message || "Login failed. Please check your credentials.");
+          setError(
+            err.message || "Login failed. Please check your credentials.",
+          );
         }
       } else {
         const msg = err.message || "";
@@ -224,9 +239,13 @@ export default function LoginPage() {
           msg.includes("NetworkError") ||
           msg.includes("status 0")
         ) {
-          setError("Unable to connect to backend. Please ensure the backend server is running.");
+          setError(
+            "Unable to connect to backend. Please ensure the backend server is running.",
+          );
         } else {
-          setError(msg || "Incorrect email or password. Double-check and try again.");
+          setError(
+            msg || "Incorrect email or password. Double-check and try again.",
+          );
         }
       }
     } finally {
@@ -239,12 +258,19 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    setTouched({ email: true, password: true, confirm: true, agreeTerms: true });
+    setTouched({
+      email: true,
+      password: true,
+      confirm: true,
+      agreeTerms: true,
+    });
 
     const emailErr = validateEmail(email);
     const passwordErr = validatePassword(password);
     const confirmErr = validateConfirmPassword(confirmPassword, password);
-    const termsErr = !agreeTerms ? "You must agree to the Terms of Service to continue." : null;
+    const termsErr = !agreeTerms
+      ? "You must agree to the Terms of Service to continue."
+      : null;
 
     if (emailErr || passwordErr || confirmErr || termsErr) {
       setFieldErrors({
@@ -268,7 +294,9 @@ export default function LoginPage() {
             ...prev,
             email: "A user with this email address already exists.",
           }));
-          setError("This email address is already registered. Please sign in instead.");
+          setError(
+            "This email address is already registered. Please sign in instead.",
+          );
         } else if (err.status === 400 && Array.isArray(err.details)) {
           const mapped: FieldErrors = {};
           err.details.forEach((d: { field: string; message: string }) => {
@@ -287,7 +315,9 @@ export default function LoginPage() {
           msg.includes("NetworkError") ||
           msg.includes("status 0")
         ) {
-          setError("Unable to connect to backend. Please ensure the backend server is running.");
+          setError(
+            "Unable to connect to backend. Please ensure the backend server is running.",
+          );
         } else {
           setError(msg || "Registration failed. Please try again.");
         }
@@ -316,7 +346,16 @@ export default function LoginPage() {
 
   return (
     <div className="workspace-auth">
-      <header className="workspace-auth-header"><a href="/assistant" aria-label="AI Workspace" className="workspace-icon-button"><WorkspaceIcon name="mark" className="!h-7 !w-7"/></a><WorkspaceAppearance/></header>
+      <header className="workspace-auth-header">
+        <a
+          href="/assistant"
+          aria-label="AI Workspace"
+          className="workspace-icon-button"
+        >
+          <WorkspaceIcon name="mark" className="!h-7 !w-7" />
+        </a>
+        <WorkspaceAppearance />
+      </header>
       <div className="workspace-auth-content">
         <div className="max-w-[330px] sm:max-w-[340px] w-full space-y-4">
           {/* ================= MODE 1: LOGIN (DEFAULT) ================= */}
@@ -341,10 +380,16 @@ export default function LoginPage() {
               )}
 
               {/* Form */}
-              <form onSubmit={handleLoginSubmit} noValidate className="space-y-3.5">
+              <form
+                onSubmit={handleLoginSubmit}
+                noValidate
+                className="space-y-3.5"
+              >
                 {/* Email Field */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-700">Email</label>
+                  <label className="text-xs font-medium text-slate-700">
+                    Email
+                  </label>
                   <input
                     type="email"
                     value={email}
@@ -367,7 +412,9 @@ export default function LoginPage() {
 
                 {/* Password Field with Eye Toggle */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-700">Password</label>
+                  <label className="text-xs font-medium text-slate-700">
+                    Password
+                  </label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -385,9 +432,15 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   </div>
                   {fieldErrors.password && (
@@ -405,12 +458,16 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setRememberMe(!rememberMe)}
                       className={`w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors ${
-                        rememberMe ? "bg-[#4361ee] text-white" : "border border-slate-300 bg-white"
+                        rememberMe
+                          ? "bg-[#4361ee] text-white"
+                          : "border border-slate-300 bg-white"
                       }`}
                       aria-checked={rememberMe}
                       role="checkbox"
                     >
-                      {rememberMe && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                      {rememberMe && (
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      )}
                     </button>
                     <span className="text-[11.5px]">Remember Me</span>
                   </label>
@@ -477,10 +534,16 @@ export default function LoginPage() {
               )}
 
               {/* Form */}
-              <form onSubmit={handleRegisterSubmit} noValidate className="space-y-3.5">
+              <form
+                onSubmit={handleRegisterSubmit}
+                noValidate
+                className="space-y-3.5"
+              >
                 {/* Email Field */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-700">Email</label>
+                  <label className="text-xs font-medium text-slate-700">
+                    Email
+                  </label>
                   <input
                     type="email"
                     value={email}
@@ -503,7 +566,9 @@ export default function LoginPage() {
 
                 {/* Password Field */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-700">Password</label>
+                  <label className="text-xs font-medium text-slate-700">
+                    Password
+                  </label>
                   <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
@@ -521,9 +586,15 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showPassword ? (
+                        <EyeOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   </div>
                   {fieldErrors.password && (
@@ -536,7 +607,9 @@ export default function LoginPage() {
 
                 {/* Confirm Password Field */}
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-700">Confirm Password</label>
+                  <label className="text-xs font-medium text-slate-700">
+                    Confirm Password
+                  </label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
@@ -552,11 +625,19 @@ export default function LoginPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showConfirmPassword ? "Hide password" : "Show password"
+                      }
                     >
-                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   </div>
                   {fieldErrors.confirm && (
@@ -574,17 +655,26 @@ export default function LoginPage() {
                       type="button"
                       onClick={handleTermsToggle}
                       className={`w-3.5 h-3.5 rounded-full flex items-center justify-center transition-colors shrink-0 ${
-                        agreeTerms ? "bg-[#4361ee] text-white" : "border border-slate-300 bg-white"
+                        agreeTerms
+                          ? "bg-[#4361ee] text-white"
+                          : "border border-slate-300 bg-white"
                       }`}
                       role="checkbox"
                       aria-checked={agreeTerms}
                     >
-                      {agreeTerms && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                      {agreeTerms && (
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      )}
                     </button>
                     <span className="text-[11.5px] text-slate-600">
                       I agree to the{" "}
-                      <span className="text-[#4361ee] hover:underline cursor-pointer">Terms of Service</span> and{" "}
-                      <span className="text-[#4361ee] hover:underline cursor-pointer">Privacy Policy</span>
+                      <span className="text-[#4361ee] hover:underline cursor-pointer">
+                        Terms of Service
+                      </span>{" "}
+                      and{" "}
+                      <span className="text-[#4361ee] hover:underline cursor-pointer">
+                        Privacy Policy
+                      </span>
                     </span>
                   </div>
                   {fieldErrors.agreeTerms && (
@@ -611,8 +701,6 @@ export default function LoginPage() {
                   )}
                 </button>
               </form>
-
-
 
               {/* Bottom Switch to Login */}
               <div className="text-center text-[11.5px] text-slate-500 pt-1.5">
@@ -646,7 +734,8 @@ export default function LoginPage() {
                   Reset your password
                 </h2>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Enter the email on your AI Workspace account and we&apos;ll send you a link to reset your password.
+                  Enter the email on your AI Workspace account and we&apos;ll
+                  send you a link to reset your password.
                 </p>
               </div>
 
@@ -660,9 +749,15 @@ export default function LoginPage() {
 
               {!resetSent ? (
                 /* Send Reset Link Form */
-                <form onSubmit={handleResetSubmit} noValidate className="space-y-3.5 pt-1">
+                <form
+                  onSubmit={handleResetSubmit}
+                  noValidate
+                  className="space-y-3.5 pt-1"
+                >
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-slate-700">Email</label>
+                    <label className="text-xs font-medium text-slate-700">
+                      Email
+                    </label>
                     <input
                       type="email"
                       value={email}
@@ -703,14 +798,21 @@ export default function LoginPage() {
                       Check your email
                     </h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      We sent reset instructions to <strong className="text-slate-900 font-semibold">{email || "you@company.com"}</strong>. If this email matches an active account, you can reset your password immediately.
+                      We sent reset instructions to{" "}
+                      <strong className="text-slate-900 font-semibold">
+                        {email || "you@company.com"}
+                      </strong>
+                      . If this email matches an active account, you can reset
+                      your password immediately.
                     </p>
                   </div>
 
                   <div className="text-xs text-slate-500 pt-1">
                     Didn&apos;t get it?{" "}
                     {countdown > 0 ? (
-                      <span className="text-slate-400">Resend in {countdown}s</span>
+                      <span className="text-slate-400">
+                        Resend in {countdown}s
+                      </span>
                     ) : (
                       <button
                         type="button"

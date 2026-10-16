@@ -133,3 +133,22 @@ sidebar search, saved-chat opening, responsive Decisions/Team, embedded integrat
 navigation and mobile search. No backend contracts, credentials or database
 configuration changed. AIW accepted-decision lookup returned none; no task assigned.
 Local develop only, without pushing or deploying.
+
+## Public chat entry (2026-10-16)
+
+The root route opens the minimal chat canvas from the supplied signed-out
+reference, with appearance, Sign in and Sign up controls. There is no marketing
+landing page or automatic login-form redirect. An unauthenticated visit to
+`/assistant` returns to this entry canvas; other protected routes retain their
+authentication checks. Authenticated root visitors continue to their workspace.
+
+A visitor can draft a message. Sending or adding files opens sign-in; Sign up
+opens the existing registration form. No anonymous model or file access is added.
+The draft is kept in session storage during that transition, restored to the
+signed-in composer, and removed from storage after handoff. It is never sent
+automatically. Appearance uses the existing theme controls.
+
+Verified with frontend lint, TypeScript and production build, plus anonymous
+desktop/mobile browser checks, both auth-form entry paths, authenticated root
+routing, unsent draft restoration/storage removal, and the unauthenticated
+assistant redirect. Temporary QA drafts were cleared. Local develop only.

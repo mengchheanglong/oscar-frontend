@@ -265,7 +265,13 @@ function groupConversationsByDate(
 }
 
 export default function AssistantPage() {
-  const { currentProject, user, projects, setCurrentProject } = useAuth();
+  const {
+    currentProject,
+    user,
+    projects,
+    setCurrentProject,
+    isLoading: authLoading,
+  } = useAuth();
   const projectWorkspace = useProjectWorkspace();
   const requestedChat = useRef<Conversation | null>(null);
   const { showToast } = useToast();
@@ -588,18 +594,26 @@ export default function AssistantPage() {
     setActiveConv(requested);
     setMessages([]);
     setIsLoadingMessages(false);
-    setInputContent(
-      draftsRef.current[
-        requested?.id || `new:${currentProject?.id || "all"}`
-      ] || "",
-    );
+    const key = requested?.id || `new:${currentProject?.id || "all"}`;
+    let draft = draftsRef.current[key] || "";
+    if (!authLoading && user && !requested && !draft) {
+      try {
+        const guestDraft = sessionStorage.getItem("aiw_guest_draft");
+        if (guestDraft) {
+          draft = guestDraft.slice(0, 20000);
+          draftsRef.current[key] = draft;
+          sessionStorage.removeItem("aiw_guest_draft");
+        }
+      } catch {}
+    }
+    setInputContent(draft);
     setSendError(null);
     setFailedRequest(null);
     setMessagesError(null);
     setInspectingCitation(null);
     // Only a project identity change starts another conversation; metadata refreshes preserve drafts.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentProject?.id, user?.id, invalidateMessageLoads]);
+  }, [currentProject?.id, user?.id, authLoading, invalidateMessageLoads]);
 
   useEffect(() => {
     void loadConversations();

@@ -44,9 +44,9 @@ export function AppLayout({
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.replace("/login");
+      router.replace(pathname === "/assistant" ? "/" : "/login");
     }
-  }, [isLoading, user, router]);
+  }, [isLoading, user, router, pathname]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
