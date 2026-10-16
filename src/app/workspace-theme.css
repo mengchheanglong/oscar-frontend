@@ -1286,7 +1286,7 @@ html[data-workspace-theme]
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  width: clamp(340px, 52%, 830px);
+  width: clamp(340px, 40%, 520px);
   min-width: 0;
   margin: 8px 8px 8px 0;
   border: 1px solid var(--ws-border);
@@ -1894,8 +1894,8 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
   position: absolute;
   right: 0;
   top: 44px;
-  width: 210px;
-  padding: 14px;
+  width: min(280px, calc(100vw - 32px));
+  padding: 10px;
   z-index: 10;
   background: var(--ws-input);
   border: 1px solid var(--ws-border);
@@ -1988,4 +1988,50 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
   background: var(--ws-bg);
   color: var(--ws-muted);
   font-size: 13px;
+}
+
+/* Compact project controls share the same spacing as the sidebar. */
+.project-settings-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0 6px;
+}
+.project-settings-identity > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.project-settings-save {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+}
+.guest-appearance .workspace-appearance {
+  padding: 8px;
+  gap: 16px;
+}
+.guest-appearance .workspace-appearance select {
+  min-width: 0;
+  max-width: 120px;
+}
+.workspace-section-toggle {
+  border: 0;
+  background: transparent;
+}
+.workspace-section-toggle:focus-visible {
+  outline: 2px solid var(--ws-blue);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@media (max-width: 600px) {
+  .guest-appearance > div {
+    position: fixed;
+    top: 64px;
+    right: 16px;
+  }
 }

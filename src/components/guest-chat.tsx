@@ -12,6 +12,18 @@ export function GuestChat() {
     router = useRouter();
   const [draft, setDraft] = useState("");
   const textarea = useRef<HTMLTextAreaElement>(null);
+  const appearance = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const closeOutside = (event: PointerEvent) => {
+      if (
+        appearance.current &&
+        !appearance.current.contains(event.target as Node)
+      )
+        appearance.current.open = false;
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    return () => document.removeEventListener("pointerdown", closeOutside);
+  }, []);
   useEffect(() => {
     if (!isLoading && user) router.replace("/assistant");
   }, [isLoading, user, router]);
@@ -43,6 +55,7 @@ export function GuestChat() {
         </Link>
         <div className="guest-chat-account">
           <details
+            ref={appearance}
             className="guest-appearance"
             onKeyDown={(event) => {
               if (event.key === "Escape") event.currentTarget.open = false;

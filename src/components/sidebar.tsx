@@ -356,7 +356,7 @@ export function Sidebar({
               )}
             {chatHistory && (
               <>
-                <div className="workspace-section-label">
+                <div className="workspace-section-label project-section-heading">
                   <button
                     type="button"
                     aria-label="Toggle chats"
@@ -370,6 +370,18 @@ export function Sidebar({
                     ) : (
                       <ChevronRight size={13} />
                     )}
+                  </button>
+                  <button
+                    type="button"
+                    className="workspace-icon-button"
+                    aria-label="New standalone chat"
+                    title="New chat"
+                    onClick={() => {
+                      onNewChat?.();
+                      onCloseMobile?.();
+                    }}
+                  >
+                    <WorkspaceIcon name="plus" />
                   </button>
                 </div>
                 {chatsOpen && (

@@ -19,8 +19,6 @@ import {
   Minimize2,
   Pencil,
   Settings2,
-  Share2,
-  Smile,
   FileText,
   Loader2,
 } from "lucide-react";
@@ -28,10 +26,9 @@ import { api } from "@/lib/api";
 import { useAuth, type Project } from "@/context/auth-context";
 import { WorkspaceIcon } from "@/components/workspace-icons";
 import { WorkspaceDialog, FloatingMenu } from "@/components/workspace-overlays";
-import { ProjectAccess } from "@/components/project-access";
 import { UploadedFolderSources } from "@/components/uploaded-folder-sources";
 
-type PanelTab = "settings" | "files" | "sharing";
+type PanelTab = "settings" | "files";
 type Edit = { kind: "rename" | "icon" | "archive"; project: Project };
 interface WorkspaceState {
   openCreate: () => void;
@@ -673,23 +670,6 @@ export function ProjectActions({
           </button>
           <button
             role="menuitem"
-            onClick={() =>
-              action(() => workspace.openPanel(project, "sharing"))
-            }
-          >
-            <Share2 />
-            Share
-          </button>
-          <button
-            role="menuitem"
-            disabled={!manage}
-            onClick={() => action(() => workspace.editProject("icon", project))}
-          >
-            <Smile />
-            Edit icon
-          </button>
-          <button
-            role="menuitem"
             onClick={() => action(() => workspace.openPanel(project))}
           >
             <Settings2 />
@@ -795,14 +775,6 @@ export function ProjectSidePanel() {
           >
             <FileText size={18} />
           </button>
-          <button
-            role="tab"
-            aria-selected={panelTab === "sharing"}
-            aria-label="Project sharing"
-            onClick={() => setPanelTab("sharing")}
-          >
-            <Share2 size={18} />
-          </button>
         </div>
         <div>
           <button
@@ -828,15 +800,6 @@ export function ProjectSidePanel() {
       <div className="project-panel-body" key={project.id}>
         {panelTab === "settings" ? (
           <ProjectSettingsContent project={project} />
-        ) : panelTab === "sharing" ? (
-          <>
-            <h2>{project.name} · Sharing</h2>
-            <p className="workspace-subtle">
-              Shared documents are available to members. Chats and folder copies
-              stay private.
-            </p>
-            <ProjectAccess projectId={project.id} />
-          </>
         ) : (
           <ProjectFilesContent project={project} />
         )}
@@ -845,22 +808,24 @@ export function ProjectSidePanel() {
   );
 }
 function ProjectSettingsContent({ project }: { project: Project }) {
-  const { saveProject, setPanelTab } = useProjectWorkspace();
+  const { saveProject, editProject } = useProjectWorkspace();
   const [instructions, setInstructions] = useState(project.instructions || ""),
     [saving, setSaving] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [saved, setSaved] = useState(false);
   useEffect(() => {
     setInstructions(project.instructions || "");
     setError("");
   }, [project.id, project.instructions]);
-  const canManage = ["OWNER", "MANAGER"].includes(
-    project.currentUserRole || "",
-  );
+  const canManage =
+    project.status !== "ARCHIVED" &&
+    ["OWNER", "MANAGER"].includes(project.currentUserRole || "");
   async function save() {
     setSaving(true);
     setError("");
     try {
       await saveProject(project, { instructions });
+      setSaved(true);
     } catch (error) {
       setError(errorText(error));
     } finally {
@@ -869,7 +834,27 @@ function ProjectSettingsContent({ project }: { project: Project }) {
   }
   return (
     <>
-      <h2>{project.name}’s settings</h2>
+      <h2>Project settings</h2>
+      <div className="project-settings-identity">
+        <button
+          type="button"
+          className="workspace-icon-button"
+          aria-label="Edit project icon"
+          disabled={!canManage}
+          onClick={() => editProject("icon", project)}
+        >
+          <ProjectGlyph project={project} />
+        </button>
+        <span>{project.name}</span>
+        <button
+          type="button"
+          className="workspace-pill"
+          disabled={!canManage}
+          onClick={() => editProject("rename", project)}
+        >
+          Rename
+        </button>
+      </div>
       <section className="project-panel-section">
         <div className="project-panel-row">
           <div>
@@ -883,10 +868,20 @@ function ProjectSettingsContent({ project }: { project: Project }) {
           rows={5}
           value={instructions}
           disabled={!canManage || saving}
-          onChange={(event) => setInstructions(event.target.value)}
+          onChange={(event) => {
+            setInstructions(event.target.value);
+            setSaved(false);
+          }}
           placeholder="Add your project goals, preferences, and working instructions…"
         />
-        <div className="flex justify-end pt-2">
+        <div className="project-settings-save">
+          <span role="status" className="workspace-subtle">
+            {saved
+              ? "Saved"
+              : !canManage
+                ? "Only project owners and managers can edit instructions."
+                : ""}
+          </span>
           <button
             type="button"
             disabled={
@@ -897,7 +892,7 @@ function ProjectSettingsContent({ project }: { project: Project }) {
             onClick={() => void save()}
             className="workspace-pill"
           >
-            {saving ? "Saving…" : "Save instructions"}
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
         {error && (
@@ -905,41 +900,6 @@ function ProjectSettingsContent({ project }: { project: Project }) {
             {error}
           </p>
         )}
-      </section>
-      <section className="project-panel-section project-panel-row">
-        <div>
-          <h3>Files</h3>
-          <p>Reference material for this project.</p>
-        </div>
-        <button
-          type="button"
-          className="workspace-pill"
-          onClick={() => setPanelTab("files")}
-        >
-          Add
-        </button>
-      </section>
-      <section className="project-panel-section project-panel-row">
-        <div>
-          <h3>Tasks</h3>
-          <p>Your project’s next actions and Kanban board.</p>
-        </div>
-        <Link href="/tasks" className="workspace-pill">
-          Open
-        </Link>
-      </section>
-      <section className="project-panel-section project-panel-row">
-        <div>
-          <h3>Sharing</h3>
-          <p>Project members and access.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setPanelTab("sharing")}
-          className="workspace-pill"
-        >
-          Manage
-        </button>
       </section>
     </>
   );

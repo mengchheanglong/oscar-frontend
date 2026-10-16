@@ -46,14 +46,12 @@ import {
   Zap,
   Code2,
   TestTube,
-  Layers,
   Server,
   Presentation,
   Eye,
   X,
   ArrowUpRight,
   ArrowLeft,
-  FolderKanban,
 } from "lucide-react";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
@@ -68,7 +66,6 @@ import {
   ConversationWorkStatus,
 } from "@/components/ai/conversation-work";
 import { agentRuns } from "@/lib/agent-runs";
-import { DropdownSelect } from "@/components/ui/dropdown-select";
 
 const getSourceLink = (
   sourceType: string,
@@ -1096,37 +1093,6 @@ export default function AssistantPage() {
               >
                 <Brain className="h-5 w-5" />
               </button>
-              {projects.length > 0 && (
-                <DropdownSelect
-                  value={currentProject?.id ?? "ALL"}
-                  onChange={(val) => {
-                    if (val === "ALL") {
-                      setCurrentProject(null);
-                    } else {
-                      const p = projects.find((proj) => proj.id === val);
-                      if (p) setCurrentProject(p);
-                    }
-                  }}
-                  placeholder="All Projects"
-                  triggerClassName="chat-project-trigger"
-                  options={[
-                    {
-                      value: "ALL",
-                      label: "All Projects",
-                      icon: (
-                        <Layers className="w-3.5 h-3.5 text-codex-accent shrink-0" />
-                      ),
-                    },
-                    ...projects.map((p) => ({
-                      value: p.id,
-                      label: p.name,
-                      icon: (
-                        <FolderKanban className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                      ),
-                    })),
-                  ]}
-                />
-              )}
             </div>
           </header>
 

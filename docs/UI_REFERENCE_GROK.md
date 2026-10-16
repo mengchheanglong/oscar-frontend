@@ -172,3 +172,24 @@ Browser checks covered both search entry points, collapsed sidebar controls,
 actual project-record search with an empty result, Settings section reload,
 unsigned Settings access and the task Kanban screen. No browser errors were
 reported in that pass. No backend contract or deployment configuration changed.
+
+## Project controls refinement
+
+The sidebar is the project selector. Chat no longer repeats an All Projects
+selector in its header. The Chats heading has a plus button for a new standalone
+conversation; each project retains its own new-chat action. Chat search at the top
+and the Global search navigation entry remain distinct.
+
+Project menus contain Rename, Settings, and Archive. Icon editing is in project
+settings. The narrower settings panel focuses on identity and instructions with
+explicit save feedback; repeated Tasks and Sharing links were removed. Files
+remain available through the panel and sidebar, and membership management remains
+in the existing project administration screen. Existing backend role checks,
+version checks, instruction limits, and archive/restore behavior are retained.
+
+The guest appearance popover fits mobile viewports and closes on outside clicks.
+
+Verified with lint, TypeScript, formatting, and production build. Browser checks
+covered the trimmed menu, both new-chat contexts, saving instructions and reload
+persistence (temporary text restored), desktop/mobile layout, and appearance
+popover dismissal. No browser errors were reported. Backend readiness passed.
