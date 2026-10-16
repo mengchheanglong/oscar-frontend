@@ -938,7 +938,7 @@ export function GitHubWorkspace(p: Props) {
                       About this connection
                     </h2>
                     <p className={`text-sm leading-6 ${muted}`}>
-                      Repository content connected to your AI Workspace project.
+                      Repository content connected to your Continuum project.
                     </p>
                     <a
                       href={repoUrl}

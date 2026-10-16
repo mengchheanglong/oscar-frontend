@@ -1,6 +1,24 @@
-# AI Project Workspace — Frontend
+# Continuum — Frontend
 
-Next.js 14 App Router frontend for the AI Project Workspace, connected to the NestJS backend API.
+Continuum is a personal, chat-first workspace for business, finance, research,
+project files, tasks, decisions, and AI-assisted work. This is an independent
+repository derived from AI Workspace's develop branch, with its Git history
+preserved. The original AI Workspace repositories remain separate.
+
+- Frontend: https://github.com/mengchheanglong/continuum-frontend
+- Backend: https://github.com/mengchheanglong/continuum-backend
+- Working and default branch: `develop`.
+- Local frontend: `http://localhost:3002`; local API: `http://127.0.0.1:3001`.
+- Environment files, access tokens, uploaded content, and machine MCP settings
+  stay local and are not part of this repository.
+
+The inherited implementation guide and verification notes describe the original
+foundation. Continuum's current direction is the personal workspace above.
+Legacy `aiw_*` storage keys, API environment names, database migration identifiers,
+and the existing isolated development database remain compatible with current
+local data. Repository branding changes do not migrate or reset that data.
+
+Next.js 14 App Router frontend for the Continuum, connected to the NestJS backend API.
 
 ## Features
 
@@ -103,7 +121,7 @@ These are copies, without background synchronization. Deleting a copy removes
 its stored originals and index without changing the computer's source folder.
 Cross-device access needs a reachable authenticated backend with persistent
 storage. No hosting or cloud service is provisioned. Local testing uses
-[AI Workspace](http://localhost:3002/documents) with
+[Continuum](http://localhost:3002/documents) with
 `NEXT_PUBLIC_API_URL=/api/v1` and `BACKEND_INTERNAL_URL=http://127.0.0.1:3001`.
 The frontend proxies API requests to the isolated local backend. Login cookies
 stay on the frontend's origin, so both localhost and 127.0.0.1 work. The explicit
@@ -112,7 +130,6 @@ IPv4 backend address avoids another app's localhost IPv6 listener.
 Checks: `pnpm test:folder-resume` verifies fingerprint compatibility, block
 boundaries, changed content and pause handling. The legacy scanner checks remain
 available with `pnpm test:local-folders`.
-
 
 ## Personal workspace navigation (2026-10-16)
 
@@ -170,7 +187,6 @@ desktop/mobile inspection, and a real calculator run followed by a normal answer
 in the same thread after reload. The temporary QA conversation was hidden through
 the normal deletion API. No project records or proposals were created by this QA.
 
-
 ## Task board refinement (2026-10-16)
 
 Tasks is restored to the sidebar. Cards move between
@@ -189,7 +205,6 @@ blocked states, list preference persistence, and confirmed deletion of the tempo
 QA task. Desktop and 390px mobile layouts were inspected; mobile page width stayed
 at 390px while the board scrolls independently. AIW decision lookup returned no
 architectural decisions. No assigned task was supplied or marked complete.
-
 
 ## Chat-first workspace (2026-10-16)
 
@@ -211,7 +226,6 @@ Files and Kanban navigation, and mobile menu dismissal/focus restoration. Deskto
 and 390px screenshots were inspected with no page overflow. No AI generation or
 record deletion was performed. AIW accepted-decision lookup returned no decisions;
 no assigned task was supplied or marked complete. Changes are frontend-only.
-
 
 ## Grok visual direction (2026-10-16)
 

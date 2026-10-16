@@ -620,7 +620,7 @@ export function IntegrationsConsole() {
 
   const activeTokenValue = revealedToken || "<YOUR_PERSONAL_ACCESS_TOKEN>";
 
-  const universalAgentPrompt = `Configure and connect our AI Workspace MCP (Model Context Protocol) server for this project repository.
+  const universalAgentPrompt = `Configure and connect our Continuum MCP (Model Context Protocol) server for this project repository.
 
 ### MCP Server Parameters:
 - Server Command: node <PATH_TO_BACKEND>/dist/mcp/cli.js
@@ -630,10 +630,10 @@ export function IntegrationsConsole() {
   AI_WORKSPACE_PROJECT_ID: "${projectKey}"
 
 ### Instructions for Agent:
-1. Detect my coding environment (Cursor, Claude Code, Codex, or Google Antigravity) and configure the "ai-workspace" MCP server:
+1. Detect my coding environment (Cursor, Claude Code, Codex, or Google Antigravity) and configure the "continuum" MCP server:
    - In Cursor: add to .cursor/mcp.json
-   - In Claude Code: run \`claude mcp add ai-workspace -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"\`
-   - In Codex: add to .codex/config.toml or run \`codex mcp add ai-workspace ...\`
+   - In Claude Code: run \`claude mcp add continuum -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"\`
+   - In Codex: add to .codex/config.toml or run \`codex mcp add continuum ...\`
    - In Antigravity: add to ~/.gemini/config/mcp_config.json or .agents/mcp_config.json
 2. Test the connection by running MCP tool \`list_tasks\` for project "${projectKey}".
 3. Full Platform Capabilities (32 MCP Tools plus Resources):
@@ -648,13 +648,13 @@ export function IntegrationsConsole() {
 4. Workflow Rules:
    - Consult accepted architecture decisions (\`list_decisions\`) before making design changes.
    - AI generation saves drafts only. Review/edit with get_ai_proposal and update_ai_proposal, then confirm only user-authorized selected items using the current version and a stable idempotency key. Reuse that key when retrying. Reject unwanted drafts.
-   - When any assigned task is completed and verified, automatically call \`update_task_status\` to set it to "DONE" on our AI Workspace dashboard.`;
+   - When any assigned task is completed and verified, automatically call \`update_task_status\` to set it to "DONE" on our Continuum dashboard.`;
 
   // Pre-formatted MCP Configs
   const cursorConfigJson = JSON.stringify(
     {
       mcpServers: {
-        "ai-workspace": {
+        "continuum": {
           command: "node",
           args: ["<PATH_TO_BACKEND>/dist/mcp/cli.js"],
           env: {
@@ -669,24 +669,24 @@ export function IntegrationsConsole() {
     2,
   );
 
-  const claudeCodeCommand = `claude mcp add ai-workspace -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"`;
+  const claudeCodeCommand = `claude mcp add continuum -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"`;
 
-  const codexConfigToml = `[mcp_servers.ai-workspace]
+  const codexConfigToml = `[mcp_servers.continuum]
 command = "node"
 args = ["<PATH_TO_BACKEND>/dist/mcp/cli.js"]
 env_vars = ["AI_WORKSPACE_API_KEY"]
 tool_timeout_sec = 90
 
-[mcp_servers.ai-workspace.env]
+[mcp_servers.continuum.env]
 AI_WORKSPACE_API_URL = ${JSON.stringify(apiBaseUrl)}
 AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
 
-  const codexCommand = `codex mcp add ai-workspace --env AI_WORKSPACE_API_URL="${apiBaseUrl}" --env AI_WORKSPACE_API_KEY="${activeTokenValue}" --env AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"`;
+  const codexCommand = `codex mcp add continuum --env AI_WORKSPACE_API_URL="${apiBaseUrl}" --env AI_WORKSPACE_API_KEY="${activeTokenValue}" --env AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"`;
 
   const antigravityConfigJson = JSON.stringify(
     {
       mcpServers: {
-        "ai-workspace": {
+        "continuum": {
           command: "node",
           args: ["<PATH_TO_BACKEND>/dist/mcp/cli.js"],
           env: {
@@ -701,7 +701,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
     2,
   );
 
-  const antigravityCommand = `agy mcp add ai-workspace -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js" -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}"`;
+  const antigravityCommand = `agy mcp add continuum -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js" -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}"`;
 
   // App catalog data
   const integrationCount = 3;
@@ -991,7 +991,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
           <McpConsole
             logo={<McpIcon className="h-6 w-6" />}
             projectKey={projectKey}
-            projectName={currentProject?.name || "AI Workspace"}
+            projectName={currentProject?.name || "Continuum"}
             apiUrl={apiBaseUrl}
             prompt={universalAgentPrompt}
             tokens={apiKeys}

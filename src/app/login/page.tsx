@@ -349,7 +349,7 @@ export default function LoginPage() {
       <header className="workspace-auth-header">
         <a
           href="/assistant"
-          aria-label="AI Workspace"
+          aria-label="Continuum"
           className="workspace-icon-button"
         >
           <WorkspaceIcon name="mark" className="!h-7 !w-7" />
@@ -364,7 +364,7 @@ export default function LoginPage() {
               {/* Header */}
               <div className="space-y-1">
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-serif">
-                  Sign in to AI Workspace
+                  Sign in to Continuum
                 </h2>
                 <p className="text-xs text-slate-500">
                   Already have an account? Log in to your workspace account.
@@ -500,7 +500,7 @@ export default function LoginPage() {
 
               {/* Bottom Switch to Register */}
               <div className="text-center text-[11.5px] text-slate-500 pt-1.5">
-                New to AI Workspace?{" "}
+                New to Continuum?{" "}
                 <button
                   type="button"
                   onClick={() => switchMode("register")}
@@ -518,7 +518,7 @@ export default function LoginPage() {
               {/* Header */}
               <div className="space-y-1">
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-serif">
-                  Create your AI Workspace account
+                  Create your Continuum account
                 </h2>
                 <p className="text-xs text-slate-500">
                   New here? Create your very own workspace account.
@@ -734,7 +734,7 @@ export default function LoginPage() {
                   Reset your password
                 </h2>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Enter the email on your AI Workspace account and we&apos;ll
+                  Enter the email on your Continuum account and we&apos;ll
                   send you a link to reset your password.
                 </p>
               </div>

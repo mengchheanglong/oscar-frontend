@@ -931,7 +931,7 @@ export default function DocumentsPage() {
                       Upload document
                     </h3>
                     <p className="text-sm text-slate-500 mt-0.5">
-                      Adds to {currentProject?.name || "AI Project Workspace"}&apos;s knowledge base.
+                      Adds to {currentProject?.name || "Continuum"}&apos;s knowledge base.
                     </p>
                   </div>
                   <button

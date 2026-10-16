@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { api, setCsrfToken } from "@/lib/api";
-import { AiWorkspaceLogo } from "@/components/ai-workspace-logo";
+import { ContinuumLogo } from "@/components/continuum-logo";
 import {
   Sparkles,
   Shield,
@@ -165,7 +165,7 @@ export default function AcceptInvitePage() {
       <div className="w-full max-w-lg relative z-10 space-y-6">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <AiWorkspaceLogo size="lg" />
+          <ContinuumLogo size="lg" />
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Workspace Invitation</span>

@@ -21,7 +21,7 @@ import {
   Cpu,
   Clock,
 } from "lucide-react";
-import { AiWorkspaceMark } from "@/components/ai-workspace-logo";
+import { ContinuumMark } from "@/components/continuum-logo";
 
 export const HeroSerenity: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"copilot" | "specs" | "decisions" | "tasks">("copilot");
@@ -38,7 +38,7 @@ export const HeroSerenity: React.FC = () => {
       <div className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-xs font-medium mb-8 backdrop-blur-md hover:border-white/20 transition-colors shadow-[0_0_20px_rgba(0,242,254,0.1)]">
         <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
         <span className="text-zinc-300 font-mono text-[11px]">
-          AI Workspace 2.0 • Phase 2 Grounded AI & Vector Engine Live
+          Continuum 2.0 • Phase 2 Grounded AI & Vector Engine Live
         </span>
         <ChevronRight className="w-3 h-3 text-zinc-500" />
       </div>
@@ -85,7 +85,7 @@ export const HeroSerenity: React.FC = () => {
               </div>
               <div className="h-4 w-px bg-white/10 mx-1" />
               <div className="flex items-center gap-2">
-                <AiWorkspaceMark className="w-4 h-4" />
+                <ContinuumMark className="w-4 h-4" />
                 <span className="text-xs font-semibold text-zinc-300 font-mono">
                   ai-workspace / phoenix-core
                 </span>

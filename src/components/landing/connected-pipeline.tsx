@@ -14,7 +14,7 @@ import {
   Cpu,
   Layers,
 } from "lucide-react";
-import { AiWorkspaceMark } from "@/components/ai-workspace-logo";
+import { ContinuumMark } from "@/components/continuum-logo";
 
 export const ConnectedPipeline: React.FC = () => {
   return (
@@ -111,7 +111,7 @@ export const ConnectedPipeline: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Center Column: AI Workspace Engine (Concept 3 Kinetic Facet) */}
+            {/* Center Column: Continuum Engine (Concept 3 Kinetic Facet) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.85 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -124,7 +124,7 @@ export const ConnectedPipeline: React.FC = () => {
                 <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500 to-indigo-600 rounded-full blur-xl opacity-30 group-hover:opacity-60 transition-all" />
                 
                 <div className="relative w-28 h-28 rounded-2xl bg-[#12131c] border border-cyan-500/40 p-3 shadow-[0_0_40px_rgba(0,242,254,0.2)] flex flex-col items-center justify-center gap-2">
-                  <AiWorkspaceMark className="w-12 h-12" />
+                  <ContinuumMark className="w-12 h-12" />
                   <span className="text-[10px] font-mono text-cyan-300 font-semibold tracking-wider">
                     AI WORKSPACE
                   </span>

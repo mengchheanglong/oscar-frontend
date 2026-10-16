@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { AiWorkspaceLogo } from "@/components/ai-workspace-logo";
+import { ContinuumLogo } from "@/components/continuum-logo";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Menu, X, Sparkles } from "lucide-react";
 
@@ -14,7 +14,7 @@ export const LandingNavbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <AiWorkspaceLogo size="md" />
+          <ContinuumLogo size="md" />
         </Link>
 
         {/* Desktop Nav Links */}

@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Shield, Database, Terminal } from "lucide-react";
-import { AiWorkspaceMark } from "@/components/ai-workspace-logo";
+import { ContinuumMark } from "@/components/continuum-logo";
 
 export const CtaSection: React.FC = () => {
   return (
@@ -21,7 +21,7 @@ export const CtaSection: React.FC = () => {
       >
         <div className="flex justify-center">
           <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] shadow-inner">
-            <AiWorkspaceMark className="w-12 h-12" />
+            <ContinuumMark className="w-12 h-12" />
           </div>
         </div>
 
@@ -41,7 +41,7 @@ export const CtaSection: React.FC = () => {
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
           <Link href="/assistant">
             <button className="relative inline-flex items-center justify-center gap-2 px-7 py-3.5 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-[#00F2FE] via-[#4361EE] to-[#6366F1] rounded-full shadow-[0_0_30px_rgba(67,97,238,0.4)] hover:shadow-[0_0_40px_rgba(67,97,238,0.6)] hover:scale-[1.02] transition-all">
-              <span>Open AI Workspace</span>
+              <span>Open Continuum</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </Link>

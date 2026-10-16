@@ -149,8 +149,8 @@ export function Sidebar({
         {!compact && (
           <Link
             href="/assistant"
-            aria-label="AI Workspace"
-            title="AI Workspace"
+            aria-label="Continuum"
+            title="Continuum"
             onClick={onCloseMobile}
             className="workspace-icon-button"
           >

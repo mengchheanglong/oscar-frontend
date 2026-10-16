@@ -63,7 +63,7 @@ export const PALETTES: Record<
   },
 };
 
-interface AiWorkspaceMarkProps {
+interface ContinuumMarkProps {
   className?: string;
   size?: number | string;
   palette?: PaletteId;
@@ -74,7 +74,7 @@ interface AiWorkspaceMarkProps {
  * - Precision white chevron 'A' on the left
  * - Floating vertical rounded intelligence pillar 'I' on the right
  */
-export const AiWorkspaceMark: React.FC<AiWorkspaceMarkProps> = ({
+export const ContinuumMark: React.FC<ContinuumMarkProps> = ({
   className = "w-7 h-5",
   size,
   palette = "cyber-cyan",
@@ -101,10 +101,7 @@ export const AiWorkspaceMark: React.FC<AiWorkspaceMarkProps> = ({
       </defs>
 
       {/* Dynamic architectural white A chevron */}
-      <path
-        d="M16 4H22L33 30H25.5L20 16L14.5 30H7L16 4Z"
-        fill="#FFFFFF"
-      />
+      <path d="M16 4H22L33 30H25.5L20 16L14.5 30H7L16 4Z" fill="#FFFFFF" />
 
       {/* Floating vertical rounded I-pillar */}
       <rect
@@ -119,7 +116,7 @@ export const AiWorkspaceMark: React.FC<AiWorkspaceMarkProps> = ({
   );
 };
 
-interface AiWorkspaceIconProps {
+interface ContinuumIconProps {
   className?: string;
   size?: "sm" | "md" | "lg" | "xl";
   variant?: "glyph" | "card";
@@ -131,7 +128,7 @@ interface AiWorkspaceIconProps {
  * - 'glyph': Standalone scalable emblem mark
  * - 'card': Emblem nested inside a premium dark rounded squircle tile (#161927)
  */
-export const AiWorkspaceIcon: React.FC<AiWorkspaceIconProps> = ({
+export const ContinuumIcon: React.FC<ContinuumIconProps> = ({
   className = "",
   size = "md",
   variant = "card",
@@ -148,8 +145,10 @@ export const AiWorkspaceIcon: React.FC<AiWorkspaceIconProps> = ({
 
   if (variant === "glyph") {
     return (
-      <div className={`inline-flex items-center justify-center shrink-0 ${className}`}>
-        <AiWorkspaceMark className={mark} palette={palette} />
+      <div
+        className={`inline-flex items-center justify-center shrink-0 ${className}`}
+      >
+        <ContinuumMark className={mark} palette={palette} />
       </div>
     );
   }
@@ -158,14 +157,14 @@ export const AiWorkspaceIcon: React.FC<AiWorkspaceIconProps> = ({
     <div
       className={`inline-flex items-center justify-center bg-[#161927] border border-white/10 shadow-md shrink-0 transition-transform ${box} ${className}`}
       role="img"
-      aria-label="AI Workspace Icon"
+      aria-label="Continuum Icon"
     >
-      <AiWorkspaceMark className={mark} palette={palette} />
+      <ContinuumMark className={mark} palette={palette} />
     </div>
   );
 };
 
-interface AiWorkspaceLogoProps {
+interface ContinuumLogoProps {
   className?: string;
   showText?: boolean;
   textClassName?: string;
@@ -174,10 +173,10 @@ interface AiWorkspaceLogoProps {
 }
 
 /**
- * Full AI Workspace Brand Logo:
- * Renders the Concept 3 emblem paired with the crisp bold "Workspace" wordmark.
+ * Full Continuum Brand Logo:
+ * Renders the Concept 3 emblem paired with the crisp bold "Continuum" wordmark.
  */
-export const AiWorkspaceLogo: React.FC<AiWorkspaceLogoProps> = ({
+export const ContinuumLogo: React.FC<ContinuumLogoProps> = ({
   className = "",
   showText = true,
   textClassName = "",
@@ -196,19 +195,19 @@ export const AiWorkspaceLogo: React.FC<AiWorkspaceLogoProps> = ({
     <div
       className={`inline-flex items-center gap-2 select-none ${className}`}
       role="img"
-      aria-label="AI Workspace"
+      aria-label="Continuum"
     >
-      <AiWorkspaceMark className={mark} palette={palette} />
+      <ContinuumMark className={mark} palette={palette} />
       {showText && (
         <span
           className={`text-white font-sans ${text} ${textClassName}`}
           style={{ letterSpacing: "-0.03em" }}
         >
-          Workspace
+          Continuum
         </span>
       )}
     </div>
   );
 };
 
-export default AiWorkspaceLogo;
+export default ContinuumLogo;

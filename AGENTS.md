@@ -1,4 +1,4 @@
-# AI Workspace workflow
+# Continuum workflow
 
 - Work only on `develop`. Reconcile newer `main` changes into `develop`; do not commit or merge into `main`.
 - Commit completed, verified changes locally. Do not push unless the user explicitly requests it.
@@ -10,3 +10,13 @@
 - When an assigned task is completed and verified, call `update_task_status` for that task in `AIW` with status `DONE`. Do not mark unverified work complete.
 - Keep personal access tokens out of tracked files and tool output. The project MCP configuration forwards `AI_WORKSPACE_API_KEY` from the local environment.
 - If the MCP server or authentication is unavailable, report the blocker instead of claiming that decisions were consulted or a task was updated.
+
+## Continuum repository split
+
+- This checkout belongs to Continuum. Keep the original AI Workspace repositories
+  separate; do not push Continuum changes to their remotes.
+- The user's 2026-10-17 request authorizes the initial private Continuum repository
+  creation and initial develop push. Future pushes still require user direction.
+- The original AIW implementation guide and MCP project are inherited references;
+  do not rename existing user project records or database identifiers as part of
+  product branding. Report MCP unavailability honestly.

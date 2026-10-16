@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { AiWorkspaceLogo } from "@/components/ai-workspace-logo";
+import { ContinuumLogo } from "@/components/continuum-logo";
 import { CheckCircle2, Shield, Terminal, ArrowUpRight } from "lucide-react";
 
 export const LandingFooter: React.FC = () => {
@@ -13,7 +13,7 @@ export const LandingFooter: React.FC = () => {
           {/* Col 1: Brand */}
           <div className="space-y-3 md:col-span-2">
             <Link href="/" className="inline-block">
-              <AiWorkspaceLogo size="md" />
+              <ContinuumLogo size="md" />
             </Link>
             <p className="text-xs text-zinc-500 max-w-sm leading-relaxed">
               One workspace. Every answer, sourced. Built for engineering teams that require deterministic traceability across requirements, ADRs, tasks, and meetings.
@@ -78,7 +78,7 @@ export const LandingFooter: React.FC = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-500">
           <div>
-            &copy; {new Date().getFullYear()} AI Workspace Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} Continuum Inc. All rights reserved.
           </div>
           <div className="text-[11px] text-zinc-500">
             One workspace. Every answer, sourced.
