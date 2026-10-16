@@ -1007,7 +1007,14 @@ html[data-workspace-theme]
 }
 .project-sidebar-row .workspace-project {
   width: 100%;
-  padding-right: 54px;
+  min-height: 44px;
+  padding: 8px 54px 8px 47px;
+  position: relative;
+}
+.project-sidebar-row .workspace-project > .workspace-project-icon,
+.project-sidebar-row .workspace-project > .project-emoji {
+  position: absolute;
+  left: 11px;
 }
 .project-row-actions {
   position: absolute;
@@ -1066,6 +1073,7 @@ html[data-workspace-theme]
   display: flex;
   align-items: center;
   min-width: 0;
+  min-height: 44px;
   border-radius: 12px;
   padding-right: 5px;
 }
@@ -1076,23 +1084,27 @@ html[data-workspace-theme]
 .chat-nav-select {
   display: flex;
   align-items: center;
-  gap: 9px;
   flex: 1;
   min-width: 0;
-  padding: 10px 10px;
+  height: 44px;
+  padding: 0 10px 0 47px;
+  position: relative;
   text-align: left;
   font-size: 13px;
   border-radius: 12px;
 }
 .chat-nav-select svg {
+  position: absolute;
+  left: 14px;
   color: var(--ws-muted);
 }
 .project-draft-chat {
   display: flex;
   align-items: center;
+  height: 44px;
   min-height: 44px;
   text-align: left;
-  padding: 10px 10px 10px 47px;
+  padding: 0 10px 0 47px;
   width: 100%;
   border-radius: 12px;
   font-size: 13px;
