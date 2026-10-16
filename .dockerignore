@@ -1,10 +1,16 @@
 node_modules
 .next
 .git
-.env*.local
+.env
+.env.*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .DS_Store
 *.tsbuildinfo
+
+.codex
+.agents
+.vercel
+coverage

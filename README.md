@@ -1,5 +1,11 @@
 # Continuum — Frontend
 
+The sibling backend repository owns Compose. From `../continuum-backend`, use
+`pnpm stack:up` for the full Docker app on port 3002 with API port 3001. See its
+`docs/DOCKER_LOCAL.md` for migrations, existing-data mounts, and Hermes limitations.
+The frontend Docker build accepts `BACKEND_INTERNAL_URL` (default `http://api:3001`)
+and uses `/api/v1` in the browser. Local environment files stay outside the image.
+
 Continuum is a personal, chat-first workspace for business, finance, research,
 project files, tasks, decisions, and AI-assisted work. This is an independent
 repository derived from AI Workspace's develop branch, with its Git history
@@ -50,7 +56,7 @@ pnpm install
 cp .env.example .env.local
 ```
 
-The default backend endpoint is `http://localhost:3000/api/v1`.
+The default local backend endpoint is `http://127.0.0.1:3001/api/v1`.
 
 ### 3. Run Development Server
 

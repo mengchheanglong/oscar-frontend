@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:24.14.0-bookworm-slim AS base
 RUN npm install -g pnpm@10.32.1
 WORKDIR /app
 
@@ -12,6 +12,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_API_URL=/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ARG BACKEND_INTERNAL_URL=http://api:3001
+ENV BACKEND_INTERNAL_URL=$BACKEND_INTERNAL_URL
 RUN pnpm build
 
 FROM base AS runner
@@ -21,14 +23,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+LABEL org.opencontainers.image.title="Continuum Frontend"
 
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-USER nextjs
+USER node
 EXPOSE 3000
 
 CMD ["node", "server.js"]
