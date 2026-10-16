@@ -658,8 +658,8 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
             {/* Header & Title */}
             <div>
               <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">
-                <Link href="/dashboard" className="hover:text-slate-600 transition-colors">
-                  Dashboard
+                <Link href="/settings" className="hover:text-slate-600 transition-colors">
+                  Settings
                 </Link>
                 <span>/</span>
                 <span className="text-slate-700 font-medium">Integrations & Apps</span>

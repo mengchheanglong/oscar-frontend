@@ -51,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-codex-accent transition-colors shrink-0" />
             <span className="truncate pr-2">
               <span className="sm:hidden">Search</span>
-              <span className="hidden sm:inline">Search tasks, decisions, requirements...</span>
+              <span className="hidden sm:inline">Search your workspace...</span>
             </span>
             <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-mono font-medium text-slate-400 bg-slate-100 border border-slate-200/80 px-1.5 py-0.5 rounded shadow-2xs group-hover:text-slate-600 group-hover:border-slate-300 transition-all shrink-0">
               <span className="text-xs leading-none">⌘</span>K

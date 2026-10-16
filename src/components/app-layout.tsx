@@ -103,6 +103,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           pathname !== "/dashboard" &&
           pathname !== "/tasks" &&
           pathname !== "/profile" &&
+          !pathname.startsWith("/settings") &&
           pathname !== "/team" &&
           pathname !== "/assistant" ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-5 max-w-md mx-auto">
@@ -112,7 +113,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="space-y-1.5">
                 <h2 className="text-xl font-bold text-codex-text">Select a Workspace</h2>
                 <p className="text-xs text-codex-muted leading-relaxed">
-                  To view and manage requirements, tasks, decisions, and files, please select an active workspace.
+                  Select a project to open its files, checklist, and decisions.
                 </p>
               </div>
 

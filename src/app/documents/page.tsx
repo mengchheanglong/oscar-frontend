@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
+import { ProjectNavigation } from "@/components/project-navigation";
 import { AppLayout } from "@/components/app-layout";
 import { FilterDropdown, FilterOption } from "@/components/ui/filter-dropdown";
 import { api } from "@/lib/api";
@@ -559,6 +560,7 @@ export default function DocumentsPage() {
 
   return (
     <AppLayout>
+      <ProjectNavigation active="Files" />
       <div className="space-y-6">
         {/* BREADCRUMB & HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -568,13 +570,13 @@ export default function DocumentsPage() {
                 href="/dashboard"
                 className="text-blue-600 hover:text-blue-700 hover:underline"
               >
-                Dashboard
+                Home
               </Link>
               <span>/</span>
-              <span className="text-slate-800">Documents</span>
+              <span className="text-slate-800">Files</span>
             </nav>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 tracking-tight">
-              Documents
+              Files
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 font-normal">
               {filteredDocuments.length} uploaded document{filteredDocuments.length === 1 ? "" : "s"} across{" "}
@@ -589,7 +591,7 @@ export default function DocumentsPage() {
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium shadow-xs transition-all active:scale-[0.98] w-fit"
           >
             <Upload className="w-4 h-4 stroke-[2.2]" />
-            <span>Upload Document</span>
+            <span>Upload file</span>
           </button>
         </div>
 
@@ -636,7 +638,7 @@ export default function DocumentsPage() {
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Filter documents..."
+                placeholder="Filter files..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs transition-all"
@@ -709,7 +711,7 @@ export default function DocumentsPage() {
               <FolderOpen className="w-7 h-7" />
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
-              <h3 className="text-base font-semibold text-slate-900">No documents found</h3>
+              <h3 className="text-base font-semibold text-slate-900">No uploaded files found</h3>
               <p className="text-xs text-slate-500">
                 {searchQuery || selectedProject !== "ALL" || selectedType !== "ALL"
                   ? "Try resetting your active filters or search terms."
@@ -722,7 +724,7 @@ export default function DocumentsPage() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-medium shadow-xs transition-all"
             >
               <Upload className="w-3.5 h-3.5" />
-              Upload Document
+              Upload file
             </button>
           </div>
         ) : viewMode === "grid" ? (

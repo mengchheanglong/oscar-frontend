@@ -112,3 +112,38 @@ IPv4 backend address avoids another app's localhost IPv6 listener.
 Checks: `pnpm test:folder-resume` verifies fingerprint compatibility, block
 boundaries, changed content and pause handling. The legacy scanner checks remain
 available with `pnpm test:local-folders`.
+
+
+## Personal workspace navigation (2026-10-16)
+
+Home shows recent projects and the selected project's unfinished checklist,
+conversations and agent runs. It replaces the management-statistics dashboard.
+The main navigation is Home, Projects, Files, Search, AI Copilot and Settings.
+AI Copilot, its modes, Hermes execution, memory and history recall are unchanged.
+
+Project navigation provides Overview, Tasks, Files, Decisions and Settings.
+The overview contains the project brief rather than a software-delivery dashboard.
+Use project files for detailed goals, requirements, research and meeting notes.
+Requirements and Meetings are removed from primary navigation and creation
+shortcuts; their existing routes, records and backend contracts are retained.
+Decisions remain available inside the current project. Tasks use a minimal
+add/complete checklist with completed and cancelled items available on demand;
+existing descriptions, due dates and other statuses remain visible.
+
+Project Settings contains existing edit/archive/ownership actions and project
+membership controls (add an existing account, change access, confirmed removal).
+Backend authorization remains authoritative. Settings contains Account,
+Integrations and project sharing; user administration is shown only to admins.
+The previous integrations URL still works, alongside /settings/integrations.
+Files combines existing document uploads and private uploaded folder copies.
+No existing records are migrated or deleted by this UI change.
+
+Verification: frontend lint, TypeScript and production build passed. Local browser
+QA covered navigation, project settings/member display, nested integrations,
+files/folders, checklist creation and completion persisted through an API read,
+and temporary task cleanup. Desktop and 390px Home screenshots were inspected;
+no horizontal overflow was observed on the mobile Home. No membership changes
+or AI generation were performed. AIW accepted-decision lookup failed (fetch
+failed); no assigned task was supplied or marked complete. Backend continuity
+work and frontend Copilot/API edits already present were left uncommitted and
+unchanged. Only this navigation slice is committed locally on develop.

@@ -9,14 +9,10 @@ import { AiWorkspaceLogo } from "@/components/ai-workspace-logo";
 import {
   LayoutDashboard,
   Folder,
-  Users,
-  FileCheck2,
-  CheckSquare,
   Files,
-  Calendar,
-  Bookmark,
   Sparkles,
-  GitBranch,
+  Search,
+  Settings,
   X,
   LogOut,
   User,
@@ -29,16 +25,12 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Home", href: "/dashboard", icon: LayoutDashboard },
   { label: "Projects", href: "/projects", icon: Folder },
-  { label: "Team", href: "/team", icon: Users },
-  { label: "Requirements", href: "/requirements", icon: FileCheck2 },
-  { label: "Tasks", href: "/tasks", icon: CheckSquare },
-  { label: "Documents", href: "/documents", icon: Files },
-  { label: "Meetings", href: "/meetings", icon: Calendar },
-  { label: "Decisions", href: "/decisions", icon: Bookmark },
+  { label: "Files", href: "/documents", icon: Files },
+  { label: "Search", href: "/search", icon: Search },
   { label: "AI Copilot", href: "/assistant", icon: Sparkles },
-  { label: "Integrations", href: "/integrations", icon: GitBranch },
+  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) => {

@@ -120,43 +120,23 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         href: "/tasks?create=true",
         icon: Plus,
         category: "Quick Actions",
-        desc: "Add an actionable engineering task item",
+        desc: "Add your next project action",
         tag: "Action",
         iconColorClass: "text-emerald-600 bg-emerald-50",
       },
       {
-        id: "act-create-req",
-        label: "Create Requirement",
-        href: "/requirements?create=true",
-        icon: Plus,
-        category: "Quick Actions",
-        desc: "Define new project specification & criteria",
-        tag: "Action",
-        iconColorClass: "text-blue-600 bg-blue-50",
-      },
-      {
         id: "act-create-adr",
-        label: "Log Architectural Decision (ADR)",
+        label: "Record a decision",
         href: "/decisions?create=true",
         icon: Plus,
         category: "Quick Actions",
-        desc: "Record technical rationale, context, and choice",
+        desc: "Record a choice and its reasons",
         tag: "Action",
         iconColorClass: "text-purple-600 bg-purple-50",
       },
       {
-        id: "act-create-meeting",
-        label: "Log Meeting",
-        href: "/meetings?create=true",
-        icon: Plus,
-        category: "Quick Actions",
-        desc: "Record meeting minutes, transcript, or agenda",
-        tag: "Action",
-        iconColorClass: "text-cyan-600 bg-cyan-50",
-      },
-      {
         id: "act-upload-doc",
-        label: "Upload Document",
+        label: "Upload file",
         href: "/documents?upload=true",
         icon: Plus,
         category: "Quick Actions",
@@ -180,96 +160,13 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
   const navigationItems: PaletteItem[] = useMemo(
     () => [
-      {
-        id: "nav-dashboard",
-        label: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboard,
-        category: "Navigation",
-        desc: "Overview, metrics, and recent workspace activity",
-      },
-      {
-        id: "nav-requirements",
-        label: "Requirements",
-        href: "/requirements",
-        icon: FileCheck2,
-        category: "Navigation",
-        desc: "Project scope, specifications, and acceptance criteria",
-      },
-      {
-        id: "nav-decisions",
-        label: "Architectural Decisions (ADR)",
-        href: "/decisions",
-        icon: GitPullRequest,
-        category: "Navigation",
-        desc: "Technical records, superseded decisions, and revisions",
-      },
-      {
-        id: "nav-tasks",
-        label: "Tasks Board",
-        href: "/tasks",
-        icon: CheckSquare,
-        category: "Navigation",
-        desc: "Engineering Kanban & list view with due dates",
-      },
-      {
-        id: "nav-meetings",
-        label: "Meetings",
-        href: "/meetings",
-        icon: Calendar,
-        category: "Navigation",
-        desc: "Sync minutes, discussions, and AI action-item proposals",
-      },
-      {
-        id: "nav-documents",
-        label: "Documents",
-        href: "/documents",
-        icon: FileText,
-        category: "Navigation",
-        desc: "Knowledge base files and parsed vector sources",
-      },
-      {
-        id: "nav-assistant",
-        label: "AI Copilot Assistant",
-        href: "/assistant",
-        icon: Sparkles,
-        category: "Navigation",
-        desc: "DeepSeek V4 Pro grounded workspace conversation",
-      },
-      {
-        id: "nav-search",
-        label: "Universal Search",
-        href: "/search",
-        icon: Search,
-        category: "Navigation",
-        desc: "Full faceted keyword, semantic, and hybrid search",
-      },
-      {
-        id: "nav-team",
-        label: "Team & Workspace Members",
-        href: "/team",
-        icon: Users,
-        category: "Navigation",
-        desc: "Manage members, roles, and pending invitations",
-      },
-      {
-        id: "nav-integrations",
-        label: "Integrations & GitHub",
-        href: "/integrations",
-        icon: Layers,
-        category: "Navigation",
-        desc: "GitHub issues sync and third-party tools",
-      },
-      {
-        id: "nav-projects",
-        label: "Workspaces Directory",
-        href: "/projects",
-        icon: FolderOpen,
-        category: "Navigation",
-        desc: "Manage, switch, or create new workspace projects",
-      },
-    ],
-    []
+      { id: "nav-home", label: "Home", href: "/dashboard", icon: LayoutDashboard, category: "Navigation", desc: "Recent projects and work" },
+      { id: "nav-projects", label: "Projects", href: "/projects", icon: FolderOpen, category: "Navigation", desc: "Open or create a project" },
+      { id: "nav-files", label: "Files", href: "/documents", icon: FileText, category: "Navigation", desc: "Documents and uploaded folders" },
+      { id: "nav-search", label: "Search", href: "/search", icon: Search, category: "Navigation", desc: "Find your work" },
+      { id: "nav-assistant", label: "AI Copilot", href: "/assistant", icon: Sparkles, category: "Navigation", desc: "Open your conversations" },
+      { id: "nav-settings", label: "Settings", href: "/settings", icon: Layers, category: "Navigation", desc: "Account and connections" },
+    ], []
   );
 
   const projectItems: PaletteItem[] = useMemo(
@@ -530,7 +427,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search tasks, decisions, requirements, documents, or jump to page..."
+            placeholder="Search your work or jump to a page..."
             className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
             aria-label="Search command palette"
           />

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useAuth, Project } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
+import { ProjectNavigation } from "@/components/project-navigation";
 import { AppLayout } from "@/components/app-layout";
 import { ProposalReviewDialog } from "@/components/ai/proposal-review-dialog";
 import { api } from "@/lib/api";
@@ -140,7 +141,7 @@ function formatDecisionDate(dateStr?: string | Date | null): string {
 }
 
 export default function DecisionsPage() {
-  const { currentProject, projects } = useAuth();
+  const { currentProject, projects, setCurrentProject } = useAuth();
   const { showToast } = useToast();
 
   const [items, setItems] = useState<DecisionItem[]>([]);
@@ -503,6 +504,7 @@ export default function DecisionsPage() {
 
   return (
     <AppLayout>
+      <ProjectNavigation active="Decisions" />
       <div className="space-y-6 max-w-7xl mx-auto pb-12">
         {/* ==================================================================== */}
         {/* VIEW 1: DECISIONS LIST VIEW (IMAGE 1)                                */}
@@ -517,7 +519,7 @@ export default function DecisionsPage() {
                     href="/dashboard"
                     className="text-blue-600 hover:text-blue-700 hover:underline"
                   >
-                    Dashboard
+                    Home
                   </Link>
                   <span>/</span>
                   <span className="text-slate-800 font-medium">Decisions</span>
@@ -547,10 +549,9 @@ export default function DecisionsPage() {
               {/* Refined Project Filter Dropdown */}
               <DropdownSelect
                 value={selectedProjectId}
-                onChange={setSelectedProjectId}
+                onChange={(id) => { const project = projects.find(p => p.id === id); if (project) { setCurrentProject(project); setSelectedProjectId(id); setViewState("list"); setActiveDec(null); } }}
                 prefix="Project:"
                 options={[
-                  { value: "ALL", label: "All" },
                   ...projects.map((p) => ({
                     value: p.id,
                     label: p.name,
