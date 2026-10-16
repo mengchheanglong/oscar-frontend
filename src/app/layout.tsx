@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "./workspace-theme.css";
+import { WorkspaceThemeProvider } from "@/context/workspace-theme";
 import { AuthProvider } from "@/context/auth-context";
 import { ToastProvider } from "@/context/toast-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI Workspace - Project Workspace Intelligence",
-  description: "Unified Intelligence for Modern Project Teams",
+  title: "AI Workspace",
+  description: "Your projects, knowledge, and AI in one workspace.",
   icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "32x32" },
-    ],
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     shortcut: "/icon.svg",
     apple: "/icon.svg",
   },
@@ -25,13 +25,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
-      <body className={`${inter.className} bg-[#08090a] text-zinc-100 min-h-screen`}>
-        <AuthProvider>
-          <ToastProvider>
-            {children}
-          </ToastProvider>
-        </AuthProvider>
+    <html
+      lang="en"
+      data-workspace-theme="dark"
+      suppressHydrationWarning
+      style={{ colorScheme: "dark" }}
+    >
+      <head>
+        <Script
+          id="workspace-theme-init"
+          strategy="beforeInteractive"
+        >{`try{var t=localStorage.getItem('aiw_theme');var r=t==='light'?'light':t==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):'dark';document.documentElement.dataset.workspaceTheme=r;document.documentElement.style.colorScheme=r;}catch{}`}</Script>
+      </head>
+      <body
+        className={`${inter.className} bg-[#08090a] text-zinc-100 min-h-screen`}
+      >
+        <WorkspaceThemeProvider>
+          <AuthProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AuthProvider>
+        </WorkspaceThemeProvider>
       </body>
     </html>
   );

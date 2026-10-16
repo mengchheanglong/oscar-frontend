@@ -89,6 +89,7 @@ export function AppLayout({
         onCloseMobile={closeNavigation}
         chatHistory={chatHistory}
         onNewChat={onNewChat}
+        onOpenSearch={() => setCommandPaletteOpen(true)}
       />
 
       {/* Main Column - fixed height with navbar and scrollable canvas */}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { WorkspaceAppearance } from "@/context/workspace-theme";
 import { AppLayout } from "@/components/app-layout";
 import { useAuth } from "@/context/auth-context";
 
@@ -45,6 +46,7 @@ export default function SettingsPage() {
             Account, connections, and project access.
           </p>
         </div>
+        <div className="rounded-2xl border border-slate-200 bg-white"><WorkspaceAppearance /></div>
         <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
           {links.map((link) => (
             <Link

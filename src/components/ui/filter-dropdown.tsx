@@ -1,5 +1,6 @@
 "use client";
 
+import { WorkspaceIcon } from "@/components/workspace-icons";
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
 
@@ -78,7 +79,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
   // 3. Default idle: white background, subtle border `border-slate-200`, text `text-slate-800`, hover:border-slate-800
   const isFiltered = !isAll;
   const buttonStyle = isFiltered
-    ? "bg-[#EEF2FF] border-[#6366F1] text-[#4F46E5] shadow-xs"
+    ? "bg-[var(--ws-hover)] border-codex-border text-codex-text"
     : isOpen
     ? "bg-white border-slate-800 text-slate-900 shadow-xs"
     : "bg-white border-slate-200 text-slate-800 hover:border-slate-800 hover:text-slate-900";
@@ -96,7 +97,7 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
         <span className="truncate max-w-[170px]">
           {label}: {displayValue}
         </span>
-        <ChevronDown
+        <WorkspaceIcon name="chevron"
           className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
             isFiltered ? "text-[#4F46E5]" : "text-slate-400"
           } ${isOpen ? "rotate-180" : ""}`}

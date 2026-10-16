@@ -211,3 +211,17 @@ Files and Kanban navigation, and mobile menu dismissal/focus restoration. Deskto
 and 390px screenshots were inspected with no page overflow. No AI generation or
 record deletion was performed. AIW accepted-decision lookup returned no decisions;
 no assigned task was supplied or marked complete. Changes are frontend-only.
+
+
+## Grok visual direction (2026-10-16)
+
+The workspace now uses Grok's measured warm dark palette, muted chrome, rounded
+composer, matching common icons, collapsible sidebar, and dark/light/system
+appearance controls. Theme tokens reach existing workspace pages and dialogs.
+Chat engines remain Assistant/Hermes. The composer plus menu uploads project
+documents or opens Files, with drag-and-drop using the same upload service.
+The app root opens chat; sign-in uses a centered form with no demo prefill.
+
+Reference scope, measured values, implementation and verification are recorded in
+[the Grok UI reference](docs/UI_REFERENCE_GROK.md). Signed-in-only Grok screens
+were not available to scrape; the supplied screenshot guides that part of the UI.

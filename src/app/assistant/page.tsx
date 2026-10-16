@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
+import { WorkspaceIcon } from "@/components/workspace-icons";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import {
@@ -157,6 +158,45 @@ function UserAvatar({ name }: { name?: string }) {
   );
 }
 
+
+
+type DateGroup = "Today" | "Yesterday" | "Previous 7 Days" | "Older";
+
+function groupConversationsByDate(
+  conversations: Conversation[]
+): Record<DateGroup, Conversation[]> {
+  const groups: Record<DateGroup, Conversation[]> = {
+    Today: [],
+    Yesterday: [],
+    "Previous 7 Days": [],
+    Older: [],
+  };
+
+  const now = new Date();
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  ).getTime();
+  const startOfYesterday = startOfToday - 86400000;
+  const startOf7DaysAgo = startOfToday - 7 * 86400000;
+
+  for (const conv of conversations) {
+    const time = new Date(conv.updatedAt || conv.createdAt).getTime();
+    if (time >= startOfToday) {
+      groups["Today"].push(conv);
+    } else if (time >= startOfYesterday) {
+      groups["Yesterday"].push(conv);
+    } else if (time >= startOf7DaysAgo) {
+      groups["Previous 7 Days"].push(conv);
+    } else {
+      groups["Older"].push(conv);
+    }
+  }
+
+  return groups;
+}
+
 export default function AssistantPage() {
   const { currentProject, user, projects, setCurrentProject } = useAuth();
   const { showToast } = useToast();
@@ -235,14 +275,6 @@ export default function AssistantPage() {
   useEffect(() => {
     if (inspectingCitation && inspectorRef.current && !inspectorRef.current.open) inspectorRef.current.showModal();
   }, [inspectingCitation]);
-
-  useEffect(() => {
-    const closeHistory = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !inspectingCitation) setSidebarOpen(false);
-    };
-    if (sidebarOpen) window.addEventListener("keydown", closeHistory);
-    return () => window.removeEventListener("keydown", closeHistory);
-  }, [sidebarOpen, inspectingCitation]);
 
   // Fetch complete entity records when inspecting citation in-app
   useEffect(() => {
@@ -693,36 +725,106 @@ export default function AssistantPage() {
     );
   }, [conversations, convSearch]);
 
+  const groupedConversations = useMemo(
+    () => groupConversationsByDate(filteredConversations),
+    [filteredConversations]
+  );
 
   const closeNavigation = useCallback(() => setSidebarOpen(false), []);
-  const chatHistory = <div className="space-y-1">
-    <input type="search" aria-label="Search conversations" value={convSearch} onChange={event => setConvSearch(event.target.value)} placeholder="Find a chat…" className="mb-2 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-slate-500 focus:border-slate-500" />
-    {isLoading ? <p role="status" className="px-3 py-3 text-xs text-slate-400">Loading chats…</p> : historyError ? <button type="button" onClick={() => void loadConversations()} className="px-3 py-3 text-xs text-slate-400 hover:text-white">Couldn’t load chats. Retry</button> : filteredConversations.length === 0 ? <p className="px-3 py-3 text-xs text-slate-500">{convSearch ? "No matching chats" : "Your chats will appear here."}</p> : filteredConversations.map(conversation => <div key={conversation.id} className={`group relative flex items-center rounded-lg ${activeConv?.id === conversation.id ? "bg-white/10" : "hover:bg-white/[0.06]"}`}>
-      <button type="button" aria-pressed={activeConv?.id === conversation.id} disabled={isSending} onClick={() => selectConversation(conversation)} className="min-w-0 flex-1 rounded-lg py-2.5 pl-3 pr-8 text-left text-xs text-slate-300 disabled:opacity-50"><span className="block truncate">{conversation.title || "Untitled chat"}</span></button>
-      <button type="button" onClick={event => promptDeleteConversation(event, conversation.id)} disabled={isSending} aria-label={`Delete ${conversation.title || "conversation"}`} className="absolute right-1 rounded-md p-1.5 text-slate-500 hover:text-rose-400 focus-visible:opacity-100 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
-    </div>)}
-  </div>;
-  const isNewChat = messages.length === 0 && !isSending && !isLoadingMessages && !messagesError && projects.length > 0;
+  const chatHistory = (
+    <div className="space-y-1">
+      {isLoading ? (
+        <p role="status" className="px-3 py-3 text-xs text-slate-400">
+          Loading chats…
+        </p>
+      ) : historyError ? (
+        <button
+          type="button"
+          onClick={() => void loadConversations()}
+          className="px-3 py-3 text-xs text-slate-400 hover:text-white"
+        >
+          Couldn’t load chats. Retry
+        </button>
+      ) : filteredConversations.length === 0 ? (
+        <p className="px-3 py-3 text-xs text-slate-500">
+          {convSearch ? "No matching chats" : "Your chats will appear here."}
+        </p>
+      ) : (
+        (["Today", "Yesterday", "Previous 7 Days", "Older"] as DateGroup[]).map(
+          (groupName) => {
+            const items = groupedConversations[groupName];
+            if (!items || items.length === 0) return null;
+            return (
+              <div key={groupName} className="space-y-0.5 pt-1">
+                <div className="px-3 py-1 text-[11px] font-medium text-slate-500">
+                  {groupName}
+                </div>
+                {items.map((conversation) => (
+                  <div
+                    key={conversation.id}
+                    className={`group relative flex items-center rounded-lg ${
+                      activeConv?.id === conversation.id
+                        ? "bg-white/10"
+                        : "hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      aria-pressed={activeConv?.id === conversation.id}
+                      disabled={isSending}
+                      onClick={() => selectConversation(conversation)}
+                      className="min-w-0 flex-1 rounded-lg py-2.5 pl-3 pr-8 text-left text-xs text-slate-300 disabled:opacity-50"
+                    >
+                      <span className="block truncate">
+                        {conversation.title || "Untitled chat"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) =>
+                        promptDeleteConversation(event, conversation.id)
+                      }
+                      disabled={isSending}
+                      aria-label={`Delete ${conversation.title || "conversation"}`}
+                      className="absolute right-1 rounded-md p-1.5 text-slate-500 hover:text-rose-400 focus-visible:opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+        )
+      )}
+    </div>
+  );
+  const isNewChat =
+    messages.length === 0 &&
+    !isSending &&
+    !isLoadingMessages &&
+    !messagesError &&
+    projects.length > 0;
 
   return (
-    <AppLayout chatHistory={chatHistory} onNewChat={handleResetChat} navigationOpen={sidebarOpen} onCloseNavigation={closeNavigation}>
-      <div className="relative flex h-full min-h-0 w-full overflow-hidden bg-white">
-        <section aria-label="Copilot conversation" className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white">
-          <header className="flex h-16 shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-slate-100 px-3 sm:px-6">
+    <AppLayout
+      chatHistory={chatHistory}
+      onNewChat={handleResetChat}
+      navigationOpen={sidebarOpen}
+      onCloseNavigation={closeNavigation}
+    >
+      <div className="relative flex h-full min-h-0 w-full overflow-hidden chat-canvas">
+        <section
+          aria-label="Copilot conversation"
+          className="flex min-w-0 flex-1 flex-col overflow-hidden chat-canvas"
+        >
+          <header className="chat-header">
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              <button type="button" onClick={() => setSidebarOpen(open => !open)} aria-label="Open navigation" aria-expanded={sidebarOpen} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden"><PanelLeft className="h-4 w-4" /></button>
-              <div className="hidden min-w-0 sm:block">
-                <div className="flex items-center gap-2">
-                  <h1 className="whitespace-nowrap text-sm font-semibold text-slate-900">Workspace</h1>
-
-                </div>
-                <p className="mt-0.5 truncate text-[11px] text-slate-400">
-                  {activeConv?.title || (currentProject ? currentProject.name : "All Projects Chat")}
-                </p>
-              </div>
+              <button type="button" onClick={() => setSidebarOpen(open => !open)} aria-label="Open navigation" aria-expanded={sidebarOpen} className="workspace-icon-button md:hidden"><WorkspaceIcon name="panel" /></button>
+              <div className="chat-header-title">{activeConv?.title || ""}</div>
             </div>
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-              <button type="button" aria-label="Memory" disabled={!memoryProjectId} onClick={() => { setMemoryDraft(null); setMemoryPanelOpen(true); }} className="h-9 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"><Brain className="h-4 w-4 sm:hidden" /><span className="hidden sm:inline">Memory</span></button>
+            <div className="chat-header-actions">
+              <button type="button" aria-label="Memory" disabled={!memoryProjectId} onClick={() => { setMemoryDraft(null); setMemoryPanelOpen(true); }} className="workspace-icon-button disabled:opacity-40" title="Memory"><Brain className="h-5 w-5" /></button>
               {projects.length > 0 && (
                 <DropdownSelect
                   value={currentProject?.id ?? "ALL"}
@@ -735,7 +837,7 @@ export default function AssistantPage() {
                     }
                   }}
                   placeholder="All Projects"
-                  triggerClassName="h-8 border-slate-200 text-xs rounded-xl shadow-2xs font-semibold max-w-[110px] sm:max-w-none"
+                  triggerClassName="chat-project-trigger"
                   options={[
                     {
                       value: "ALL",
@@ -755,8 +857,8 @@ export default function AssistantPage() {
           </header>
 
           {/* Messages Stream / Hero Canvas */}
-          <div className={isNewChat ? "relative shrink-0 overflow-y-auto max-h-[45%]" : "relative min-h-0 flex-1"}>
-          <div ref={messageScrollRef} onScroll={(event) => { const container = event.currentTarget; const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80; stickToBottomRef.current = nearBottom; setShowScrollToLatest(!nearBottom && messages.length > 0); }} className="h-full overflow-y-auto px-3 py-6 sm:px-6 space-y-6">
+          <div className={isNewChat ? "relative shrink-0" : "relative min-h-0 flex-1"}>
+          <div ref={messageScrollRef} onScroll={(event) => { const container = event.currentTarget; const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80; stickToBottomRef.current = nearBottom; setShowScrollToLatest(!nearBottom && messages.length > 0); }} className={isNewChat ? "px-3 sm:px-6" : "h-full overflow-y-auto px-3 py-6 sm:px-6 space-y-6"}>
             {messagesError ? (
               <div role="alert" className="mx-auto max-w-md space-y-3 rounded-xl border border-slate-200 p-6 text-center"><AlertCircle className="mx-auto h-6 w-6 text-slate-400" /><h2 className="text-sm font-medium text-slate-700">Couldn’t load this conversation</h2><p className="text-xs text-slate-500">{messagesError}</p><button type="button" onClick={() => activeConv && void loadMessages(activeConv.id)} className="text-xs font-medium text-codex-accent hover:underline">Try again</button></div>
             ) : isLoadingMessages ? (
@@ -799,9 +901,8 @@ export default function AssistantPage() {
                 </div>
               </div>
             ) : messages.length === 0 && !isSending ? (
-              <div className="mx-auto max-w-3xl px-3 pt-[clamp(2rem,12vh,8rem)] pb-5 text-center">
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">What would you like to work on?</h2>
-                <p className="mt-3 text-sm text-slate-400">{currentProject ? currentProject.name : "Explore ideas across your projects"}</p>
+              <div className="chat-welcome">
+                <h2>What should we explore?</h2>
               </div>
             ) : (
               /* Message Bubbles */
@@ -816,17 +917,18 @@ export default function AssistantPage() {
                 return (
                   <div
                     key={msg.id}
-                    className={`flex gap-3 items-start max-w-3xl mx-auto ${
+                    data-message-role={msg.role}
+                    className={`chat-message flex gap-3 items-start ${
                       !isAssistant ? "flex-row-reverse" : ""
                     }`}
                   >
-                    {isAssistant ? (
+                    <div className="chat-avatar">{isAssistant ? (
                       <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 shadow-2xs">
                         <Bot className="w-4 h-4" />
                       </div>
                     ) : (
                       <UserAvatar name={user?.displayName ?? user?.fullName} />
-                    )}
+                    )}</div>
 
                     <div
                       className={`space-y-1.5 ${
@@ -837,7 +939,7 @@ export default function AssistantPage() {
                     >
                       {/* Meta header */}
                       <div
-                        className={`flex flex-wrap items-center gap-2 text-[10px] text-slate-400 ${
+                        className={`chat-meta flex flex-wrap items-center gap-2 text-[10px] text-slate-400 ${
                           !isAssistant ? "flex-row-reverse" : ""
                         }`}
                       >
@@ -845,7 +947,7 @@ export default function AssistantPage() {
                           {isAssistant ? "AI Copilot" : user?.displayName ?? "You"}
                         </span>
                         {isAssistant && (
-                          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
+                          <span className="chat-mode-badge text-[9px] font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
                             {getModeConfig(msg.mode).label}
                           </span>
                         )}
@@ -870,7 +972,7 @@ export default function AssistantPage() {
 
                       {/* Bubble Body */}
                       <div
-                        className={`rounded-2xl p-4 sm:p-5 space-y-3 ${
+                        className={`chat-bubble ${isAssistant ? "chat-bubble-assistant" : "chat-bubble-user"} rounded-2xl p-4 sm:p-5 space-y-3 ${
                           isAssistant
                             ? isFailed
                               ? "bg-rose-50 border border-rose-200 text-rose-700"
@@ -985,13 +1087,14 @@ export default function AssistantPage() {
 
           {work.error && <p role="status" className="px-6 text-xs text-amber-700">{work.error}</p>}
           <CopilotComposer
+            projectId={currentProject?.id}
             value={inputContent} onChange={setInputContent}
             onSend={() => void handleSendMessage()}
             useTools={useTools} onUseToolsChange={setUseTools} toolsAvailable={work.available&&!!currentProject} toolsHint={!currentProject ? "Choose a project to use Hermes tools." : work.available ? "Hermes can search files, calculate, and prepare changes for review." : "Hermes is unavailable. Check Settings > Integrations."}
             sending={isSending || work.active} loading={isLoading || isLoadingMessages || (useTools&&!work.available) || (!!activeConv && work.loading) || !!messagesError || projects.length === 0}
             error={sendError} failedRequest={failedRequest} onDismissError={() => setSendError(null)} textareaRef={textareaRef}
           />
-          {isNewChat && <div className="min-h-0 flex-1" />}
+          {isNewChat && <div className="flex-1 min-h-0" />}
         </section>
       </div>
 

@@ -1,10 +1,20 @@
 "use client";
 
-import React, { useCallback, useLayoutEffect, useRef } from "react";
-import { AlertCircle, ArrowUp, Filter, Loader2, X } from "lucide-react";
+import React, {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useEffect,
+  useState,
+} from "react";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import { WorkspaceIcon } from "@/components/workspace-icons";
+import { AlertCircle, Filter, Loader2, X } from "lucide-react";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 
 interface ComposerProps {
+  projectId?: string;
   value: string;
   onChange: (value: string) => void;
   onSend: () => void;
@@ -24,6 +34,7 @@ interface ComposerProps {
 }
 
 export function CopilotComposer({
+  projectId,
   value,
   onChange,
   onSend,
@@ -41,12 +52,77 @@ export function CopilotComposer({
   onDismissError,
   textareaRef,
 }: ComposerProps) {
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadNotice, setUploadNotice] = useState<string | null>(null);
+  const attachRef = useRef<HTMLDivElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const uploadRequest = useRef(0);
+  useEffect(() => {
+    uploadRequest.current++;
+    setUploadNotice(null);
+    setUploading(false);
+    setAttachOpen(false);
+  }, [projectId]);
+  useEffect(() => {
+    if (!attachOpen) return;
+    const close = (event: PointerEvent) => {
+      if (!attachRef.current?.contains(event.target as Node))
+        setAttachOpen(false);
+    };
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setAttachOpen(false);
+        attachRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", key);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", key);
+    };
+  }, [attachOpen]);
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length || uploading) return;
+    if (!projectId) {
+      setUploadNotice("Choose a project before adding files.");
+      return;
+    }
+    const request = ++uploadRequest.current,
+      targetProject = projectId;
+    setAttachOpen(false);
+    setUploading(true);
+    setUploadNotice(null);
+    let completed = 0;
+    try {
+      for (const file of files) {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("title", file.name);
+        await api.documents.upload(targetProject, form);
+        completed++;
+      }
+      if (request === uploadRequest.current)
+        setUploadNotice(
+          `${completed} ${completed === 1 ? "file" : "files"} saved to project Files. Processing may take a moment.`,
+        );
+    } catch (error) {
+      if (request === uploadRequest.current)
+        setUploadNotice(
+          `${completed ? `${completed} saved. ` : ""}${error instanceof Error ? error.message : "Could not upload files."}`,
+        );
+    } finally {
+      if (request === uploadRequest.current) setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
+    }
+  };
   const previousSending = useRef(sending);
   const resizeInput = useCallback(() => {
     const input = textareaRef.current;
     if (input) {
       input.style.height = "auto";
-      input.style.height = `${Math.min(144, Math.max(48, input.scrollHeight))}px`;
+      input.style.height = `${Math.min(160, Math.max(32, input.scrollHeight))}px`;
     }
   }, [textareaRef]);
 
@@ -72,8 +148,8 @@ export function CopilotComposer({
   }, [sending, textareaRef]);
 
   return (
-    <footer className="shrink-0 bg-white px-3 pb-4 pt-3 sm:px-6 sm:pb-5">
-      <div className="mx-auto max-w-3xl space-y-3">
+    <footer className="chat-composer">
+      <div className="chat-composer-inner space-y-3">
         {error && (
           <div
             role="alert"
@@ -109,7 +185,27 @@ export function CopilotComposer({
             </button>
           </div>
         )}
-        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow focus-within:border-codex-accent/60 focus-within:ring-2 focus-within:ring-codex-accent/10 sm:p-4">
+        <div
+          className="chat-composer-box"
+          onDragOver={(event) => {
+            if (event.dataTransfer.types.includes("Files"))
+              event.preventDefault();
+          }}
+          onDrop={(event) => {
+            event.preventDefault();
+            void uploadFiles(Array.from(event.dataTransfer.files));
+          }}
+        >
+          <input
+            ref={fileInput}
+            type="file"
+            multiple
+            className="hidden"
+            aria-label="Upload project files"
+            onChange={(event) =>
+              void uploadFiles(Array.from(event.target.files || []))
+            }
+          />
           <textarea
             ref={textareaRef}
             aria-label="Message AI Copilot"
@@ -124,38 +220,89 @@ export function CopilotComposer({
                 event.keyCode !== 229
               ) {
                 event.preventDefault();
-                if (!sending && !loading && value.trim()) onSend();
+                if (!sending && !loading && !uploading && value.trim())
+                  onSend();
               }
             }}
             placeholder={
               sending
                 ? "Draft your next question while Copilot works…"
-                : "Ask about your project, or describe what you want to work on…"
+                : "Ask anything"
             }
-            rows={2}
+            rows={1}
             className="block max-h-36 min-h-[48px] w-full resize-none overflow-y-auto border-0 bg-transparent p-0 text-sm leading-relaxed text-slate-800 outline-none placeholder:text-slate-400"
           />
-          <div className="mt-3 flex items-end justify-between gap-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <label
-                title={toolsHint}
-                className="flex items-center gap-2 text-xs text-slate-600"
+          {uploadNotice && (
+            <p role="status" className="py-2 text-xs text-slate-400">
+              {uploadNotice}
+            </p>
+          )}
+          <div className="chat-composer-actions">
+            <div ref={attachRef} className="relative">
+              <button
+                type="button"
+                aria-label="Attach files"
+                aria-expanded={attachOpen}
+                disabled={uploading || sending}
+                onClick={() => setAttachOpen((value) => !value)}
+                className="workspace-icon-button"
               >
-                <input
-                  type="checkbox"
-                  aria-label="Use Hermes tools"
-                  checked={useTools}
-                  disabled={sending || (!toolsAvailable && !useTools)}
-                  onChange={(e) => onUseToolsChange(e.target.checked)}
-                />
-                Use tools
-              </label>
-              <span className="text-[10px] text-slate-400">
-                {useTools
-                  ? "Hermes · changes require review"
-                  : "General assistant"}
-              </span>
-
+                {uploading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <WorkspaceIcon name="plus" />
+                )}
+              </button>
+              {attachOpen && (
+                <div
+                  className="workspace-attachment-menu"
+                  aria-label="Add context"
+                >
+                  <button
+                    type="button"
+                    disabled={!projectId}
+                    onClick={() => fileInput.current?.click()}
+                  >
+                    <WorkspaceIcon name="plus" className="h-5 w-5" />
+                    Upload project files
+                  </button>
+                  <Link href="/documents">
+                    <WorkspaceIcon name="files" className="h-5 w-5" />
+                    Browse project files
+                  </Link>
+                  {!projectId && (
+                    <p className="px-3 pb-2 text-xs text-slate-400">
+                      Choose a project to upload files.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="chat-composer-controls">
+              <DropdownSelect
+                value={useTools ? "HERMES" : "ASSISTANT"}
+                onChange={(value) => onUseToolsChange(value === "HERMES")}
+                direction="up"
+                align="right"
+                disabled={sending}
+                triggerClassName="chat-mode-trigger"
+                menuWidth="w-72 max-w-[calc(100vw-2rem)]"
+                options={[
+                  {
+                    value: "ASSISTANT",
+                    label: "Assistant",
+                    desc: "Answers grounded in your project sources",
+                  },
+                  {
+                    value: "HERMES",
+                    label: "Hermes",
+                    desc: toolsAvailable
+                      ? "Tools and multi-step work. Changes require review."
+                      : toolsHint,
+                    disabled: !toolsAvailable && !useTools,
+                  },
+                ]}
+              />
               {sources && onSourceChange && (
                 <DropdownSelect
                   value={source || ""}
@@ -177,30 +324,21 @@ export function CopilotComposer({
                   })}
                 />
               )}
+              <button
+                type="button"
+                onClick={onSend}
+                disabled={!value.trim() || sending || loading || uploading}
+                aria-label={sending ? "Generating answer" : "Send message"}
+                className="chat-send"
+              >
+                {sending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <WorkspaceIcon name="send" />
+                )}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={onSend}
-              disabled={!value.trim() || sending || loading}
-              aria-label={sending ? "Generating answer" : "Send message"}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-codex-accent text-white transition-colors hover:bg-codex-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-codex-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {sending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowUp className="h-4 w-4" />
-              )}
-            </button>
           </div>
-        </div>
-        <div
-          id="copilot-composer-help"
-          className="flex flex-wrap justify-between gap-1 px-1 text-[10px] leading-relaxed text-slate-400"
-        >
-          <span>Check answers against their sources.</span>
-          <span className="hidden sm:inline">
-            Enter to send · Shift + Enter for a new line
-          </span>
         </div>
       </div>
     </footer>
