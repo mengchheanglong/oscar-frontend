@@ -1087,15 +1087,14 @@ html[data-workspace-theme]
   flex: 1;
   min-width: 0;
   height: 44px;
-  padding: 0 10px 0 47px;
-  position: relative;
+  gap: 9px;
+  padding: 0 10px;
   text-align: left;
   font-size: 13px;
   border-radius: 12px;
 }
 .chat-nav-select svg {
-  position: absolute;
-  left: 14px;
+  flex: 0 0 auto;
   color: var(--ws-muted);
 }
 .project-draft-chat {
