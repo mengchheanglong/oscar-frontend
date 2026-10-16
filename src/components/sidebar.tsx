@@ -2,16 +2,16 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { cn } from "@/lib/utils";
 import { AiWorkspaceLogo } from "@/components/ai-workspace-logo";
 import {
-  LayoutDashboard,
+  SquarePen,
+  Plus,
   Folder,
   CheckSquare,
   Files,
-  Sparkles,
   Search,
   Settings,
   X,
@@ -23,24 +23,26 @@ import {
 interface SidebarProps {
   mobileOpen?: boolean;
   onCloseMobile?: () => void;
+  chatHistory?: React.ReactNode;
+  onNewChat?: () => void;
 }
 
 const NAV_ITEMS = [
-  { label: "Home", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Projects", href: "/projects", icon: Folder },
   { label: "Tasks", href: "/tasks", icon: CheckSquare },
   { label: "Files", href: "/documents", icon: Files },
   { label: "Search", href: "/search", icon: Search },
-  { label: "AI Copilot", href: "/assistant", icon: Sparkles },
-  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
   mobileOpen,
   onCloseMobile,
+  chatHistory,
+  onNewChat,
 }) => {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, projects, currentProject, setCurrentProject } =
+    useAuth();
+  const router = useRouter();
 
   // Get user display name and initials
   const displayName =
@@ -57,6 +59,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const panel = mobileRef.current;
+    panel?.querySelector<HTMLElement>("button,a[href]")?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseMobile?.();
+      }
+      if (event.key !== "Tab" || !panel) return;
+      const controls = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          "button:not([disabled]),a[href],input:not([disabled])",
+        ),
+      ).filter((node) => node.offsetParent !== null);
+      const first = controls[0],
+        last = controls.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      previous?.focus();
+    };
+  }, [mobileOpen, onCloseMobile]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -97,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Brand Header */}
       <div className="h-16 px-6 flex items-center justify-between shrink-0 border-b border-white/[0.06]">
         <Link
-          href="/dashboard"
+          href="/assistant"
           className="flex items-center gap-2.5 group transition-transform hover:scale-[1.02]"
           onClick={onCloseMobile}
         >
@@ -117,6 +153,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Main Navigation Links - Dedicated Scroll Container */}
       <nav className="flex-1 min-h-0 px-3 py-3 space-y-1 overflow-y-auto overflow-x-hidden [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.15)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-white/25">
+        {onNewChat ? (
+          <button
+            type="button"
+            onClick={() => {
+              onNewChat();
+              onCloseMobile?.();
+            }}
+            className="mb-2 flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm text-white hover:bg-white/10"
+          >
+            <SquarePen className="h-4 w-4" />
+            New chat
+          </button>
+        ) : (
+          <Link
+            href="/assistant"
+            onClick={onCloseMobile}
+            className="mb-2 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm text-white hover:bg-white/10"
+          >
+            <SquarePen className="h-4 w-4" />
+            Open chat
+          </Link>
+        )}
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -148,7 +206,85 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </Link>
           );
         })}
+        <div className="pt-7">
+          <div className="mb-2 flex items-center justify-between px-3.5 text-xs text-slate-400">
+            <span>Projects</span>
+            <Link
+              href="/projects"
+              aria-label="Manage projects"
+              onClick={onCloseMobile}
+              className="rounded p-1 hover:bg-white/10 hover:text-white"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          {projects
+            .filter((project) => project.status !== "ARCHIVED")
+            .map((project) => (
+              <div key={project.id} className="group">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentProject(project);
+                    router.push("/assistant");
+                    onCloseMobile?.();
+                  }}
+                  aria-pressed={currentProject?.id === project.id}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-3.5 py-2 text-left text-xs",
+                    currentProject?.id === project.id
+                      ? "bg-white/[0.06] text-white"
+                      : "text-slate-300 hover:bg-white/[0.06]",
+                  )}
+                >
+                  <Folder className="h-4 w-4 shrink-0 text-slate-400" />
+                  <span className="truncate">{project.name}</span>
+                </button>
+                {currentProject?.id === project.id && (
+                  <div className="ml-10 flex flex-wrap gap-x-3 gap-y-2 pb-2 pt-1 text-[11px] text-slate-400">
+                    <Link
+                      href={`/projects/${project.id}`}
+                      onClick={onCloseMobile}
+                      className="hover:text-white"
+                    >
+                      Overview
+                    </Link>
+                    <Link
+                      href="/decisions"
+                      onClick={onCloseMobile}
+                      className="hover:text-white"
+                    >
+                      Decisions
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ))}
+          {projects.length === 0 && (
+            <Link
+              href="/projects"
+              onClick={onCloseMobile}
+              className="block px-3.5 py-2 text-xs text-slate-400 hover:text-white"
+            >
+              Create a project
+            </Link>
+          )}
+        </div>
+        {chatHistory && (
+          <div className="pt-7">
+            <h2 className="mb-2 px-3.5 text-xs text-slate-400">Chats</h2>
+            {chatHistory}
+          </div>
+        )}
       </nav>
+      <Link
+        href="/settings"
+        onClick={onCloseMobile}
+        className="mx-3 mb-2 flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white"
+      >
+        <Settings className="h-4 w-4 text-slate-400" />
+        Settings
+      </Link>
 
       {/* User Profile Footer - Anchored at the bottom end with Popover Menu */}
       <div
@@ -256,7 +392,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={onCloseMobile}
           />
-          <aside className="relative w-64 max-w-[85vw] bg-[#191a1c] border-r border-white/[0.1] flex flex-col h-full z-10 shadow-2xl overflow-hidden">
+          <aside
+            ref={mobileRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Workspace navigation"
+            className="relative w-64 max-w-[85vw] bg-[#191a1c] border-r border-white/[0.1] flex flex-col h-full z-10 shadow-2xl overflow-hidden"
+          >
             {navContent}
           </aside>
         </div>

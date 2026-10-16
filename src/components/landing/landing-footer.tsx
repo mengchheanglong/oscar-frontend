@@ -62,7 +62,7 @@ export const LandingFooter: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="hover:text-white transition-colors flex items-center gap-1">
+                <Link href="/assistant" className="hover:text-white transition-colors flex items-center gap-1">
                   Workspace Dashboard <ArrowUpRight className="w-3 h-3 text-zinc-500" />
                 </Link>
               </li>

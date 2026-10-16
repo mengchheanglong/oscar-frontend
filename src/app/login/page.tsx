@@ -147,7 +147,7 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace("/dashboard");
+      router.replace("/assistant");
     }
   }, [user, isLoading, router]);
 
@@ -295,7 +295,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push("/dashboard");
+      router.push("/assistant");
     } catch (err: any) {
       if (err instanceof ApiError || err.status) {
         if (err.status === 401) {
@@ -362,7 +362,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await register(email, password);
-      router.push("/dashboard");
+      router.push("/assistant");
     } catch (err: any) {
       if (err instanceof ApiError || err.status) {
         if (err.status === 409 || err.code === "EMAIL_ALREADY_EXISTS") {

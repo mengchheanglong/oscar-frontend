@@ -189,3 +189,25 @@ blocked states, list preference persistence, and confirmed deletion of the tempo
 QA task. Desktop and 390px mobile layouts were inspected; mobile page width stayed
 at 390px while the board scrolls independently. AIW decision lookup returned no
 architectural decisions. No assigned task was supplied or marked complete.
+
+
+## Chat-first workspace (2026-10-16)
+
+Sign-in and public Open Workspace links lead to /assistant. The app opens with a
+new chat; previous conversations stay available in the sidebar. Projects and chat
+history share one sidebar on the assistant page instead of two separate columns.
+New chats use a centered composer; existing threads retain the scrolling transcript,
+sources, memory and inline Hermes work controls. The suggestion-card grid is removed.
+
+Tasks/Kanban, Files and Search remain direct sidebar links. Selecting a project
+opens its chat context; its overview and decisions are available beneath the selected
+project. Settings stays at the bottom. On other pages, Open chat returns to the
+assistant; chat history is loaded when the assistant page is open. Mobile navigation
+includes Escape dismissal, focus containment and focus restoration.
+
+Verification: lint, TypeScript, production build, and browser checks of new-chat
+entry, opening an existing thread, chat search, composer input/tools toggle,
+Files and Kanban navigation, and mobile menu dismissal/focus restoration. Desktop
+and 390px screenshots were inspected with no page overflow. No AI generation or
+record deletion was performed. AIW accepted-decision lookup returned no decisions;
+no assigned task was supplied or marked complete. Changes are frontend-only.

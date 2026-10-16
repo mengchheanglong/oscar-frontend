@@ -138,19 +138,6 @@ const SOURCE_TYPE_ICONS: Record<string, React.ElementType> = {
   MEETING: Calendar,
 };
 
-const PROMPT_SUGGESTIONS = [
- {mode:"WORKSPACE",icon:Zap,title:"Find the next step",desc:"Turn the project goal into useful actions.",prompt:"Based on this project's evidence, what should I work on next? Separate known facts from assumptions."},
- {mode:"WORKSPACE",icon:FileText,title:"Understand a topic",desc:"Explain the ideas in your working material.",prompt:"Explain the main ideas in this project's files and how I can apply them to the project goal."},
- {mode:"WORKSPACE",icon:GitPullRequest,title:"Compare options",desc:"Make tradeoffs and assumptions clear.",prompt:"Help me compare the project's available options. Identify tradeoffs, evidence, and assumptions that need testing."},
- {mode:"WORKSPACE",icon:Sparkles,title:"Prepare a report",desc:"Bring the relevant evidence together.",prompt:"Prepare a concise report on this project using its sources. Include open questions and practical next actions."},
-];
-const ALL_PROJECTS_PROMPT_SUGGESTIONS = [
- {mode:"WORKSPACE",icon:Zap,title:"Compare priorities",desc:"See what needs attention across projects.",prompt:"Compare priorities and blockers across my projects, using their evidence."},
- {mode:"WORKSPACE",icon:FileText,title:"Connect ideas",desc:"Find useful connections across fields.",prompt:"Find connections between ideas in my projects. Explain how they could help the work, and cite sources."},
- {mode:"WORKSPACE",icon:GitPullRequest,title:"Review decisions",desc:"Understand choices and their reasons.",prompt:"Summarize important decisions across my projects and the reasons behind them."},
- {mode:"WORKSPACE",icon:Sparkles,title:"Summarize my work",desc:"Bring recent project evidence together.",prompt:"Summarize the current state of my projects, with evidence and open questions."},
-];
-
 function getModeConfig(key: string) {
   return MODES.find((m) => m.key === key) ?? MODES[0]!;
 }
@@ -331,13 +318,6 @@ export default function AssistantPage() {
     else if (stickToBottomRef.current) container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
   }, [messages, isSending]);
 
-  useEffect(() => {
-    const media = window.matchMedia("(min-width: 1024px)");
-    setSidebarOpen(media.matches);
-    const closeOnMobile = () => { if (!media.matches) setSidebarOpen(false); };
-    media.addEventListener("change", closeOnMobile);
-    return () => media.removeEventListener("change", closeOnMobile);
-  }, []);
 
   const loadConversations = useCallback(async () => {
     const request = ++historyLoadRef.current;
@@ -354,7 +334,7 @@ export default function AssistantPage() {
         }));
         setConversations(list);
         if (list.length > 0) {
-          setActiveConv((prev) => (prev && list.some((c) => c.id === prev.id) ? prev : list[0]!));
+          setActiveConv((prev) => (prev && list.some((c) => c.id === prev.id) ? prev : null));
         } else {
           setActiveConv(null);
           setMessages([]);
@@ -387,7 +367,7 @@ export default function AssistantPage() {
         allConvs.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
         setConversations(allConvs);
         if (allConvs.length > 0) {
-          setActiveConv((prev) => (prev && allConvs.some((c) => c.id === prev.id) ? prev : allConvs[0]!));
+          setActiveConv((prev) => (prev && allConvs.some((c) => c.id === prev.id) ? prev : null));
         } else {
           setActiveConv(null);
           setMessages([]);
@@ -714,88 +694,27 @@ export default function AssistantPage() {
   }, [conversations, convSearch]);
 
 
+  const closeNavigation = useCallback(() => setSidebarOpen(false), []);
+  const chatHistory = <div className="space-y-1">
+    <input type="search" aria-label="Search conversations" value={convSearch} onChange={event => setConvSearch(event.target.value)} placeholder="Find a chat…" className="mb-2 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-slate-500 focus:border-slate-500" />
+    {isLoading ? <p role="status" className="px-3 py-3 text-xs text-slate-400">Loading chats…</p> : historyError ? <button type="button" onClick={() => void loadConversations()} className="px-3 py-3 text-xs text-slate-400 hover:text-white">Couldn’t load chats. Retry</button> : filteredConversations.length === 0 ? <p className="px-3 py-3 text-xs text-slate-500">{convSearch ? "No matching chats" : "Your chats will appear here."}</p> : filteredConversations.map(conversation => <div key={conversation.id} className={`group relative flex items-center rounded-lg ${activeConv?.id === conversation.id ? "bg-white/10" : "hover:bg-white/[0.06]"}`}>
+      <button type="button" aria-pressed={activeConv?.id === conversation.id} disabled={isSending} onClick={() => selectConversation(conversation)} className="min-w-0 flex-1 rounded-lg py-2.5 pl-3 pr-8 text-left text-xs text-slate-300 disabled:opacity-50"><span className="block truncate">{conversation.title || "Untitled chat"}</span></button>
+      <button type="button" onClick={event => promptDeleteConversation(event, conversation.id)} disabled={isSending} aria-label={`Delete ${conversation.title || "conversation"}`} className="absolute right-1 rounded-md p-1.5 text-slate-500 hover:text-rose-400 focus-visible:opacity-100 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
+    </div>)}
+  </div>;
+  const isNewChat = messages.length === 0 && !isSending && !isLoadingMessages && !messagesError && projects.length > 0;
+
   return (
-    <AppLayout>
+    <AppLayout chatHistory={chatHistory} onNewChat={handleResetChat} navigationOpen={sidebarOpen} onCloseNavigation={closeNavigation}>
       <div className="relative flex h-full min-h-0 w-full overflow-hidden bg-white">
-        {sidebarOpen && (
-          <>
-            <button type="button" onClick={() => setSidebarOpen(false)} aria-label="Close chat history"
-              className="absolute inset-0 z-30 bg-slate-900/25 backdrop-blur-sm lg:hidden" />
-            <aside id="copilot-history" aria-label="Chat history" className="absolute inset-y-0 left-0 z-40 flex w-72 max-w-[calc(100%_-_3rem)] shrink-0 flex-col border-r border-slate-200 bg-slate-50 shadow-xl lg:relative lg:z-auto lg:w-64 lg:shadow-none">
-              <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-4">
-                <h2 className="text-sm font-semibold text-slate-800">Conversations</h2>
-                <button type="button" onClick={() => setSidebarOpen(false)} aria-label="Hide chat history" className="rounded-lg p-2 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700"><PanelLeftClose className="h-4 w-4" /></button>
-              </div>
-              <div className="space-y-3 p-3">
-                <button type="button" onClick={handleResetChat} disabled={isSending} className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-100 disabled:opacity-50"><Plus className="h-4 w-4" /> New conversation</button>
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-3 h-3.5 w-3.5 text-slate-400" />
-                  <input type="search" aria-label="Search conversations" value={convSearch} onChange={(event) => setConvSearch(event.target.value)} placeholder="Search conversations" className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-700 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-codex-accent/20" />
-                </div>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-                {isLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-12 text-xs text-slate-400" role="status"><Loader2 className="h-4 w-4 animate-spin" /> Loading conversations</div>
-                ) : historyError ? (
-                  <div role="alert" className="space-y-3 px-3 py-8 text-center text-xs text-slate-500"><p>Couldn’t load conversations.</p><button type="button" onClick={() => void loadConversations()} className="font-medium text-codex-accent hover:underline">Try again</button></div>
-                ) : filteredConversations.length === 0 ? (
-                  <div className="space-y-2 px-3 py-10 text-center"><MessageSquare className="mx-auto h-5 w-5 text-slate-300" /><p className="text-xs font-medium text-slate-600">{convSearch ? "No matching conversations" : "No conversations yet"}</p><p className="text-[11px] leading-relaxed text-slate-400">{convSearch ? "Try a different search." : "Your conversations will appear here after you send a message."}</p></div>
-                ) : filteredConversations.map((conversation) => {
-                  const isAllConv =
-                    conversation.projectKey === "ALL" ||
-                    allProjectConvIds.has(conversation.id) ||
-                    (!currentProject && activeConv?.id === conversation.id);
-
-                  return (
-                    <div key={conversation.id} className={`group relative mb-1 flex items-center rounded-lg ${activeConv?.id === conversation.id ? "bg-indigo-50" : "hover:bg-slate-200/50"}`}>
-                      <button type="button" aria-pressed={activeConv?.id === conversation.id} disabled={isSending}
-                        onClick={() => selectConversation(conversation)} className="min-w-0 flex-1 rounded-lg py-3 pl-3 pr-9 text-left outline-none focus-visible:ring-2 focus-visible:ring-codex-accent disabled:opacity-60">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          {(!currentProject || conversation.projectKey) && (
-                            isAllConv ? (
-                              <span className="shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 border border-indigo-200">
-                                ALL
-                              </span>
-                            ) : (
-                              <span className="shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
-                                {conversation.projectKey || "PRJ"}
-                              </span>
-                            )
-                          )}
-                          <p className={`truncate text-xs font-medium ${activeConv?.id === conversation.id ? "text-codex-accent" : "text-slate-700"}`}>{conversation.title || "Untitled conversation"}</p>
-                        </div>
-                        <p className="mt-1 truncate text-[10px] text-slate-400">{getModeConfig(conversation.defaultMode).label} · {formatDate(conversation.updatedAt)}</p>
-                      </button>
-                      <button type="button" onClick={(event) => promptDeleteConversation(event, conversation.id)} disabled={isSending}
-                        aria-label={`Delete ${conversation.title || "conversation"}`} className="absolute right-1 rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 focus-visible:opacity-100 disabled:opacity-30 lg:opacity-0 lg:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="border-t border-slate-200 px-4 py-4 text-[11px] text-slate-400">
-                <span className="font-medium text-slate-600">
-                  {currentProject ? currentProject.key : "All Projects"}
-                </span>{" "}
-                · {currentProject ? "Conversations saved to this project" : "Cross-workspace shared context active"}
-              </div>
-            </aside>
-          </>
-        )}
-
         <section aria-label="Copilot conversation" className="flex min-w-0 flex-1 flex-col overflow-hidden bg-white">
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 sm:gap-3 border-b border-slate-100 px-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              <Link href="/dashboard" aria-label="Back to workspace" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden"><ArrowLeft className="h-4 w-4" /></Link>
-              <button type="button" onClick={() => setSidebarOpen((open) => !open)} aria-label={sidebarOpen ? "Hide chat history" : "Show chat history"} aria-expanded={sidebarOpen} aria-controls="copilot-history" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-codex-accent"><PanelLeft className="h-4 w-4" /></button>
+              <button type="button" onClick={() => setSidebarOpen(open => !open)} aria-label="Open navigation" aria-expanded={sidebarOpen} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden"><PanelLeft className="h-4 w-4" /></button>
               <div className="hidden min-w-0 sm:block">
                 <div className="flex items-center gap-2">
-                  <h1 className="whitespace-nowrap text-sm font-semibold text-slate-900">AI Copilot</h1>
-                  {!currentProject && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                      <Layers className="w-3 h-3 text-indigo-500" />
-                      All Workspaces Shared Context
-                    </span>
-                  )}
+                  <h1 className="whitespace-nowrap text-sm font-semibold text-slate-900">Workspace</h1>
+
                 </div>
                 <p className="mt-0.5 truncate text-[11px] text-slate-400">
                   {activeConv?.title || (currentProject ? currentProject.name : "All Projects Chat")}
@@ -831,25 +750,12 @@ export default function AssistantPage() {
                   ]}
                 />
               )}
-              <span className="hidden items-center gap-1.5 text-[11px] text-slate-400 xl:flex">
-                <ShieldCheck className="h-3.5 w-3.5" />{" "}
-                {currentProject ? `${currentProject.key} sources` : "All project sources"}
-              </span>
-              <button
-                type="button"
-                onClick={handleResetChat}
-                disabled={isSending || projects.length === 0}
-                aria-label="New conversation"
-                className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">New chat</span>
-              </button>
+
             </div>
           </header>
 
           {/* Messages Stream / Hero Canvas */}
-          <div className="relative min-h-0 flex-1">
+          <div className={isNewChat ? "relative shrink-0 overflow-y-auto max-h-[45%]" : "relative min-h-0 flex-1"}>
           <div ref={messageScrollRef} onScroll={(event) => { const container = event.currentTarget; const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80; stickToBottomRef.current = nearBottom; setShowScrollToLatest(!nearBottom && messages.length > 0); }} className="h-full overflow-y-auto px-3 py-6 sm:px-6 space-y-6">
             {messagesError ? (
               <div role="alert" className="mx-auto max-w-md space-y-3 rounded-xl border border-slate-200 p-6 text-center"><AlertCircle className="mx-auto h-6 w-6 text-slate-400" /><h2 className="text-sm font-medium text-slate-700">Couldn’t load this conversation</h2><p className="text-xs text-slate-500">{messagesError}</p><button type="button" onClick={() => activeConv && void loadMessages(activeConv.id)} className="text-xs font-medium text-codex-accent hover:underline">Try again</button></div>
@@ -893,51 +799,9 @@ export default function AssistantPage() {
                 </div>
               </div>
             ) : messages.length === 0 && !isSending ? (
-              <div className="mx-auto max-w-2xl py-6 sm:py-12">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-codex-accent">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h2 className="font-serif text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                      {!currentProject ? "All Projects Copilot" : "What would you like to work on?"}
-                    </h2>
-                    <p className="mt-2 max-w-lg text-sm leading-relaxed text-slate-500">
-                      {!currentProject
-                        ? "Chat across all your project workspaces with shared context, verify requirements, and compare progress."
-                        : "Explore your project’s knowledge, clarify requirements, and plan your next step with sources you can review."}
-                    </p>
-                  </div>
-                  {!currentProject && projects.length > 0 && (
-                    <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-codex-accent text-xs font-medium">
-                      <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Shared cross-workspace context active ({projects.length} workspaces)</span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {(!currentProject ? ALL_PROJECTS_PROMPT_SUGGESTIONS : PROMPT_SUGGESTIONS).map((suggestion) => (
-                    <button
-                      key={suggestion.title}
-                      type="button"
-                      onClick={() => {
-
-                        setInputContent(suggestion.prompt);
-                        requestAnimationFrame(() => textareaRef.current?.focus());
-                      }}
-                      className="group flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-codex-accent/50 hover:bg-indigo-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-codex-accent"
-                    >
-                      <suggestion.icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover:text-codex-accent" />
-                      <div>
-                        <p className="text-xs font-semibold text-slate-700">{suggestion.title}</p>
-                        <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
-                          {suggestion.desc}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-4 text-[11px] text-slate-400">Choose a suggestion to edit before sending.</p>
+              <div className="mx-auto max-w-3xl px-3 pt-[clamp(2rem,12vh,8rem)] pb-5 text-center">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">What would you like to work on?</h2>
+                <p className="mt-3 text-sm text-slate-400">{currentProject ? currentProject.name : "Explore ideas across your projects"}</p>
               </div>
             ) : (
               /* Message Bubbles */
@@ -1127,6 +991,7 @@ export default function AssistantPage() {
             sending={isSending || work.active} loading={isLoading || isLoadingMessages || (useTools&&!work.available) || (!!activeConv && work.loading) || !!messagesError || projects.length === 0}
             error={sendError} failedRequest={failedRequest} onDismissError={() => setSendError(null)} textareaRef={textareaRef}
           />
+          {isNewChat && <div className="min-h-0 flex-1" />}
         </section>
       </div>
 

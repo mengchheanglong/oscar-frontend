@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/auth-context";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
@@ -11,12 +11,29 @@ import { Button } from "@/components/ui/button";
 import { FolderKanban, ChevronRight, Plus } from "lucide-react";
 import { CommandPalette } from "@/components/command-palette";
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, currentProject, projects, setCurrentProject, isLoading } = useAuth();
+export function AppLayout({
+  children,
+  chatHistory,
+  onNewChat,
+  navigationOpen,
+  onCloseNavigation,
+}: {
+  children: React.ReactNode;
+  chatHistory?: React.ReactNode;
+  onNewChat?: () => void;
+  navigationOpen?: boolean;
+  onCloseNavigation?: () => void;
+}) {
+  const { user, currentProject, projects, setCurrentProject, isLoading } =
+    useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const closeNavigation = useCallback(() => {
+    setMobileMenuOpen(false);
+    onCloseNavigation?.();
+  }, [onCloseNavigation]);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -68,8 +85,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="h-screen max-h-screen overflow-hidden flex bg-[#F4F5F7] text-codex-text app-layout-shell">
       {/* Persistent Left Sidebar with its own independent scrollbar and bottom profile */}
       <Sidebar
-        mobileOpen={mobileMenuOpen}
-        onCloseMobile={() => setMobileMenuOpen(false)}
+        mobileOpen={navigationOpen ?? mobileMenuOpen}
+        onCloseMobile={closeNavigation}
+        chatHistory={chatHistory}
+        onNewChat={onNewChat}
       />
 
       {/* Main Column - fixed height with navbar and scrollable canvas */}
@@ -111,7 +130,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <FolderKanban className="w-7 h-7" />
               </div>
               <div className="space-y-1.5">
-                <h2 className="text-xl font-bold text-codex-text">Select a Workspace</h2>
+                <h2 className="text-xl font-bold text-codex-text">
+                  Select a Workspace
+                </h2>
                 <p className="text-xs text-codex-muted leading-relaxed">
                   Select a project to open its files, checklist, and decisions.
                 </p>

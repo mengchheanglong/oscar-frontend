@@ -59,7 +59,7 @@ export const HeroSerenity: React.FC = () => {
 
       {/* Action Buttons */}
       <div className="flex flex-wrap items-center justify-center gap-3.5 mt-8">
-        <Link href="/dashboard">
+        <Link href="/assistant">
           <button className="relative inline-flex items-center justify-center gap-2 px-6 py-3 text-xs font-semibold text-white bg-gradient-to-r from-[#00F2FE] via-[#4361EE] to-[#6366F1] rounded-full shadow-[0_0_25px_rgba(67,97,238,0.4)] hover:shadow-[0_0_35px_rgba(67,97,238,0.6)] hover:scale-[1.02] transition-all">
             <span>Launch Workspace</span>
             <ArrowRight className="w-3.5 h-3.5" />

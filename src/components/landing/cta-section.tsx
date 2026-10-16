@@ -39,7 +39,7 @@ export const CtaSection: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-          <Link href="/dashboard">
+          <Link href="/assistant">
             <button className="relative inline-flex items-center justify-center gap-2 px-7 py-3.5 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-[#00F2FE] via-[#4361EE] to-[#6366F1] rounded-full shadow-[0_0_30px_rgba(67,97,238,0.4)] hover:shadow-[0_0_40px_rgba(67,97,238,0.6)] hover:scale-[1.02] transition-all">
               <span>Open AI Workspace</span>
               <ArrowRight className="w-4 h-4" />
