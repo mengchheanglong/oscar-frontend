@@ -6,7 +6,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
-import { ProjectNavigation } from "@/components/project-navigation";
 import { AppLayout } from "@/components/app-layout";
 import { FilterDropdown, FilterOption } from "@/components/ui/filter-dropdown";
 import { api } from "@/lib/api";
@@ -560,7 +559,6 @@ export default function DocumentsPage() {
 
   return (
     <AppLayout>
-      <ProjectNavigation active="Files" />
       <div className="space-y-6">
         {/* BREADCRUMB & HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

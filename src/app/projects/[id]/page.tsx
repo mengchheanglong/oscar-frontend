@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth, Project } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { ProjectAccess } from "@/components/project-access";
-import { ProjectNavigation } from "@/components/project-navigation";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -814,8 +813,6 @@ export default function ProjectDetailPage() {
 
           <Link href={`/projects/${projectId}#settings`} className="text-sm text-slate-500 hover:underline">Project settings</Link>
         </div>
-
-        <ProjectNavigation active={activeTab === "settings" ? "Settings" : "Overview"} />
 
         {/* =========================================================================
             TAB 1: OVERVIEW (matching media_1790901601198.png)

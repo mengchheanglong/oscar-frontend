@@ -121,7 +121,7 @@ conversations and agent runs. It replaces the management-statistics dashboard.
 The main navigation is Home, Projects, Tasks, Files, Search, AI Copilot and Settings.
 AI Copilot, its modes, Hermes execution, memory and history recall are unchanged.
 
-Project navigation provides Overview, Tasks, Files, Decisions and Settings.
+Project pages provide links to Tasks, Files, Decisions and project Settings.
 The overview contains the project brief rather than a software-delivery dashboard.
 Use project files for detailed goals, requirements, research and meeting notes.
 Requirements and Meetings are removed from primary navigation and creation
@@ -173,14 +173,15 @@ the normal deletion API. No project records or proposals were created by this QA
 
 ## Task board refinement (2026-10-16)
 
-Tasks is restored to the sidebar and project navigation. Cards move between
+Tasks is restored to the sidebar. Cards move between
 statuses by dragging or with Space and arrow keys; Enter opens the editor.
 Moving to Blocked asks for a reason before saving. Status changes are persisted;
 manual card ordering within a column is not persisted by the API. Board/list
 preference is remembered on this browser. All-project loading follows pagination.
 
-The sidebar uses quieter neutral styling, and project tabs share one compact row
-that wraps on smaller screens. Copilot behavior is unchanged.
+The sidebar uses quieter neutral styling. The repeated project tab bar has been
+removed at user request; project overview links and Settings still provide access
+to project features. Copilot behavior is unchanged.
 
 Verification: frontend lint, TypeScript and production build; local browser QA
 covered creation, keyboard movement, edit/save and reload persistence, review and

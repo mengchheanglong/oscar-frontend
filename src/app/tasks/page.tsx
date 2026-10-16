@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
-import { ProjectNavigation } from "@/components/project-navigation";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
@@ -859,7 +858,6 @@ function TaskWorkspace() {
 
   return (
     <AppLayout>
-      <ProjectNavigation active="Tasks" />
       <div className="space-y-5 max-w-7xl mx-auto pb-12">
         {/* Top Breadcrumb & Title Area */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">

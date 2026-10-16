@@ -4,7 +4,6 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useAuth, Project } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
-import { ProjectNavigation } from "@/components/project-navigation";
 import { AppLayout } from "@/components/app-layout";
 import { ProposalReviewDialog } from "@/components/ai/proposal-review-dialog";
 import { api } from "@/lib/api";
@@ -504,7 +503,6 @@ export default function DecisionsPage() {
 
   return (
     <AppLayout>
-      <ProjectNavigation active="Decisions" />
       <div className="space-y-6 max-w-7xl mx-auto pb-12">
         {/* ==================================================================== */}
         {/* VIEW 1: DECISIONS LIST VIEW (IMAGE 1)                                */}
