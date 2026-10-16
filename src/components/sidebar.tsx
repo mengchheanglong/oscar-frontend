@@ -10,13 +10,27 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { WorkspaceIcon } from "@/components/workspace-icons";
-import { LogOut } from "lucide-react";
+import {
+  LogOut,
+  Archive,
+  FolderPlus,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
+import {
+  useProjectWorkspace,
+  ProjectActions,
+  ProjectGlyph,
+} from "@/components/project-workspace";
+import type { Project } from "@/context/auth-context";
 
 interface SidebarProps {
   mobileOpen?: boolean;
   onCloseMobile?: () => void;
   chatHistory?: ReactNode;
   onNewChat?: () => void;
+  projectChats?: Record<string, ReactNode>;
+  onNewProjectChat?: (project: Project) => void;
   onOpenSearch?: () => void;
 }
 export function Sidebar({
@@ -24,10 +38,22 @@ export function Sidebar({
   onCloseMobile,
   chatHistory,
   onNewChat,
+  projectChats,
+  onNewProjectChat,
   onOpenSearch,
 }: SidebarProps) {
   const { user, logout, projects, currentProject, setCurrentProject } =
     useAuth();
+  const workspace = useProjectWorkspace();
+  const [projectsOpen, setProjectsOpen] = useState(true),
+    [chatsOpen, setChatsOpen] = useState(true);
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
+    new Set(),
+  );
+  const currentProjectId = currentProject?.id;
+  useEffect(() => {
+    setExpandedProjects(new Set(currentProjectId ? [currentProjectId] : []));
+  }, [currentProjectId]);
   const pathname = usePathname(),
     router = useRouter();
   const [collapsed, setCollapsed] = useState(false),
@@ -217,51 +243,129 @@ export function Sidebar({
           </Link>
         ) : (
           <>
-            <div className="workspace-section-label">
-              <span>Projects</span>
-              <Link
-                href="/projects"
-                title="Manage projects"
-                aria-label="Manage projects"
-                onClick={onCloseMobile}
-                className="workspace-icon-button"
+            <div className="workspace-section-label project-section-heading">
+              <button
+                type="button"
+                aria-label="Toggle projects"
+                aria-expanded={projectsOpen}
+                onClick={() => setProjectsOpen((value) => !value)}
+                className="workspace-section-toggle"
               >
-                <WorkspaceIcon name="plus" />
-              </Link>
+                Projects
+                {projectsOpen ? (
+                  <ChevronDown size={13} />
+                ) : (
+                  <ChevronRight size={13} />
+                )}
+              </button>
+              <div className="flex">
+                <button
+                  type="button"
+                  aria-label="Archived projects"
+                  title="Archived projects"
+                  className="workspace-icon-button"
+                  onClick={workspace.openArchives}
+                >
+                  <Archive size={16} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Create project"
+                  title="Create project"
+                  className="workspace-icon-button"
+                  onClick={workspace.openCreate}
+                >
+                  <FolderPlus size={16} />
+                </button>
+              </div>
             </div>
-            {projects
-              .filter((project) => project.status !== "ARCHIVED")
-              .map((project) => (
-                <div key={project.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrentProject(project);
-                      router.push("/assistant");
-                      onCloseMobile?.();
-                    }}
-                    aria-pressed={currentProject?.id === project.id}
-                    className="workspace-nav-link workspace-project"
-                  >
-                    <WorkspaceIcon name="folder" />
-                    <span className="truncate">{project.name}</span>
-                  </button>
-                </div>
-              ))}
-            {projects.length === 0 && (
-              <Link
-                href="/projects"
-                className="workspace-nav-link"
-                onClick={onCloseMobile}
-              >
-                <WorkspaceIcon name="plus" />
-                New project
-              </Link>
-            )}
+            {projectsOpen &&
+              projects
+                .filter((project) => project.status !== "ARCHIVED")
+                .map((project) => (
+                  <div key={project.id} className="project-sidebar-group">
+                    <div className="project-sidebar-row">
+                      <button
+                        type="button"
+                        className="workspace-nav-link workspace-project"
+                        aria-pressed={currentProject?.id === project.id}
+                        aria-expanded={expandedProjects.has(project.id)}
+                        onClick={() => {
+                          setExpandedProjects((previous) => {
+                            const next = new Set(previous);
+                            if (
+                              currentProject?.id === project.id &&
+                              next.has(project.id)
+                            )
+                              next.delete(project.id);
+                            else next.add(project.id);
+                            return next;
+                          });
+                          setCurrentProject(project);
+                          router.push("/assistant");
+                          onCloseMobile?.();
+                        }}
+                      >
+                        <ProjectGlyph project={project} />
+                        <span className="truncate">{project.name}</span>
+                      </button>
+                      <ProjectActions
+                        project={project}
+                        onNewChat={() => {
+                          setExpandedProjects(
+                            (previous) =>
+                              new Set([...Array.from(previous), project.id]),
+                          );
+                          if (onNewProjectChat) onNewProjectChat(project);
+                          else {
+                            setCurrentProject(project);
+                            router.push("/assistant");
+                          }
+                          onCloseMobile?.();
+                        }}
+                      />
+                    </div>
+                    {expandedProjects.has(project.id) &&
+                      projectChats?.[project.id] && (
+                        <div className="project-nested-chats">
+                          {projectChats[project.id]}
+                        </div>
+                      )}
+                  </div>
+                ))}
+            {projectsOpen &&
+              projects.filter((project) => project.status !== "ARCHIVED")
+                .length === 0 && (
+                <button
+                  type="button"
+                  onClick={workspace.openCreate}
+                  className="workspace-nav-link"
+                >
+                  <FolderPlus size={16} />
+                  New project
+                </button>
+              )}
             {chatHistory && (
               <>
-                <div className="workspace-section-label">Chats</div>
-                <div className="workspace-chat-history">{chatHistory}</div>
+                <div className="workspace-section-label">
+                  <button
+                    type="button"
+                    aria-label="Toggle chats"
+                    aria-expanded={chatsOpen}
+                    onClick={() => setChatsOpen((value) => !value)}
+                    className="workspace-section-toggle"
+                  >
+                    Chats
+                    {chatsOpen ? (
+                      <ChevronDown size={13} />
+                    ) : (
+                      <ChevronRight size={13} />
+                    )}
+                  </button>
+                </div>
+                {chatsOpen && (
+                  <div className="workspace-chat-history">{chatHistory}</div>
+                )}
               </>
             )}
           </>

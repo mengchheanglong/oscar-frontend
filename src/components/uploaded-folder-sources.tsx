@@ -47,7 +47,15 @@ const size = (bytes: number) =>
   bytes < 1024 * 1024
     ? `${(bytes / 1024).toFixed(1)} KiB`
     : `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
-export function UploadedFolderSources({ projectId }: { projectId?: string }) {
+export function UploadedFolderSources({
+  projectId,
+  initialFiles,
+  onInitialFilesConsumed,
+}: {
+  projectId?: string;
+  initialFiles?: File[];
+  onInitialFilesConsumed?: () => void;
+}) {
   const [settings, setSettings] = useState<Settings | null>(null);
   const resumeTarget = useRef<Folder | null>(null);
   const [folders, setFolders] = useState<Folder[]>([]),
@@ -246,6 +254,20 @@ export function UploadedFolderSources({ projectId }: { projectId?: string }) {
     }
     void upload({ id: target?.id, name, files });
   }
+  const importedFiles = useRef<File[] | undefined>();
+  useEffect(() => {
+    if (
+      !settings ||
+      !initialFiles?.length ||
+      importedFiles.current === initialFiles
+    )
+      return;
+    importedFiles.current = initialFiles;
+    choose(initialFiles);
+    onInitialFilesConsumed?.();
+    // The existing chooser owns policy checks and upload retries. Import each selection once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFiles, settings, onInitialFilesConsumed]);
   async function loadFiles(id: string, offset = 0) {
     try {
       const page = await apiRequest<Page>(

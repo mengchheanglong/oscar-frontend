@@ -2,7 +2,6 @@ export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== "undefined" ? "/api/v1" : "http://localhost:3000/api/v1");
 
-
 let csrfToken: string | null = null;
 if (typeof window !== "undefined") {
   csrfToken = localStorage.getItem("aiw_csrf_token");
@@ -37,7 +36,7 @@ export class ApiError extends Error {
     message: string,
     status: number,
     code?: string,
-    details?: Array<{ field: string; message: string }>
+    details?: Array<{ field: string; message: string }>,
   ) {
     super(message);
     this.name = "ApiError";
@@ -49,7 +48,7 @@ export class ApiError extends Error {
 
 export async function apiRequestRaw(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   const url = endpoint.startsWith("http") ? endpoint : `${API_URL}${endpoint}`;
   const headers: Record<string, string> = {
@@ -60,7 +59,9 @@ export async function apiRequestRaw(
     headers["Content-Type"] = "application/json";
   }
 
-  const isMutating = ["POST", "PATCH", "PUT", "DELETE"].includes(options.method?.toUpperCase() || "");
+  const isMutating = ["POST", "PATCH", "PUT", "DELETE"].includes(
+    options.method?.toUpperCase() || "",
+  );
 
   if (!csrfToken && typeof window !== "undefined") {
     csrfToken = localStorage.getItem("aiw_csrf_token");
@@ -88,7 +89,9 @@ export async function apiRequestRaw(
       const errJson = await errClone.json();
       const errCode = errJson?.error?.code || errJson?.code;
       if (errCode === "CSRF_INVALID") {
-        const csrfRes = await fetch(`${API_URL}/auth/csrf`, { credentials: "include" });
+        const csrfRes = await fetch(`${API_URL}/auth/csrf`, {
+          credentials: "include",
+        });
         const csrfJson = await csrfRes.json();
         const freshToken = csrfJson.data?.csrfToken;
         if (freshToken) {
@@ -139,7 +142,7 @@ export async function apiRequestRaw(
 
 export async function apiRequest<T = any>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const res = await apiRequestRaw(endpoint, options);
   if (res.status === 204) {
@@ -151,7 +154,7 @@ export async function apiRequest<T = any>(
 
 export async function apiEnvelopeRequest<T = any, M = any>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<ApiEnvelope<T, M>> {
   const res = await apiRequestRaw(endpoint, options);
   if (res.status === 204) {
@@ -174,7 +177,10 @@ export const api = {
       return res;
     },
     login: async (email: string, password: string) => {
-      const envelope = await apiEnvelopeRequest<{ user: any; csrfToken: string }>("/auth/login", {
+      const envelope = await apiEnvelopeRequest<{
+        user: any;
+        csrfToken: string;
+      }>("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
@@ -185,7 +191,10 @@ export const api = {
       return data;
     },
     register: async (email: string, password: string, displayName?: string) => {
-      const envelope = await apiEnvelopeRequest<{ user: any; csrfToken: string }>("/auth/register", {
+      const envelope = await apiEnvelopeRequest<{
+        user: any;
+        csrfToken: string;
+      }>("/auth/register", {
         method: "POST",
         body: JSON.stringify({ email, password, displayName }),
       });
@@ -206,13 +215,19 @@ export const api = {
     me: async () => {
       return apiRequest<any>("/auth/me");
     },
-    updateProfile: async (data: { displayName?: string; professionalRole?: string }) => {
+    updateProfile: async (data: {
+      displayName?: string;
+      professionalRole?: string;
+    }) => {
       return apiRequest<any>("/auth/profile", {
         method: "PATCH",
         body: JSON.stringify(data),
       });
     },
-    changePassword: async (data: { currentPassword: string; newPassword: string }) => {
+    changePassword: async (data: {
+      currentPassword: string;
+      newPassword: string;
+    }) => {
       return apiRequest<any>("/auth/password", {
         method: "PATCH",
         body: JSON.stringify(data),
@@ -260,36 +275,76 @@ export const api = {
       key: string;
       description?: string;
       members?: Array<{ userId: string; role?: string }>;
+      icon?: string | null;
+      instructions?: string | null;
     }) =>
-      apiRequest<any>("/projects", { method: "POST", body: JSON.stringify(data) }),
-    update: async (id: string, data: { name?: string; description?: string }) =>
-      apiRequest<any>(`/projects/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+      apiRequest<any>("/projects", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: async (
+      id: string,
+      data: {
+        name?: string;
+        description?: string;
+        icon?: string | null;
+        instructions?: string | null;
+        version?: number;
+      },
+    ) =>
+      apiRequest<any>(`/projects/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
     archive: async (id: string) =>
       apiRequest<any>(`/projects/${id}/archive`, { method: "POST" }),
     unarchive: async (id: string) =>
       apiRequest<any>(`/projects/${id}/unarchive`, { method: "POST" }),
-    getMembers: async (id: string) => apiRequest<any[]>(`/projects/${id}/members`),
-    addMember: async (id: string, data: { userId?: string; email?: string; accessRole: string }) =>
-      apiRequest<any>(`/projects/${id}/members`, { method: "POST", body: JSON.stringify(data) }),
-    updateMemberRole: async (id: string, userId: string, data: { accessRole: string }) =>
-      apiRequest<any>(`/projects/${id}/members/${userId}`, { method: "PATCH", body: JSON.stringify(data) }),
+    getMembers: async (id: string) =>
+      apiRequest<any[]>(`/projects/${id}/members`),
+    addMember: async (
+      id: string,
+      data: { userId?: string; email?: string; accessRole: string },
+    ) =>
+      apiRequest<any>(`/projects/${id}/members`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateMemberRole: async (
+      id: string,
+      userId: string,
+      data: { accessRole: string },
+    ) =>
+      apiRequest<any>(`/projects/${id}/members/${userId}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
     removeMember: async (id: string, userId: string) =>
       apiRequestRaw(`/projects/${id}/members/${userId}`, { method: "DELETE" }),
     transferOwnership: async (id: string, data: { newOwnerUserId: string }) =>
-      apiRequest<any>(`/projects/${id}/ownership-transfer`, { method: "POST", body: JSON.stringify(data) }),
+      apiRequest<any>(`/projects/${id}/ownership-transfer`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     getMemberCandidates: async (id: string, search?: string) => {
       const q = search ? `?search=${encodeURIComponent(search)}` : "";
       return apiRequest<any[]>(`/projects/${id}/member-candidates${q}`);
     },
     getAuditLogs: async (id: string, page = 1, pageSize = 50) =>
-      apiEnvelopeRequest<any[]>(`/projects/${id}/audit?page=${page}&pageSize=${pageSize}`),
+      apiEnvelopeRequest<any[]>(
+        `/projects/${id}/audit?page=${page}&pageSize=${pageSize}`,
+      ),
   },
 
   dashboard: {
     get: async (projectId: string, timezone = "Asia/Bangkok") =>
-      apiRequest<any>(`/projects/${projectId}/dashboard?timezone=${encodeURIComponent(timezone)}`),
+      apiRequest<any>(
+        `/projects/${projectId}/dashboard?timezone=${encodeURIComponent(timezone)}`,
+      ),
     getActivity: async (projectId: string, page = 1, pageSize = 20) =>
-      apiEnvelopeRequest<any[]>(`/projects/${projectId}/activity?page=${page}&pageSize=${pageSize}`),
+      apiEnvelopeRequest<any[]>(
+        `/projects/${projectId}/activity?page=${page}&pageSize=${pageSize}`,
+      ),
   },
 
   search: {
@@ -299,7 +354,7 @@ export const api = {
       type?: string,
       page = 1,
       pageSize = 20,
-      mode: "keyword" | "semantic" | "hybrid" = "hybrid"
+      mode: "keyword" | "semantic" | "hybrid" = "hybrid",
     ) => {
       let queryUrl = `/projects/${projectId}/search?q=${encodeURIComponent(q)}&page=${page}&pageSize=${pageSize}&mode=${mode}`;
       if (type && type.trim()) {
@@ -324,9 +379,12 @@ export const api = {
       pageSize?: number;
     }) => {
       const q = new URLSearchParams();
-      if (params?.projectId && params.projectId !== "ALL") q.append("projectId", params.projectId);
-      if (params?.status && params.status !== "ALL") q.append("status", params.status);
-      if (params?.priority && params.priority !== "ALL") q.append("priority", params.priority);
+      if (params?.projectId && params.projectId !== "ALL")
+        q.append("projectId", params.projectId);
+      if (params?.status && params.status !== "ALL")
+        q.append("status", params.status);
+      if (params?.priority && params.priority !== "ALL")
+        q.append("priority", params.priority);
       if (params?.search) q.append("search", params.search);
       if (params?.page) q.append("page", String(params.page));
       if (params?.pageSize) q.append("pageSize", String(params.pageSize));
@@ -340,8 +398,12 @@ export const api = {
         description?: string;
         acceptanceCriteria?: string;
         priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-      }
-    ) => apiRequest<any>(`/projects/${projectId}/requirements`, { method: "POST", body: JSON.stringify(data) }),
+      },
+    ) =>
+      apiRequest<any>(`/projects/${projectId}/requirements`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     update: async (
       projectId: string,
       requirementId: string,
@@ -352,16 +414,20 @@ export const api = {
         acceptanceCriteria?: string;
         status?: string;
         priority?: string;
-      }
+      },
     ) =>
       apiRequest<any>(`/projects/${projectId}/requirements/${requirementId}`, {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
     listRevisions: async (projectId: string, requirementId: string) =>
-      apiRequest<any[]>(`/projects/${projectId}/requirements/${requirementId}/revisions`),
+      apiRequest<any[]>(
+        `/projects/${projectId}/requirements/${requirementId}/revisions`,
+      ),
     listTasks: async (projectId: string, requirementId: string) =>
-      apiRequest<any[]>(`/projects/${projectId}/requirements/${requirementId}/tasks`),
+      apiRequest<any[]>(
+        `/projects/${projectId}/requirements/${requirementId}/tasks`,
+      ),
     delete: async (projectId: string, requirementId: string) =>
       apiRequest<any>(`/projects/${projectId}/requirements/${requirementId}`, {
         method: "DELETE",
@@ -382,8 +448,12 @@ export const api = {
         rationale?: string;
         requirementId?: string;
         supersedesDecisionId?: string;
-      }
-    ) => apiRequest<any>(`/projects/${projectId}/decisions`, { method: "POST", body: JSON.stringify(data) }),
+      },
+    ) =>
+      apiRequest<any>(`/projects/${projectId}/decisions`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     update: async (
       projectId: string,
       decisionId: string,
@@ -394,16 +464,20 @@ export const api = {
         rationale?: string;
         status?: string;
         supersedesDecisionId?: string;
-      }
+      },
     ) =>
       apiRequest<any>(`/projects/${projectId}/decisions/${decisionId}`, {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
     listRevisions: async (projectId: string, decisionId: string) =>
-      apiRequest<any[]>(`/projects/${projectId}/decisions/${decisionId}/revisions`),
+      apiRequest<any[]>(
+        `/projects/${projectId}/decisions/${decisionId}/revisions`,
+      ),
     delete: async (projectId: string, decisionId: string) =>
-      apiRequestRaw(`/projects/${projectId}/decisions/${decisionId}`, { method: "DELETE" }),
+      apiRequestRaw(`/projects/${projectId}/decisions/${decisionId}`, {
+        method: "DELETE",
+      }),
   },
 
   tasks: {
@@ -446,8 +520,12 @@ export const api = {
         dueDate?: string; // YYYY-MM-DD
         requirementId?: string;
         sourceMeetingId?: string;
-      }
-    ) => apiRequest<any>(`/projects/${projectId}/tasks`, { method: "POST", body: JSON.stringify(data) }),
+      },
+    ) =>
+      apiRequest<any>(`/projects/${projectId}/tasks`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     update: async (
       projectId: string,
       taskId: string,
@@ -460,18 +538,21 @@ export const api = {
         assigneeId?: string | null;
         blockedReason?: string | null;
         dueDate?: string | null;
-      }
+      },
     ) =>
       apiRequest<any>(`/projects/${projectId}/tasks/${taskId}`, {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
     delete: async (projectId: string, taskId: string) =>
-      apiRequestRaw(`/projects/${projectId}/tasks/${taskId}`, { method: "DELETE" }),
+      apiRequestRaw(`/projects/${projectId}/tasks/${taskId}`, {
+        method: "DELETE",
+      }),
   },
 
   meetings: {
-    list: async (projectId: string) => apiRequest<any[]>(`/projects/${projectId}/meetings`),
+    list: async (projectId: string) =>
+      apiRequest<any[]>(`/projects/${projectId}/meetings`),
     create: async (
       projectId: string,
       data: {
@@ -482,8 +563,12 @@ export const api = {
         notes?: string;
         transcriptText?: string;
         attendeeUserIds?: string[];
-      }
-    ) => apiRequest<any>(`/projects/${projectId}/meetings`, { method: "POST", body: JSON.stringify(data) }),
+      },
+    ) =>
+      apiRequest<any>(`/projects/${projectId}/meetings`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     update: async (
       projectId: string,
       meetingId: string,
@@ -496,18 +581,21 @@ export const api = {
         notes?: string;
         transcriptText?: string;
         attendeeUserIds?: string[];
-      }
+      },
     ) =>
       apiRequest<any>(`/projects/${projectId}/meetings/${meetingId}`, {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
     delete: async (projectId: string, meetingId: string) =>
-      apiRequestRaw(`/projects/${projectId}/meetings/${meetingId}`, { method: "DELETE" }),
+      apiRequestRaw(`/projects/${projectId}/meetings/${meetingId}`, {
+        method: "DELETE",
+      }),
   },
 
   documents: {
-    list: async (projectId: string) => apiRequest<any[]>(`/projects/${projectId}/documents`),
+    list: async (projectId: string) =>
+      apiRequest<any[]>(`/projects/${projectId}/documents`),
     listAll: async (params?: {
       projectId?: string;
       fileType?: string;
@@ -517,9 +605,12 @@ export const api = {
       pageSize?: number;
     }) => {
       const q = new URLSearchParams();
-      if (params?.projectId && params.projectId !== "ALL") q.append("projectId", params.projectId);
-      if (params?.fileType && params.fileType !== "ALL") q.append("fileType", params.fileType);
-      if (params?.createdBy && params.createdBy !== "ALL") q.append("createdBy", params.createdBy);
+      if (params?.projectId && params.projectId !== "ALL")
+        q.append("projectId", params.projectId);
+      if (params?.fileType && params.fileType !== "ALL")
+        q.append("fileType", params.fileType);
+      if (params?.createdBy && params.createdBy !== "ALL")
+        q.append("createdBy", params.createdBy);
       if (params?.search) q.append("search", params.search);
       if (params?.page) q.append("page", String(params.page));
       if (params?.pageSize) q.append("pageSize", String(params.pageSize));
@@ -527,18 +618,36 @@ export const api = {
       return apiEnvelopeRequest<any[]>(`/documents${qs}`);
     },
     upload: async (projectId: string, formData: FormData) =>
-      apiRequest<any>(`/projects/${projectId}/documents`, { method: "POST", body: formData }),
-    uploadRevision: async (projectId: string, documentId: string, formData: FormData) =>
-      apiRequest<any>(`/projects/${projectId}/documents/${documentId}/revisions`, {
+      apiRequest<any>(`/projects/${projectId}/documents`, {
         method: "POST",
         body: formData,
       }),
+    uploadRevision: async (
+      projectId: string,
+      documentId: string,
+      formData: FormData,
+    ) =>
+      apiRequest<any>(
+        `/projects/${projectId}/documents/${documentId}/revisions`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      ),
     listRevisions: async (projectId: string, documentId: string) =>
-      apiRequest<any[]>(`/projects/${projectId}/documents/${documentId}/revisions`),
+      apiRequest<any[]>(
+        `/projects/${projectId}/documents/${documentId}/revisions`,
+      ),
     getDownloadUrl: (projectId: string, docId: string) =>
       `${API_URL}/projects/${projectId}/documents/${docId}/download`,
-    downloadFile: async (projectId: string, docId: string, filename: string) => {
-      const res = await apiRequestRaw(`/projects/${projectId}/documents/${docId}/download`);
+    downloadFile: async (
+      projectId: string,
+      docId: string,
+      filename: string,
+    ) => {
+      const res = await apiRequestRaw(
+        `/projects/${projectId}/documents/${docId}/download`,
+      );
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -550,13 +659,15 @@ export const api = {
       document.body.removeChild(a);
     },
     delete: async (projectId: string, docId: string) =>
-      apiRequestRaw(`/projects/${projectId}/documents/${docId}`, { method: "DELETE" }),
+      apiRequestRaw(`/projects/${projectId}/documents/${docId}`, {
+        method: "DELETE",
+      }),
   },
 
   ingestion: {
     listSources: async (
       projectId: string,
-      params?: { sourceType?: string; status?: string; search?: string }
+      params?: { sourceType?: string; status?: string; search?: string },
     ) => {
       const q = new URLSearchParams();
       if (params?.sourceType) q.append("sourceType", params.sourceType);
@@ -568,9 +679,12 @@ export const api = {
     getSource: async (projectId: string, sourceId: string) =>
       apiRequest<any>(`/projects/${projectId}/ingestion/sources/${sourceId}`),
     reindexSource: async (projectId: string, sourceId: string) =>
-      apiRequest<any>(`/projects/${projectId}/ingestion/sources/${sourceId}/reindex`, {
-        method: "POST",
-      }),
+      apiRequest<any>(
+        `/projects/${projectId}/ingestion/sources/${sourceId}/reindex`,
+        {
+          method: "POST",
+        },
+      ),
     listJobs: async (projectId: string) =>
       apiRequest<any[]>(`/projects/${projectId}/ingestion/jobs`),
   },
@@ -580,48 +694,88 @@ export const api = {
       apiRequest<any[]>(`/projects/${projectId}/ai/conversations`),
     createConversation: async (
       projectId: string,
-      data?: { title?: string; defaultMode?: string }
+      data?: { title?: string; defaultMode?: string },
     ) =>
       apiRequest<any>(`/projects/${projectId}/ai/conversations`, {
         method: "POST",
         body: JSON.stringify(data || {}),
       }),
+    updateConversation: async (
+      projectId: string,
+      conversationId: string,
+      data: { title?: string; isPinned?: boolean },
+    ) =>
+      apiRequest<any>(
+        `/projects/${projectId}/ai/conversations/${conversationId}`,
+        { method: "PATCH", body: JSON.stringify(data) },
+      ),
     getConversation: async (projectId: string, conversationId: string) =>
-      apiRequest<any>(`/projects/${projectId}/ai/conversations/${conversationId}`),
+      apiRequest<any>(
+        `/projects/${projectId}/ai/conversations/${conversationId}`,
+      ),
     deleteConversation: async (projectId: string, conversationId: string) =>
-      apiRequestRaw(`/projects/${projectId}/ai/conversations/${conversationId}`, {
-        method: "DELETE",
-      }),
+      apiRequestRaw(
+        `/projects/${projectId}/ai/conversations/${conversationId}`,
+        {
+          method: "DELETE",
+        },
+      ),
     listMessages: async (projectId: string, conversationId: string) =>
-      apiRequest<any[]>(`/projects/${projectId}/ai/conversations/${conversationId}/messages`),
-    excludeMessageContext: async (projectId: string, conversationId: string, messageId: string) =>
-      apiRequestRaw(`/projects/${projectId}/ai/conversations/${conversationId}/messages/${messageId}/exclude-context`, {
-        method: "POST",
-      }),
+      apiRequest<any[]>(
+        `/projects/${projectId}/ai/conversations/${conversationId}/messages`,
+      ),
+    excludeMessageContext: async (
+      projectId: string,
+      conversationId: string,
+      messageId: string,
+    ) =>
+      apiRequestRaw(
+        `/projects/${projectId}/ai/conversations/${conversationId}/messages/${messageId}/exclude-context`,
+        {
+          method: "POST",
+        },
+      ),
     postMessage: async (
       projectId: string,
       conversationId: string,
-      data: { content: string; mode?: string; sourceType?: string; includeAllWorkspaces?: boolean }
+      data: {
+        content: string;
+        mode?: string;
+        sourceType?: string;
+        includeAllWorkspaces?: boolean;
+      },
     ) =>
       apiRequest<{ userMessage: any; assistantMessage: any }>(
         `/projects/${projectId}/ai/conversations/${conversationId}/messages`,
         {
           method: "POST",
           body: JSON.stringify(data),
-        }
+        },
       ),
     generateTaskProposal: async (projectId: string, requirementId: string) =>
-      apiRequest<any>(`/projects/${projectId}/ai/requirements/${requirementId}/task-proposals`, {
-        method: "POST",
-      }),
-    generateDecisionTaskProposal: async (projectId: string, decisionId: string) =>
-      apiRequest<{ proposal: any }>(`/projects/${projectId}/ai/decisions/${decisionId}/task-proposals`, {
-        method: "POST",
-      }),
+      apiRequest<any>(
+        `/projects/${projectId}/ai/requirements/${requirementId}/task-proposals`,
+        {
+          method: "POST",
+        },
+      ),
+    generateDecisionTaskProposal: async (
+      projectId: string,
+      decisionId: string,
+    ) =>
+      apiRequest<{ proposal: any }>(
+        `/projects/${projectId}/ai/decisions/${decisionId}/task-proposals`,
+        {
+          method: "POST",
+        },
+      ),
     generateMeetingAnalysis: async (projectId: string, meetingId: string) =>
-      apiRequest<any>(`/projects/${projectId}/ai/meetings/${meetingId}/analysis-proposals`, {
-        method: "POST",
-      }),
+      apiRequest<any>(
+        `/projects/${projectId}/ai/meetings/${meetingId}/analysis-proposals`,
+        {
+          method: "POST",
+        },
+      ),
     listProposals: async (projectId: string, params?: { status?: string }) => {
       const q = new URLSearchParams();
       if (params?.status) q.append("status", params.status);
@@ -633,21 +787,28 @@ export const api = {
     updateProposal: async (
       projectId: string,
       proposalId: string,
-      data: { version: number; draftJson: any }
+      data: { version: number; draftJson: any },
     ) =>
       apiRequest<any>(`/projects/${projectId}/ai/proposals/${proposalId}`, {
         method: "PATCH",
         body: JSON.stringify(data),
       }),
     rejectProposal: async (projectId: string, proposalId: string) =>
-      apiRequest<any>(`/projects/${projectId}/ai/proposals/${proposalId}/reject`, {
-        method: "POST",
-      }),
+      apiRequest<any>(
+        `/projects/${projectId}/ai/proposals/${proposalId}/reject`,
+        {
+          method: "POST",
+        },
+      ),
     confirmProposal: async (
       projectId: string,
       proposalId: string,
-      data: { version: number; selectedItemIds?: string[]; includeSummary?: boolean },
-      idempotencyKey?: string
+      data: {
+        version: number;
+        selectedItemIds?: string[];
+        includeSummary?: boolean;
+      },
+      idempotencyKey?: string,
     ) => {
       const headers: Record<string, string> = {
         "Idempotency-Key":
@@ -662,42 +823,67 @@ export const api = {
           method: "POST",
           headers,
           body: JSON.stringify(data),
-        }
+        },
       );
     },
   },
   integrations: {
     github: {
       listConnections: async (projectId: string) =>
-        apiRequest<any[]>(`/projects/${projectId}/integrations/github/connections`),
+        apiRequest<any[]>(
+          `/projects/${projectId}/integrations/github/connections`,
+        ),
       getConnection: async (projectId: string, connectionId?: string) => {
         const qs = connectionId ? `?connectionId=${connectionId}` : "";
-        return apiRequest<any>(`/projects/${projectId}/integrations/github${qs}`);
+        return apiRequest<any>(
+          `/projects/${projectId}/integrations/github${qs}`,
+        );
       },
       connect: async (
         projectId: string,
-        data: { repositoryOwner: string; repositoryName: string; accessToken?: string }
+        data: {
+          repositoryOwner: string;
+          repositoryName: string;
+          accessToken?: string;
+        },
       ) =>
         apiRequest<any>(`/projects/${projectId}/integrations/github/connect`, {
           method: "POST",
           body: JSON.stringify(data),
         }),
-      sync: async (projectId: string, connectionId?: string, accessToken?: string) =>
-        apiRequest<{ syncedCount: number; totalCount: number; syncedPrCount?: number; totalPrCount?: number; lastSyncedAt: string }>(
-          `/projects/${projectId}/integrations/github/sync`,
-          {
-            method: "POST",
-            body: JSON.stringify({ connectionId, accessToken }),
-          }
-        ),
-      syncCode: async (projectId: string, connectionId?: string, accessToken?: string, progress?: { cursor?: number; treeVersion?: string }) =>
-        apiRequest<{ nextCursor: number | null; treeVersion: string; indexedFilesCount: number; unchangedFilesCount: number; candidateFilesCount: number; totalFiles: number; lastSyncedAt: string }>(
-          `/projects/${projectId}/integrations/github/sync-code`,
-          {
-            method: "POST",
-            body: JSON.stringify({ connectionId, accessToken, ...progress }),
-          }
-        ),
+      sync: async (
+        projectId: string,
+        connectionId?: string,
+        accessToken?: string,
+      ) =>
+        apiRequest<{
+          syncedCount: number;
+          totalCount: number;
+          syncedPrCount?: number;
+          totalPrCount?: number;
+          lastSyncedAt: string;
+        }>(`/projects/${projectId}/integrations/github/sync`, {
+          method: "POST",
+          body: JSON.stringify({ connectionId, accessToken }),
+        }),
+      syncCode: async (
+        projectId: string,
+        connectionId?: string,
+        accessToken?: string,
+        progress?: { cursor?: number; treeVersion?: string },
+      ) =>
+        apiRequest<{
+          nextCursor: number | null;
+          treeVersion: string;
+          indexedFilesCount: number;
+          unchangedFilesCount: number;
+          candidateFilesCount: number;
+          totalFiles: number;
+          lastSyncedAt: string;
+        }>(`/projects/${projectId}/integrations/github/sync-code`, {
+          method: "POST",
+          body: JSON.stringify({ connectionId, accessToken, ...progress }),
+        }),
       disconnect: async (projectId: string, connectionId?: string) => {
         const url = connectionId
           ? `/projects/${projectId}/integrations/github/connections/${connectionId}`
@@ -708,7 +894,13 @@ export const api = {
       },
       listIssues: async (
         projectId: string,
-        params?: { state?: string; q?: string; page?: number; limit?: number; connectionId?: string }
+        params?: {
+          state?: string;
+          q?: string;
+          page?: number;
+          limit?: number;
+          connectionId?: string;
+        },
       ) => {
         const q = new URLSearchParams();
         if (params?.connectionId) q.append("connectionId", params.connectionId);
@@ -717,13 +909,22 @@ export const api = {
         if (params?.page) q.append("page", String(params.page));
         if (params?.limit) q.append("limit", String(params.limit));
         const qs = q.toString() ? `?${q.toString()}` : "";
-        return apiRequest<{ items: any[]; total: number; page: number; limit: number }>(
-          `/projects/${projectId}/integrations/github/issues${qs}`
-        );
+        return apiRequest<{
+          items: any[];
+          total: number;
+          page: number;
+          limit: number;
+        }>(`/projects/${projectId}/integrations/github/issues${qs}`);
       },
       listPullRequests: async (
         projectId: string,
-        params?: { state?: string; q?: string; page?: number; limit?: number; connectionId?: string }
+        params?: {
+          state?: string;
+          q?: string;
+          page?: number;
+          limit?: number;
+          connectionId?: string;
+        },
       ) => {
         const q = new URLSearchParams();
         if (params?.connectionId) q.append("connectionId", params.connectionId);
@@ -732,13 +933,22 @@ export const api = {
         if (params?.page) q.append("page", String(params.page));
         if (params?.limit) q.append("limit", String(params.limit));
         const qs = q.toString() ? `?${q.toString()}` : "";
-        return apiRequest<{ items: any[]; total: number; page: number; limit: number }>(
-          `/projects/${projectId}/integrations/github/pull-requests${qs}`
-        );
+        return apiRequest<{
+          items: any[];
+          total: number;
+          page: number;
+          limit: number;
+        }>(`/projects/${projectId}/integrations/github/pull-requests${qs}`);
       },
       listFiles: async (
         projectId: string,
-        params?: { extension?: string; q?: string; page?: number; limit?: number; connectionId?: string }
+        params?: {
+          extension?: string;
+          q?: string;
+          page?: number;
+          limit?: number;
+          connectionId?: string;
+        },
       ) => {
         const q = new URLSearchParams();
         if (params?.connectionId) q.append("connectionId", params.connectionId);
@@ -747,16 +957,23 @@ export const api = {
         if (params?.page) q.append("page", String(params.page));
         if (params?.limit) q.append("limit", String(params.limit));
         const qs = q.toString() ? `?${q.toString()}` : "";
-        return apiRequest<{ items: any[]; total: number; page: number; limit: number }>(
-          `/projects/${projectId}/integrations/github/files${qs}`
-        );
+        return apiRequest<{
+          items: any[];
+          total: number;
+          page: number;
+          limit: number;
+        }>(`/projects/${projectId}/integrations/github/files${qs}`);
       },
     },
   },
   workspace: {
     getMembers: async () => apiRequest<any[]>("/workspace/members"),
     getInvites: async () => apiRequest<any[]>("/workspace/invites"),
-    createInvite: async (data: { email: string; systemRole?: string; professionalRole?: string }) =>
+    createInvite: async (data: {
+      email: string;
+      systemRole?: string;
+      professionalRole?: string;
+    }) =>
       apiRequest<any>("/workspace/invites", {
         method: "POST",
         body: JSON.stringify(data),

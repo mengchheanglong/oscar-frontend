@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "./workspace-theme.css";
 import { WorkspaceThemeProvider } from "@/context/workspace-theme";
+import { ProjectWorkspaceProvider } from "@/components/project-workspace";
 import { AuthProvider } from "@/context/auth-context";
 import { ToastProvider } from "@/context/toast-context";
 
@@ -42,7 +43,9 @@ export default function RootLayout({
       >
         <WorkspaceThemeProvider>
           <AuthProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              <ProjectWorkspaceProvider>{children}</ProjectWorkspaceProvider>
+            </ToastProvider>
           </AuthProvider>
         </WorkspaceThemeProvider>
       </body>

@@ -15,6 +15,8 @@ import { DropdownSelect } from "@/components/ui/dropdown-select";
 
 interface ComposerProps {
   projectId?: string;
+  projectName?: string;
+  onProjectFiles?: () => void;
   value: string;
   onChange: (value: string) => void;
   onSend: () => void;
@@ -35,6 +37,8 @@ interface ComposerProps {
 
 export function CopilotComposer({
   projectId,
+  projectName,
+  onProjectFiles,
   value,
   onChange,
   onSend,
@@ -278,6 +282,17 @@ export function CopilotComposer({
                 </div>
               )}
             </div>
+            {projectName && onProjectFiles && (
+              <button
+                type="button"
+                onClick={onProjectFiles}
+                className="composer-project-pill"
+                aria-label="Open project files"
+              >
+                <WorkspaceIcon name="folder" />
+                <span>{projectName}</span>
+              </button>
+            )}
             <div className="chat-composer-controls">
               <DropdownSelect
                 value={useTools ? "HERMES" : "ASSISTANT"}

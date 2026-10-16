@@ -57,7 +57,6 @@ request or user-content deletion was needed. Mobile page width equals its 390px
 viewport. AIW accepted-decision lookup returned no records. No assigned task was
 supplied or marked complete.
 
-
 ## Reference sizing refinement
 
 The supplied side-by-side captures showed 125% display scaling: the former 320px
@@ -69,3 +68,39 @@ Project administration remains accessible through Settings. At a 1534x732 CSS
 viewport, browser measurement confirms 256px sidebar width, 236x36px rows and
 zero Overview navigation links. Mobile keeps 40px rows and 40px minimum input
 height. Unrelated in-progress Settings and Team work is preserved separately.
+
+## Project and chat workflows (2026-10-16)
+
+The supplied signed-in references guide project creation, nested chats, menus,
+icons, and the settings/files panel. Files remains the full library; the chat
+panel offers the same project documents and private folder copies without leaving
+work in progress. No Drive, Box, automation, or public-share controls are shown
+without an implemented integration.
+
+- Projects and Chats collapse independently. Selecting a project opens its chats;
+  the plus button starts a scoped draft. Chat at the top starts general chat.
+- Create Project needs a name; keys are generated. Add accepts files or a browser
+  folder selection. Documents upload after creation; a folder uses the existing
+  resumable folder uploader. A failed file upload retries the remaining files
+  against the same created project.
+- Project menus expose Rename, Share, Edit icon, Settings, and Archive. Sharing
+  opens real project membership controls. Owners can archive and restore; managers
+  can edit preferences. Archive replaces destructive project deletion.
+- Settings and Files open beside chat on desktop and in a focus-contained overlay
+  on mobile. Escape closes the panel. The composer project chip opens Files.
+- Instructions and emoji icons persist on the project. Instructions reach both
+  Assistant and Hermes as preferences, subordinate to evidence/access/review rules.
+- Chat menus support rename, pin/unpin, and confirmed deletion. Pins and titles
+  persist on the server; project membership never makes private chats public.
+- Metadata refreshes preserve the current draft. Unsaved drafts are session-only;
+  project switching keeps them separate. A page reload does not save drafts.
+
+Backend migration: `1792368000000-ProjectWorkspacePreferences`. The backend's
+`docs/PROJECT_CHAT.md` documents the metadata API and authorization boundaries.
+
+Verified locally: frontend lint/typecheck/production build, eight existing folder
+checks, desktop/mobile browser workflows, document/folder creation and upload,
+chat rename/pin after reload, instruction save without losing the draft, project
+rename/icon, sharing, and archive/restore. Three synthetic QA projects and their
+stored files were removed after verification. No live AI calls were needed for
+these UI checks. Main and deployment configuration remain unchanged.

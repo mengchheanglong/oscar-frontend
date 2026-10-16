@@ -20,6 +20,8 @@ export interface Project {
   name: string;
   key: string;
   description?: string | null;
+  icon?: string | null;
+  instructions?: string | null;
   status: string;
   version: number;
   currentUserRole?: "OWNER" | "MANAGER" | "CONTRIBUTOR" | "VIEWER";
@@ -34,7 +36,11 @@ export interface AuthContextType {
   currentProject: Project | null;
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<void>;
-  register: (email: string, pass: string, displayName?: string) => Promise<void>;
+  register: (
+    email: string,
+    pass: string,
+    displayName?: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   setCurrentProject: (proj: Project | null) => void;
   refreshProjects: () => Promise<void>;
@@ -59,7 +65,9 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [currentProject, setCurrentProjectState] = useState<Project | null>(null);
+  const [currentProject, setCurrentProjectState] = useState<Project | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   const setCurrentProject = (p: Project | null) => {
@@ -87,7 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else if (saved) {
             try {
               const parsed = JSON.parse(saved);
-              activeProj = list.find((p: Project) => p.id === parsed.id) || null;
+              activeProj =
+                list.find((p: Project) => p.id === parsed.id) || null;
             } catch {
               activeProj = null;
             }
@@ -98,7 +107,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (activeProj) {
           setCurrentProjectState(activeProj);
           if (typeof window !== "undefined") {
-            localStorage.setItem("aiw_current_project", JSON.stringify(activeProj));
+            localStorage.setItem(
+              "aiw_current_project",
+              JSON.stringify(activeProj),
+            );
           }
         } else {
           // Default to "All Projects"
@@ -141,7 +153,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (email: string, pass: string, displayName?: string) => {
+  const register = async (
+    email: string,
+    pass: string,
+    displayName?: string,
+  ) => {
     setIsLoading(true);
     try {
       const data = await api.auth.register(email, pass, displayName);
