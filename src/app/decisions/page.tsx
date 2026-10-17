@@ -162,8 +162,8 @@ function formatDecisionDate(dateStr?: string | Date | null): string {
   }
 }
 
-export default function DecisionsPage() {
-  const { currentProject, projects, setCurrentProject } = useAuth();
+function DecisionWorkspace() {
+  const { currentProject, projects } = useAuth();
   const { showToast } = useToast();
 
   const [items, setItems] = useState<DecisionItem[]>([]);
@@ -178,9 +178,7 @@ export default function DecisionsPage() {
   const [activeDec, setActiveDec] = useState<DecisionItem | null>(null);
 
   // Filter & Search
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(
-    currentProject ? currentProject.id : "ALL",
-  );
+  const selectedProjectId = currentProject?.id || "ALL";
   const [searchQuery, setSearchQuery] = useState("");
 
   // Create Form state
@@ -277,10 +275,6 @@ export default function DecisionsPage() {
     }
   }, [projects, currentProject, showToast]);
 
-  useEffect(() => {
-    setSelectedProjectId(currentProject ? currentProject.id : "ALL");
-  }, [currentProject]);
-
   // Handle URL parameters for deep links (?id=..., ?create=true, ?search=...)
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -349,15 +343,6 @@ export default function DecisionsPage() {
       return true;
     });
   }, [items, selectedProjectId, searchQuery]);
-
-  // Active projects count
-  const activeProjectsCount = useMemo(() => {
-    const set = new Set<string>();
-    for (const item of items) {
-      if (item.projectId) set.add(item.projectId);
-    }
-    return set.size || projects.length;
-  }, [items, projects]);
 
   // Open Detail View
   const openDetailView = (item: DecisionItem) => {
@@ -589,9 +574,10 @@ export default function DecisionsPage() {
                   Decisions
                 </h1>
                 <p className="text-xs text-slate-500">
-                  {items.length} decisions across {activeProjectsCount} active
-                  project
-                  {activeProjectsCount === 1 ? "" : "s"}.
+                  {items.length} decisions
+                  {currentProject
+                    ? ` in ${currentProject.name}.`
+                    : " across all projects."}
                 </p>
               </div>
 
@@ -608,29 +594,6 @@ export default function DecisionsPage() {
 
             {/* Filter Bar (Project dropdown & Search input) */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-              {/* Refined Project Filter Dropdown */}
-              <DropdownSelect
-                value={selectedProjectId}
-                onChange={(id) => {
-                  const project = projects.find((p) => p.id === id);
-                  if (project) {
-                    setCurrentProject(project);
-                    setSelectedProjectId(id);
-                    setViewState("list");
-                    setActiveDec(null);
-                  }
-                }}
-                prefix="Project:"
-                options={[
-                  ...projects.map((p) => ({
-                    value: p.id,
-                    label: p.name,
-                    badge: `[${p.key}]`,
-                    badgeColor: getProjectBadgeStyle(p.name),
-                  })),
-                ]}
-              />
-
               {/* Search Input */}
               <div className="relative w-full sm:w-64">
                 <Input
@@ -1360,5 +1323,12 @@ export default function DecisionsPage() {
         loading={deletingDec}
       />
     </AppLayout>
+  );
+}
+
+export default function DecisionsPage() {
+  const { currentProject, user } = useAuth();
+  return (
+    <DecisionWorkspace key={`${user?.id}:${currentProject?.id || "ALL"}`} />
   );
 }

@@ -225,3 +225,11 @@ project-menu settings access, Remember draft review/cancel and return to its
 conversation, and saving/reloading/removing a temporary private memory. The
 temporary entry was removed. No browser errors were reported.
 Production build passed after the final changes.
+
+
+### 2026-10-17 — Sidebar scope and global search
+
+- Tasks and Decisions follow the selected sidebar project without duplicate project filters. All projects clears that selection and shows combined project items; individual items still belong to a project. Creation retains a project choice in the combined view.
+- Sidebar project selection stays on Tasks, Decisions, or Global search when already on those pages. Other project selection continues to open chat. The selection persists through navigation/reload.
+- Global search ignores sidebar scope. It reuses authenticated project search endpoints for every accessible active project, with four concurrent requests at most, source-project labels, summed facets, additional pages, request-race protection, and explicit partial-failure notices. Opening a result sets its owning project before navigation.
+- `pnpm test:global-search` verifies cross-project aggregation, bounded concurrency, source attribution, counts, pagination, deduplication, and partial failures. No backend schema/API changes are required.

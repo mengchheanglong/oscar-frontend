@@ -292,6 +292,23 @@ export function Sidebar({
                 </button>
               </div>
             </div>
+            {projectsOpen && (
+              <button
+                type="button"
+                className="workspace-nav-link workspace-project"
+                aria-pressed={!currentProject}
+                title="All projects"
+                onClick={() => {
+                  setCurrentProject(null);
+                  if (!["/tasks", "/decisions", "/search"].includes(pathname))
+                    router.push("/assistant");
+                  onCloseMobile?.();
+                }}
+              >
+                <WorkspaceIcon name="overview" />
+                <span>All projects</span>
+              </button>
+            )}
             {projectsOpen &&
               projects
                 .filter((project) => project.status !== "ARCHIVED")
@@ -328,7 +345,12 @@ export function Sidebar({
                               return next;
                             });
                             setCurrentProject(project);
-                            router.push("/assistant");
+                            if (
+                              !["/tasks", "/decisions", "/search"].includes(
+                                pathname,
+                              )
+                            )
+                              router.push("/assistant");
                             onCloseMobile?.();
                           }}
                         >

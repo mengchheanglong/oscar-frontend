@@ -936,7 +936,7 @@ html[data-workspace-theme]
   margin-bottom: 4px;
 }
 .workspace-nav-link.workspace-project[aria-pressed="true"] {
-  background: transparent;
+  background: var(--ws-hover);
 }
 .workspace-nav-link.workspace-project:hover,
 .workspace-account-trigger:hover {

@@ -181,16 +181,6 @@ function getProjectBadgeStyle(projectName?: string | null) {
   return "bg-purple-50 text-purple-700 border-purple-200";
 }
 
-const TASK_PROJECT_COLORS = [
-  "#C0392B",
-  "#8B5CF6",
-  "#3B82F6",
-  "#059669",
-  "#D97706",
-  "#EC4899",
-  "#6366F1",
-];
-
 const TASK_ASSIGNEE_COLORS = [
   "#6366F1",
   "#D97706",
@@ -206,7 +196,7 @@ const TASK_PRIORITY_OPTIONS: FilterOption[] = [
 ];
 
 function TaskWorkspace() {
-  const { currentProject, projects, setCurrentProject, user } = useAuth();
+  const { currentProject, projects, user } = useAuth();
   const { showToast } = useToast();
 
   const live = useRef(true);
@@ -247,9 +237,7 @@ function TaskWorkspace() {
     } catch {}
   };
   // Filters
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(
-    currentProject ? currentProject.id : "ALL",
-  );
+  const selectedProjectId = currentProject?.id || "ALL";
   const [selectedAssignee, setSelectedAssignee] = useState<string>("ALL");
   const [selectedPriority, setSelectedPriority] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -419,10 +407,6 @@ function TaskWorkspace() {
   }, [currentProject]);
 
   useEffect(() => {
-    setSelectedProjectId(currentProject ? currentProject.id : "ALL");
-  }, [currentProject]);
-
-  useEffect(() => {
     loadData();
   }, [loadData]);
 
@@ -488,14 +472,6 @@ function TaskWorkspace() {
     }
     return Array.from(map.values());
   }, [projects, tasks]);
-
-  const taskProjectOptions: FilterOption[] = useMemo(() => {
-    return activeProjectsList.map((p, idx) => ({
-      value: p.id,
-      label: p.name,
-      color: TASK_PROJECT_COLORS[idx % TASK_PROJECT_COLORS.length],
-    }));
-  }, [activeProjectsList]);
 
   const taskAssigneeOptions: FilterOption[] = useMemo(() => {
     return assigneesList.map((a, idx) => ({
@@ -573,18 +549,6 @@ function TaskWorkspace() {
     selectedPriority,
     searchQuery,
   ]);
-
-  // Active projects count in filtered result
-  const filteredProjectsCount = useMemo(() => {
-    const set = new Set<string>();
-    for (const t of filteredTasks) {
-      set.add(t.projectId);
-    }
-    return (
-      set.size ||
-      (activeProjectsList.length > 0 ? activeProjectsList.length : 1)
-    );
-  }, [filteredTasks, activeProjectsList]);
 
   // Tasks partitioned by status
   const tasksByStatus = useMemo(() => {
@@ -867,9 +831,10 @@ function TaskWorkspace() {
             </h1>
             <p className="text-xs text-slate-500 mt-1">
               {filteredTasks.length}{" "}
-              {filteredTasks.length === 1 ? "task" : "tasks"} across{" "}
-              {filteredProjectsCount} active{" "}
-              {filteredProjectsCount === 1 ? "project" : "projects"}.
+              {filteredTasks.length === 1 ? "task" : "tasks"}
+              {currentProject
+                ? ` in ${currentProject.name}.`
+                : " across all projects."}
             </p>
           </div>
 
@@ -887,18 +852,6 @@ function TaskWorkspace() {
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-1">
           {/* Left: Dropdown Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Project Dropdown */}
-            <FilterDropdown
-              label="Project"
-              allLabel="All projects"
-              value={selectedProjectId}
-              onChange={(id) => {
-                setSelectedProjectId(id);
-                setCurrentProject(projects.find((p) => p.id === id) || null);
-              }}
-              options={taskProjectOptions}
-            />
-
             {/* Assignee Dropdown */}
             <FilterDropdown
               label="Assignee"
@@ -1015,7 +968,7 @@ function TaskWorkspace() {
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
               {tasks.length === 0
                 ? "No tasks created yet in this workspace. Create your first task to get started."
-                : "Try adjusting your project, assignee, or priority filters, or clear your search term."}
+                : "Try adjusting your assignee or priority filters, or clear your search term."}
             </p>
             {tasks.length === 0 ? (
               <Button
@@ -1029,7 +982,6 @@ function TaskWorkspace() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setSelectedProjectId("ALL");
                   setSelectedAssignee("ALL");
                   setSelectedPriority("ALL");
                   setSearchQuery("");

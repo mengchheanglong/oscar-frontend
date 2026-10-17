@@ -116,6 +116,7 @@ export function AppLayout({
             pathname !== "/projects" &&
             pathname !== "/dashboard" &&
             pathname !== "/tasks" &&
+            pathname !== "/decisions" &&
             pathname !== "/profile" &&
             !pathname.startsWith("/settings") &&
             pathname !== "/team" &&

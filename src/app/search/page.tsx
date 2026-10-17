@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
+import { searchAcrossProjects, mergeSearchResults } from "@/lib/global-search";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -71,7 +72,21 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function SearchPage() {
-  const { currentProject, projects, setCurrentProject } = useAuth();
+  const {
+    projects,
+    setCurrentProject,
+    isLoading: authLoading,
+    user,
+  } = useAuth();
+  const requestId = useRef(0);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [lastSearch, setLastSearch] = useState({
+    term: "",
+    type: "",
+    mode: "hybrid" as "hybrid" | "semantic" | "keyword",
+    page: 1,
+  });
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [meta, setMeta] = useState<any>(null);
@@ -85,54 +100,82 @@ export default function SearchPage() {
   const executeSearch = useCallback(
     async (
       searchTerm: string,
-      typeFilter?: string,
-      mode: "hybrid" | "semantic" | "keyword" = searchMode,
+      typeFilter = "",
+      mode: "hybrid" | "semantic" | "keyword" = "hybrid",
+      page = 1,
     ) => {
-      if (!currentProject || !searchTerm.trim()) return;
+      if (!searchTerm.trim() || authLoading) return;
+      const request = ++requestId.current;
       setLoading(true);
       setHasSearched(true);
-      try {
-        const envelope = await api.search.query(
-          currentProject.id,
-          searchTerm.trim(),
-          typeFilter || undefined,
-          1,
-          25,
-          mode,
-        );
-        setResults(envelope.data || []);
-        setMeta(envelope.meta || null);
-      } catch (err: any) {
-        console.error("Search failed:", err);
-      } finally {
-        setLoading(false);
+      setSearchError(null);
+      if (page === 1) {
+        setResults([]);
+        setMeta(null);
+        setHasMore(false);
       }
+      const {
+        rows,
+        meta,
+        hasMore: more,
+        failed,
+      } = await searchAcrossProjects(
+        projects,
+        api.search.query,
+        searchTerm.trim(),
+        typeFilter,
+        mode,
+        page,
+      );
+      if (request !== requestId.current) return;
+      if (failed.length && page > 1) {
+        setSearchError(
+          `Could not load more results from ${failed.join(", ")}. Try Show more results again.`,
+        );
+        setLoading(false);
+        return;
+      }
+      setResults((previous) =>
+        mergeSearchResults(page === 1 ? [] : previous, rows, mode),
+      );
+      setMeta(meta);
+      setHasMore(more && failed.length === 0);
+      setLastSearch({ term: searchTerm.trim(), type: typeFilter, mode, page });
+      if (failed.length)
+        setSearchError(
+          `Could not search ${failed.join(", ")}. Results may be incomplete. Search again to retry.`,
+        );
+      setLoading(false);
     },
-    [currentProject, searchMode],
+    [projects, authLoading],
   );
 
-  // Read URL query parameter (?q= or ?search=) on load and execute search
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const incomingQuery = params.get("q") || params.get("search");
-      if (incomingQuery && incomingQuery.trim()) {
-        const trimmed = incomingQuery.trim();
-        setQuery(trimmed);
-        const typeParam = params.get("type");
-        const modeParam = params.get("mode") as any;
-        const validMode =
-          modeParam === "semantic" || modeParam === "keyword"
-            ? modeParam
-            : "hybrid";
-        if (modeParam) setSearchMode(validMode);
-        if (typeParam) setSelectedType(typeParam);
-        if (currentProject) {
-          executeSearch(trimmed, typeParam || undefined, validMode);
-        }
-      }
+    const counter = requestId;
+    const params = new URLSearchParams(window.location.search);
+    const incoming = params.get("q") || params.get("search");
+    if (incoming?.trim() && !authLoading) {
+      const modeParam = params.get("mode");
+      const mode =
+        modeParam === "semantic" || modeParam === "keyword"
+          ? modeParam
+          : "hybrid";
+      setQuery(incoming.trim());
+      setSearchMode(mode);
+      setSelectedType(params.get("type") || "");
+      void executeSearch(incoming, params.get("type") || "", mode);
+    } else {
+      setLoading(false);
+      setHasSearched(false);
+      setSearchError(null);
+      setResults([]);
+      setMeta(null);
+      setHasMore(false);
     }
-  }, [currentProject, executeSearch]);
+    return () => {
+      counter.current++;
+    };
+  }, [executeSearch, authLoading, user?.id]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,6 +197,10 @@ export default function SearchPage() {
   };
 
   const handleClear = () => {
+    requestId.current++;
+    setLoading(false);
+    setSearchError(null);
+    setHasMore(false);
     setQuery("");
     setResults([]);
     setMeta(null);
@@ -185,29 +232,15 @@ export default function SearchPage() {
             </h1>
           </div>
           <p className="text-xs text-codex-muted mt-1">
-            Search documents, tasks, decisions, and project information.
+            Search documents, tasks, decisions, and information across all your
+            projects.
           </p>
         </div>
 
-        {/* Project Required Banner if All Projects is currently active */}
-        {!currentProject && projects.length > 0 && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-            <span className="font-medium">
-              Choose a project for detailed results:
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {projects.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setCurrentProject(p)}
-                  className="px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition-colors shadow-2xs cursor-pointer"
-                >
-                  [{p.key}] {p.name}
-                </button>
-              ))}
-            </div>
-          </div>
+        {searchError && (
+          <p role="alert" className="chat-work-notice">
+            {searchError}
+          </p>
         )}
 
         {/* Search Mode Selector & Input Bar */}
@@ -268,6 +301,7 @@ export default function SearchPage() {
             <div className="relative flex-1">
               <SearchIcon className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
               <input
+                aria-label="Search all projects"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search files, tasks, decisions, or a record key…"
@@ -276,6 +310,7 @@ export default function SearchPage() {
               {query && (
                 <button
                   type="button"
+                  aria-label="Clear search"
                   onClick={handleClear}
                   className="absolute right-3 top-3 text-slate-400 hover:text-slate-700"
                 >
@@ -285,7 +320,7 @@ export default function SearchPage() {
             </div>
             <Button
               type="submit"
-              disabled={loading || !query.trim()}
+              disabled={authLoading || loading || !query.trim()}
               className="h-10 px-5 text-xs bg-codex-accent hover:bg-codex-hover text-white font-medium rounded-xl shadow-xs"
             >
               {loading ? "Searching..." : "Search"}
@@ -390,7 +425,7 @@ export default function SearchPage() {
         )}
 
         {/* Results Stream */}
-        {loading ? (
+        {loading && results.length === 0 ? (
           <div className="space-y-3">
             <div className="h-20 rounded-2xl bg-white border border-slate-200 animate-pulse" />
             <div className="h-20 rounded-2xl bg-white border border-slate-200 animate-pulse" />
@@ -401,14 +436,11 @@ export default function SearchPage() {
               <SearchIcon className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-semibold text-slate-900 font-serif">
-              Search project knowledge
+              Search all project knowledge
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              Search titles and text in{" "}
-              <span className="text-codex-accent font-semibold">
-                {currentProject?.name}
-              </span>
-              .
+              Search titles and text across all your projects, regardless of the
+              project selected in the sidebar.
             </p>
           </div>
         ) : results.length === 0 ? (
@@ -425,8 +457,11 @@ export default function SearchPage() {
         ) : (
           <div className="space-y-3">
             <div className="text-[11px] font-mono text-slate-400">
-              Found {results.length} result(s) for &quot;
-              <span className="text-slate-700 font-semibold">{query}</span>
+              Showing {results.length} of {meta?.total || results.length}{" "}
+              result(s) for &quot;
+              <span className="text-slate-700 font-semibold">
+                {lastSearch.term}
+              </span>
               &quot;
             </div>
             {results.map((item, idx) => {
@@ -445,7 +480,7 @@ export default function SearchPage() {
 
               return (
                 <Card
-                  key={item.id || idx}
+                  key={`${item.projectId}:${item.type}:${item.id || idx}`}
                   className="bg-white border border-slate-200 hover:border-slate-300 transition-all shadow-xs hover:shadow-md group rounded-2xl"
                 >
                   <CardContent className="p-4 space-y-2">
@@ -474,6 +509,12 @@ export default function SearchPage() {
                         )}
                         <Link
                           href={targetUrl}
+                          onClick={() =>
+                            setCurrentProject(
+                              projects.find((p) => p.id === item.projectId) ||
+                                null,
+                            )
+                          }
                           className="text-xs font-bold text-slate-900 group-hover:text-codex-accent transition-colors hover:underline font-serif"
                         >
                           {item.title}
@@ -482,6 +523,12 @@ export default function SearchPage() {
 
                       <div className="flex items-center gap-1.5">
                         <Link
+                          onClick={() =>
+                            setCurrentProject(
+                              projects.find((p) => p.id === item.projectId) ||
+                                null,
+                            )
+                          }
                           href={`/assistant?prompt=${encodeURIComponent(
                             `Tell me about ${item.type.toLowerCase()} [${item.key || ""}]: "${item.title}". Context: "${
                               item.snippet || ""
@@ -499,7 +546,15 @@ export default function SearchPage() {
                           </Button>
                         </Link>
 
-                        <Link href={targetUrl}>
+                        <Link
+                          href={targetUrl}
+                          onClick={() =>
+                            setCurrentProject(
+                              projects.find((p) => p.id === item.projectId) ||
+                                null,
+                            )
+                          }
+                        >
                           <Button
                             variant="ghost"
                             size="sm"
@@ -519,7 +574,9 @@ export default function SearchPage() {
                     )}
 
                     <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
-                      <span>{formatDate(item.createdAt)}</span>
+                      <span>
+                        {item.projectName} · {formatDate(item.updatedAt)}
+                      </span>
                       <span className="text-slate-400">
                         ID: {item.id.substring(0, 8)}...
                       </span>
@@ -529,6 +586,22 @@ export default function SearchPage() {
               );
             })}
           </div>
+        )}
+        {hasMore && (
+          <Button
+            variant="outline"
+            disabled={loading}
+            onClick={() =>
+              executeSearch(
+                lastSearch.term,
+                lastSearch.type,
+                lastSearch.mode,
+                lastSearch.page + 1,
+              )
+            }
+          >
+            {loading ? "Loading…" : "Show more results"}
+          </Button>
         )}
       </div>
     </AppLayout>
