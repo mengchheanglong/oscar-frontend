@@ -523,7 +523,7 @@ html[data-workspace-theme] .chat-canvas {
   background: var(--ws-hover) !important;
 }
 .chat-message {
-  max-width: 900px;
+  max-width: 752px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -555,12 +555,6 @@ html[data-workspace-theme] .chat-bubble-user {
   border-radius: 24px;
   padding: 12px 20px;
   box-shadow: none;
-}
-.chat-bubble-assistant :is(h2, h3) {
-  border: 0;
-}
-.chat-bubble-assistant p {
-  line-height: 1.75;
 }
 .workspace-attachment-menu {
   position: absolute;
@@ -893,30 +887,207 @@ html[data-workspace-theme] .chat-bubble-assistant {
   background: transparent;
 }
 
-/* Reading typography and source chips match the quiet conversation surface. */
-.chat-bubble-assistant :is(p, [class~="text-[13px]"]) {
+/* Shared answer typography for chat and agent artifacts. */
+.answer-markdown {
+  min-width: 0;
+  color: var(--ws-text);
   font-size: 16px;
-  line-height: 1.75;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
 }
-.chat-bubble-assistant :is(h1, h2, h3, h4) {
-  font-size: 18px;
+.answer-markdown :where(p, ul, ol, blockquote, pre, table) {
+  margin: 0;
+}
+.answer-markdown > * + * {
+  margin-top: 16px;
+}
+.answer-markdown :is(h1, h2, h3, h4, h5, h6) {
+  margin: 30px 0 10px;
+  color: inherit;
   font-weight: 600;
-  line-height: 1.5;
-  margin-top: 24px;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
 }
-.chat-bubble-assistant :is(h1, h2, h3, h4) > span:first-child {
-  display: none;
+.answer-markdown h1 {
+  font-size: 24px;
 }
-html[data-workspace-theme]
-  .chat-bubble-assistant
-  [title^="Project evidence source"] {
+.answer-markdown h2 {
+  font-size: 20px;
+}
+.answer-markdown :is(h3, h4, h5, h6) {
+  font-size: 18px;
+}
+.answer-markdown > :first-child {
+  margin-top: 0;
+}
+.answer-markdown strong {
+  font-weight: 600;
+}
+.answer-markdown a {
+  color: var(--ws-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.answer-markdown :is(ul, ol) {
+  padding-left: 1.5em;
+}
+.answer-markdown ul {
+  list-style: disc;
+}
+.answer-markdown ol {
+  list-style: decimal;
+}
+.answer-markdown li {
+  padding-left: 0.2em;
+}
+.answer-markdown li + li {
+  margin-top: 8px;
+}
+.answer-markdown li > :is(p + p, ul, ol) {
+  margin-top: 8px;
+}
+.answer-markdown li::marker {
+  color: var(--ws-muted);
+}
+.answer-markdown .contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+.answer-markdown .task-list-item input {
+  margin-right: 8px;
+  accent-color: var(--ws-muted);
+}
+.answer-markdown blockquote {
+  padding-left: 16px;
+  border-left: 3px solid var(--ws-border);
+  color: var(--ws-muted);
+}
+.answer-markdown blockquote > * + * {
+  margin-top: 12px;
+}
+.answer-markdown hr {
+  margin: 24px 0;
+  border-top: 1px solid var(--ws-border);
+}
+.answer-markdown :not(pre) > code {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: var(--ws-hover);
+  font-size: 0.875em;
+}
+.answer-code {
+  overflow: hidden;
+  border: 1px solid var(--ws-border);
+  border-radius: 14px;
+  background: var(--ws-surface);
+}
+.answer-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  color: var(--ws-muted);
+  font-size: 12px;
+  border-bottom: 1px solid var(--ws-border);
+}
+.answer-code-header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 4px;
+}
+.answer-code-header button:hover {
+  color: var(--ws-text);
+  background: var(--ws-hover);
+}
+.answer-code pre {
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: normal;
+}
+.answer-code code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.answer-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.answer-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.answer-table :is(th, td) {
+  min-width: 130px;
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid var(--ws-border);
+  text-align: left;
+  vertical-align: top;
+}
+.answer-table th {
+  font-weight: 600;
+}
+.answer-table :is(th, td)[align="center"] {
+  text-align: center;
+}
+.answer-table :is(th, td)[align="right"] {
+  text-align: right;
+}
+.answer-citation {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  margin: 0 2px;
+  padding: 0 5px;
+  border-radius: 6px;
   background: var(--ws-hover);
   color: var(--ws-muted);
-  border-color: var(--ws-border);
-  font-weight: 400;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 500;
+  vertical-align: 2px;
+  text-decoration: none;
 }
-.chat-bubble-assistant [title^="Project evidence source"] > span {
-  display: none;
+button.answer-citation:hover {
+  color: var(--ws-text);
+  outline: 1px solid var(--ws-muted);
+}
+.answer-citation-unavailable {
+  background: transparent;
+}
+.answer-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ws-muted);
+}
+.answer-action:hover {
+  background: var(--ws-hover);
+  color: var(--ws-text);
+}
+:is(.answer-markdown, .chat-bubble-assistant)
+  :is(button, a, [tabindex="0"]):focus-visible {
+  outline: 2px solid var(--ws-muted);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .answer-markdown {
+    font-size: 15px;
+  }
+  .answer-code-header,
+  .answer-code pre {
+    padding: 10px 12px;
+  }
 }
 
 /* Signed-in reference sizing: 256px sidebar, compact rows, quiet project selection. */
@@ -2190,7 +2361,6 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
   margin-top: 2px;
   color: #c18a35;
 }
-
 
 .knowledge-soon-badge {
   margin-left: auto;

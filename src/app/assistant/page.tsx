@@ -1261,27 +1261,13 @@ export default function AssistantPage() {
 
                           {isAssistant ? (
                             <div className="text-sm leading-7 text-slate-800">
-                              <MarkdownContent content={msg.content} />
-                              {msg.status === "COMPLETED" &&
-                                !msg.id.startsWith("temp-") && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (memoryProjectId)
-                                        projectWorkspace.openMemory(
-                                          memoryProjectId,
-                                          {
-                                            content: msg.content,
-                                            sourceMessageId: msg.id,
-                                            conversationId: activeConv?.id,
-                                          },
-                                        );
-                                    }}
-                                    className="mt-3 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
-                                  >
-                                    Remember…
-                                  </button>
-                                )}
+                              <MarkdownContent
+                                content={msg.content}
+                                citations={msg.citations}
+                                onCitationClick={(_, index) =>
+                                  setInspectingCitation(msg.citations[index])
+                                }
+                              />
                             </div>
                           ) : (
                             <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-white">
@@ -1290,7 +1276,7 @@ export default function AssistantPage() {
                           )}
 
                           {isAssistant && msg.citations?.length > 0 && (
-                            <details className="group border-t border-slate-100 pt-3">
+                            <details className="answer-sources group pt-2">
                               <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md py-1 text-xs font-medium text-slate-500 hover:text-slate-800 [&::-webkit-details-marker]:hidden">
                                 <FileText className="h-3.5 w-3.5" /> Sources{" "}
                                 <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px]">
@@ -1391,14 +1377,14 @@ export default function AssistantPage() {
                           )}
 
                           {isAssistant && msg.status === "COMPLETED" && (
-                            <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
                               <button
                                 type="button"
                                 onClick={() =>
                                   void handleCopyMessage(msg.id, msg.content)
                                 }
                                 aria-label="Copy response"
-                                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-xs text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                                className="answer-action"
                               >
                                 {copiedMsgId === msg.id ? (
                                   <Check className="h-3.5 w-3.5 text-emerald-600" />
@@ -1409,8 +1395,27 @@ export default function AssistantPage() {
                                   ? "Copied"
                                   : "Copy response"}
                               </button>
+                              {!msg.id.startsWith("temp-") && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (memoryProjectId)
+                                      projectWorkspace.openMemory(
+                                        memoryProjectId,
+                                        {
+                                          content: msg.content,
+                                          sourceMessageId: msg.id,
+                                          conversationId: activeConv?.id,
+                                        },
+                                      );
+                                  }}
+                                  className="answer-action"
+                                >
+                                  Remember…
+                                </button>
+                              )}
                               {msg.modelName && (
-                                <span className="text-[10px] text-slate-400">
+                                <span className="ml-auto text-[10px] text-slate-400">
                                   {msg.modelName}
                                 </span>
                               )}
