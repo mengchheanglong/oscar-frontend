@@ -29,9 +29,18 @@ import { WorkspaceIcon } from "@/components/workspace-icons";
 import { WorkspaceDialog, FloatingMenu } from "@/components/workspace-overlays";
 import { UploadedFolderSources } from "@/components/uploaded-folder-sources";
 
+type MemoryDraft = {
+  content: string;
+  sourceMessageId?: string;
+  conversationId?: string;
+};
+
 type PanelTab = "settings" | "files";
 type Edit = { kind: "rename" | "icon" | "archive"; project: Project };
 interface WorkspaceState {
+  openMemory: (projectId: string, draft?: MemoryDraft) => void;
+  memoryDraft: (MemoryDraft & { projectId: string; userId: string }) | null;
+  clearMemoryDraft: () => void;
   openCreate: () => void;
   openArchives: () => void;
   openPanel: (project: Project, tab?: PanelTab) => void;
@@ -95,6 +104,9 @@ export function ProjectWorkspaceProvider({
   const { user, currentProject, setCurrentProject, projects, refreshProjects } =
       useAuth(),
     router = useRouter();
+  const [memoryDraft, setMemoryDraft] = useState<
+    (MemoryDraft & { projectId: string; userId: string }) | null
+  >(null);
   const currentRef = useRef(currentProject);
   currentRef.current = currentProject;
   const [createOpen, setCreateOpen] = useState(false),
@@ -109,6 +121,7 @@ export function ProjectWorkspaceProvider({
     setEdit(null);
     setPanelProject(null);
     setPendingFolder(null);
+    setMemoryDraft(null);
   }, [user?.id]);
   const selectedProjectId = currentProject?.id;
   const panelProjectScope = panelProject?.id;
@@ -147,9 +160,24 @@ export function ProjectWorkspaceProvider({
     return saved;
   };
   const consumeFolder = useCallback(() => setPendingFolder(null), []);
+  const clearMemoryDraft = useCallback(() => setMemoryDraft(null), []);
   return (
     <WorkspaceContext.Provider
       value={{
+        openMemory: (projectId, draft) => {
+          const project = projects.find((item) => item.id === projectId);
+          if (!project || !user) return;
+          setCurrentProject(project);
+          setPanelProject(null);
+          setMemoryDraft(
+            draft ? { ...draft, projectId, userId: user.id } : null,
+          );
+          router.push(
+            `/settings?section=personalization${draft?.conversationId ? `&conversation=${encodeURIComponent(draft.conversationId)}` : ""}`,
+          );
+        },
+        memoryDraft,
+        clearMemoryDraft,
         openCreate: () => setCreateOpen(true),
         openArchives: () => setArchivesOpen(true),
         openPanel,

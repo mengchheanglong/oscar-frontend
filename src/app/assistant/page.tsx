@@ -23,7 +23,6 @@ import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import {
   Sparkles,
-  Brain,
   Bot,
   Plus,
   Trash2,
@@ -57,10 +56,6 @@ import { formatDate, formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { CopilotComposer } from "@/components/ai/copilot-composer";
-import {
-  CopilotMemoryPanel,
-  type MemoryDraft,
-} from "@/components/ai/copilot-memory-panel";
 import {
   useConversationWork,
   ConversationWorkStatus,
@@ -283,12 +278,8 @@ export default function AssistantPage() {
     prompt: string;
     key: string;
   } | null>(null);
-  const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
-  const [memoryDraft, setMemoryDraft] = useState<MemoryDraft | null>(null);
   const memoryProjectId = activeConv?.projectId || currentProject?.id;
   useEffect(() => {
-    setMemoryPanelOpen(false);
-    setMemoryDraft(null);
     setUseTools(false);
   }, [memoryProjectId, currentProject?.id, user?.id]);
   const currentView = useRef({
@@ -1069,31 +1060,6 @@ export default function AssistantPage() {
               </button>
               <div className="chat-header-title">{activeConv?.title || ""}</div>
             </div>
-            <div className="chat-header-actions">
-              {currentProject && (
-                <button
-                  type="button"
-                  aria-label="Open project settings"
-                  onClick={() => projectWorkspace.openPanel(currentProject)}
-                  className="workspace-icon-button"
-                >
-                  <WorkspaceIcon name="panel" />
-                </button>
-              )}
-              <button
-                type="button"
-                aria-label="Memory"
-                disabled={!memoryProjectId}
-                onClick={() => {
-                  setMemoryDraft(null);
-                  setMemoryPanelOpen(true);
-                }}
-                className="workspace-icon-button disabled:opacity-40"
-                title="Memory"
-              >
-                <Brain className="h-5 w-5" />
-              </button>
-            </div>
           </header>
 
           {/* Messages Stream / Hero Canvas */}
@@ -1314,11 +1280,15 @@ export default function AssistantPage() {
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      setMemoryDraft({
-                                        content: msg.content,
-                                        sourceMessageId: msg.id,
-                                      });
-                                      setMemoryPanelOpen(true);
+                                      if (memoryProjectId)
+                                        projectWorkspace.openMemory(
+                                          memoryProjectId,
+                                          {
+                                            content: msg.content,
+                                            sourceMessageId: msg.id,
+                                            conversationId: activeConv?.id,
+                                          },
+                                        );
                                     }}
                                     className="mt-3 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
                                   >
@@ -1885,20 +1855,6 @@ export default function AssistantPage() {
             </div>
           </div>
         </dialog>
-      )}
-      {memoryPanelOpen && memoryProjectId && (
-        <CopilotMemoryPanel
-          key={`${user?.id}:${memoryProjectId}`}
-          projectId={memoryProjectId}
-          projectLabel={
-            projects.find((project) => project.id === memoryProjectId)?.name
-          }
-          draft={memoryDraft}
-          onClose={() => {
-            setMemoryPanelOpen(false);
-            setMemoryDraft(null);
-          }}
-        />
       )}
     </AppLayout>
   );

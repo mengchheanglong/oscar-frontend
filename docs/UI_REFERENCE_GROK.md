@@ -194,7 +194,6 @@ covered the trimmed menu, both new-chat contexts, saving instructions and reload
 persistence (temporary text restored), desktop/mobile layout, and appearance
 popover dismissal. No browser errors were reported. Backend readiness passed.
 
-
 ## Quiet sidebar actions
 
 Project and chat actions use 14px SVG glyphs and compact buttons. Section actions
@@ -207,3 +206,22 @@ open an existing conversation in a new tab through the supported deep link.
 Verified with TypeScript, lint, formatting, and browser checks for idle/hover/focus
 visibility, inline project/chat saves, cancelling a draft, and opening the correct
 conversation in a new tab. Existing names were retained. No browser errors.
+
+## Memory personalization
+
+Settings > Personalization now manages private project memory inline, including
+reviewed additions, edits, and confirmed removal. The project selector makes the
+existing backend scope explicit. No global memory preference or toggle is implied.
+Remember on a saved assistant reply opens an unsaved draft in this section; closing
+Settings returns to the source conversation. Drafts stay in React state, are tied
+to the current user/project, and are never saved automatically.
+
+Project settings and instructions remain in their existing side panel, reached
+from the project's menu. The redundant project-settings and memory icons are
+removed from the chat header. Files remain accessible from the composer/sidebar.
+
+Verified lint and TypeScript, desktop/mobile rendering, Settings section reload,
+project-menu settings access, Remember draft review/cancel and return to its
+conversation, and saving/reloading/removing a temporary private memory. The
+temporary entry was removed. No browser errors were reported.
+Production build passed after the final changes.

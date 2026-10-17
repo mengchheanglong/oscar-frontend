@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { apiRequest, ApiError } from "@/lib/api";
 
 type MemoryKind = "CONTEXT" | "PREFERENCE" | "LESSON";
@@ -17,18 +17,17 @@ export interface MemoryDraft {
   sourceMessageId?: string;
 }
 
-export function CopilotMemoryPanel({
+export function CopilotMemorySettings({
   projectId,
   projectLabel,
   draft,
-  onClose,
+  onSavingChange,
 }: {
   projectId: string;
   projectLabel?: string;
   draft: MemoryDraft | null;
-  onClose: () => void;
+  onSavingChange?: (saving: boolean) => void;
 }) {
-  const dialog = useRef<HTMLDialogElement>(null);
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -45,7 +44,6 @@ export function CopilotMemoryPanel({
   const base = `/projects/${projectId}/ai/memories`;
 
   useEffect(() => {
-    if (dialog.current && !dialog.current.open) dialog.current.showModal();
     let active = true;
     void apiRequest<Memory[]>(base)
       .then((items) => {
@@ -53,7 +51,7 @@ export function CopilotMemoryPanel({
       })
       .catch(() => {
         if (active)
-          setError("Couldn’t load memory. Close this panel and try again.");
+          setError("Couldn’t load memory. Reload Settings to try again.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -62,6 +60,10 @@ export function CopilotMemoryPanel({
       active = false;
     };
   }, [base]);
+
+  useEffect(() => {
+    onSavingChange?.(saving);
+  }, [saving, onSavingChange]);
 
   function startEditor(memory?: Memory) {
     setEditing(memory ?? null);
@@ -106,7 +108,7 @@ export function CopilotMemoryPanel({
     } catch (err) {
       setError(
         err instanceof ApiError && err.status === 409
-          ? "This memory changed. Close and reopen the panel to load its current version."
+          ? "This memory changed. Reload Settings to load its current version."
           : "Couldn’t save memory. Your draft is still here; try again.",
       );
     } finally {
@@ -129,7 +131,7 @@ export function CopilotMemoryPanel({
       }
     } catch {
       setError(
-        "Couldn’t remove memory. Reopen the panel if this entry has changed.",
+        "Couldn’t remove memory. Reload Settings if this entry has changed.",
       );
     } finally {
       setSaving(false);
@@ -137,36 +139,11 @@ export function CopilotMemoryPanel({
   }
 
   return (
-    <dialog
-      ref={dialog}
-      aria-labelledby="copilot-memory-title"
-      onCancel={(event) => {
-        if (saving) event.preventDefault();
-        else onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !saving) onClose();
-      }}
-      className="m-auto w-[calc(100%_-_2rem)] max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-0 text-slate-900 shadow-xl backdrop:bg-slate-900/30"
-    >
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-        <h2 id="copilot-memory-title" className="text-base font-semibold">
-          Copilot memory
-        </h2>
-        <button
-          type="button"
-          disabled={saving}
-          onClick={onClose}
-          aria-label="Close memory"
-          className="rounded-lg p-2 hover:bg-slate-100"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+    <section aria-label="Saved memory" className="personalization-memory">
       <div className="space-y-4 p-5">
         <p className="text-sm text-slate-500">
-          Private to you in {projectLabel || "this project"}. Keep goals, preferences, and useful
-          lessons for future conversations.
+          Private to you in {projectLabel || "this project"}. Keep goals,
+          preferences, and useful lessons for future conversations.
         </p>
         {error && (
           <p
@@ -328,6 +305,6 @@ export function CopilotMemoryPanel({
           </>
         )}
       </div>
-    </dialog>
+    </section>
   );
 }

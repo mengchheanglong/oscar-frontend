@@ -39,11 +39,13 @@ import {
   EyeOff,
 } from "lucide-react";
 import { IntegrationsConsole } from "@/components/integrations/integrations-console";
+import { PersonalizationSettings } from "@/components/personalization-settings";
 import { TeamManagement } from "@/components/team/team-management";
 
 type SettingsTab =
   | "account"
   | "appearance"
+  | "personalization"
   | "projects"
   | "team"
   | "integrations"
@@ -120,6 +122,7 @@ export default function SettingsWorkspace({
     const sections: SettingsTab[] = [
       "account",
       "appearance",
+      "personalization",
       "projects",
       "team",
       "integrations",
@@ -196,7 +199,16 @@ export default function SettingsWorkspace({
   }, [activeTab, fetchApiKeys, isLoading, user]);
 
   // Close Settings handler
-  const handleClose = useCallback(() => router.push("/assistant"), [router]);
+  const handleClose = useCallback(() => {
+    const conversation = new URLSearchParams(window.location.search).get(
+      "conversation",
+    );
+    router.push(
+      conversation
+        ? `/assistant?conversation=${encodeURIComponent(conversation)}`
+        : "/assistant",
+    );
+  }, [router]);
 
   // Handle ESC key to close
   useEffect(() => {
@@ -374,6 +386,7 @@ export default function SettingsWorkspace({
           {[
             ["account", "Account"],
             ["appearance", "Appearance"],
+            ["personalization", "Personalization"],
             ["projects", "Projects"],
             ["team", "Team & Members"],
             ["integrations", "Integrations"],
@@ -425,6 +438,17 @@ export default function SettingsWorkspace({
                 >
                   <Palette className="h-4 w-4" />
                   <span>Appearance</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("personalization")}
+                  aria-current={
+                    activeTab === "personalization" ? "page" : undefined
+                  }
+                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-medium transition-colors ${activeTab === "personalization" ? "bg-[var(--ws-hover)] text-[var(--ws-text)]" : "text-[var(--ws-muted)] hover:bg-[var(--ws-hover)] hover:text-[var(--ws-text)]"}`}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>Personalization</span>
                 </button>
               </div>
             </div>
@@ -549,6 +573,7 @@ export default function SettingsWorkspace({
             {/* ========================================================= */}
             {/* TAB: ACCOUNT                                              */}
             {/* ========================================================= */}
+            {activeTab === "personalization" && <PersonalizationSettings />}
             {activeTab === "account" && (
               <div className="space-y-8">
                 <div>

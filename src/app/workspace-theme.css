@@ -2122,3 +2122,50 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
   max-width: 16px;
   max-height: 16px;
 }
+
+.personalization-settings {
+  display: grid;
+  gap: 28px;
+}
+.personalization-settings h1 {
+  font-size: 22px;
+  font-weight: 500;
+}
+.personalization-settings h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.personalization-settings > div > p {
+  color: var(--ws-muted);
+  font-size: 13px;
+  margin-top: 6px;
+}
+.personalization-project {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  max-width: 400px;
+}
+.personalization-project select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--ws-border);
+  border-radius: 12px;
+  background: var(--ws-input);
+  color: var(--ws-text);
+}
+.personalization-memory,
+.personalization-empty {
+  border: 1px solid var(--ws-border);
+  border-radius: 16px;
+}
+.personalization-empty {
+  padding: 20px;
+  color: var(--ws-muted);
+  font-size: 13px;
+}
+.personalization-memory button:disabled,
+.personalization-project select:disabled {
+  opacity: 0.45;
+}
