@@ -780,7 +780,7 @@ export default function SettingsWorkspace({
                       Interface Theme
                     </h3>
                     <p className="text-xs text-[var(--ws-muted)]">
-                      Dark mode uses Grok-inspired obsidian canvas tones (
+                      Dark mode uses obsidian canvas tones (
                       <code className="font-mono text-xs">#131211</code>).
                     </p>
                   </div>

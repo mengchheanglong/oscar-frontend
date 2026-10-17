@@ -240,3 +240,9 @@ Production build passed after the final changes.
 - Original monochrome infinity ribbon, tilted 26 degrees, with tapered tips and an open crossing. The reference contributes the minimal orbital feel; the geometry is Continuum's infinity symbol.
 - Shared vector geometry in `src/lib/continuum-brand.ts` supplies sidebar, guest, login, and reusable logo marks. App SVG and ICO use the same path, with an export at `public/brand/continuum-mark.svg`.
 - The logo inherits interface color for light/dark themes. Checked the large mark, sidebar size, and 64px app tile; TypeScript and lint pass.
+
+
+### 2026-10-17 — Brand asset audit and cached icons
+
+- Audited sidebar, guest chat, login, invite, retained landing components, and static icon assets: all logo placements use the Continuum infinity geometry. Integration/vendor icons remain their own identities.
+- Versioned favicon, SVG icon, and Apple icon URLs to refresh previously cached browser branding. Added a 180px PNG Apple home-screen icon rather than advertising an SVG for that slot. Removed the remaining Grok name from user-facing appearance copy.

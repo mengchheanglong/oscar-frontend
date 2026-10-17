@@ -14,9 +14,18 @@ export const metadata: Metadata = {
   title: "Continuum",
   description: "Your projects, knowledge, and AI in one workspace.",
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    shortcut: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [
+      { url: "/favicon.ico?v=continuum-infinity-1", sizes: "any" },
+      { url: "/icon.svg?v=continuum-infinity-1", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico?v=continuum-infinity-1",
+    apple: [
+      {
+        url: "/apple-icon.png?v=continuum-infinity-1",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
   },
 };
 
