@@ -233,3 +233,10 @@ Production build passed after the final changes.
 - Sidebar project selection stays on Tasks, Decisions, or Global search when already on those pages. Other project selection continues to open chat. The selection persists through navigation/reload.
 - Global search ignores sidebar scope. It reuses authenticated project search endpoints for every accessible active project, with four concurrent requests at most, source-project labels, summed facets, additional pages, request-race protection, and explicit partial-failure notices. Opening a result sets its owning project before navigation.
 - `pnpm test:global-search` verifies cross-project aggregation, bounded concurrency, source attribution, counts, pagination, deduplication, and partial failures. No backend schema/API changes are required.
+
+
+### 2026-10-17 — Continuum infinity identity
+
+- Original monochrome infinity ribbon, tilted 26 degrees, with tapered tips and an open crossing. The reference contributes the minimal orbital feel; the geometry is Continuum's infinity symbol.
+- Shared vector geometry in `src/lib/continuum-brand.ts` supplies sidebar, guest, login, and reusable logo marks. App SVG and ICO use the same path, with an export at `public/brand/continuum-mark.svg`.
+- The logo inherits interface color for light/dark themes. Checked the large mark, sidebar size, and 64px app tile; TypeScript and lint pass.
