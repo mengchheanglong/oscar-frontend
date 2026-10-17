@@ -48,7 +48,9 @@ function formatFileSize(bytes: number | null | undefined): string {
 }
 
 // Format the recorded upload time.
-function formatRelativeTime(dateInput: string | Date | null | undefined): string {
+function formatRelativeTime(
+  dateInput: string | Date | null | undefined,
+): string {
   if (!dateInput) return "Date unavailable";
   const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
   if (isNaN(date.getTime())) return "Date unavailable";
@@ -69,7 +71,7 @@ function formatRelativeTime(dateInput: string | Date | null | undefined): string
 // File category resolver
 function getFileCategory(
   filename?: string,
-  mimeType?: string
+  mimeType?: string,
 ): "pdf" | "image" | "word" | "excel" | "presentation" | "other" {
   const name = (filename || "").toLowerCase();
   const mime = (mimeType || "").toLowerCase();
@@ -157,7 +159,7 @@ const TYPE_FILTER_OPTIONS: FilterOption[] = [
   { value: "presentation", label: "PowerPoint", color: "#D97706" },
 ];
 
-export default function DocumentsPage() {
+function FilesWorkspace() {
   const { currentProject, projects, user } = useAuth();
   const { showToast } = useToast();
 
@@ -175,23 +177,54 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    void api.workspace.getMembers().then((users) => { if (!cancelled) setMembers(users); }).catch(() => { if (!cancelled) setMembers([]); });
-    return () => { cancelled = true; };
+    void api.workspace
+      .getMembers()
+      .then((users) => {
+        if (!cancelled) setMembers(users);
+      })
+      .catch(() => {
+        if (!cancelled) setMembers([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const uploaderOptions: FilterOption[] = useMemo(() => members.map((member, index) => ({
-    value: member.userId || member.id,
-    label: member.displayName || member.email || "Unknown user",
-    color: PROJECT_FILTER_COLORS[index % PROJECT_FILTER_COLORS.length],
-  })), [members]);
+  const uploaderOptions: FilterOption[] = useMemo(
+    () =>
+      members.map((member, index) => ({
+        value: member.userId || member.id,
+        label: member.displayName || member.email || "Unknown user",
+        color: PROJECT_FILTER_COLORS[index % PROJECT_FILTER_COLORS.length],
+      })),
+    [members],
+  );
 
   // View mode: Grid vs List
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("continuum_files_view");
+      if (saved === "grid" || saved === "list") setViewMode(saved);
+    } catch {}
+  }, []);
+  const changeView = (view: "grid" | "list") => {
+    setViewMode(view);
+    try {
+      localStorage.setItem("continuum_files_view", view);
+    } catch {}
+  };
+  const loadRequest = useRef(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  useEffect(
+    () => () => {
+      loadRequest.current++;
+    },
+    [],
+  );
 
   // Filters
-  const [selectedProject, setSelectedProject] = useState<string>(
-    currentProject ? currentProject.id : "ALL"
-  );
+  const selectedProject = currentProject?.id || "ALL";
   const [selectedType, setSelectedType] = useState<string>("ALL");
   const [selectedUploader, setSelectedUploader] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -223,14 +256,16 @@ export default function DocumentsPage() {
 
   // Load all documents across active projects
   const loadData = async () => {
+    const request = ++loadRequest.current;
+    setLoadError(null);
     setLoading(true);
     try {
       const effectiveProjectId =
         selectedProject !== "ALL"
           ? selectedProject
           : currentProject
-          ? currentProject.id
-          : undefined;
+            ? currentProject.id
+            : undefined;
 
       const response = await api.documents.listAll({
         projectId: effectiveProjectId,
@@ -244,15 +279,18 @@ export default function DocumentsPage() {
         ? response
         : (response as any)?.data || [];
 
+      if (request !== loadRequest.current) return;
       setDocs(docsList);
       setSelectedDoc((previous: any) =>
-        previous ? docsList.find((doc: any) => doc.id === previous.id) || previous : null
+        previous
+          ? docsList.find((doc: any) => doc.id === previous.id) || previous
+          : null,
       );
     } catch (err: any) {
-      console.error("Failed to load documents:", err);
-      showToast(err.message || "Failed to load documents", "error");
+      if (request === loadRequest.current)
+        setLoadError(err.message || "Could not load files.");
     } finally {
-      setLoading(false);
+      if (request === loadRequest.current) setLoading(false);
     }
   };
 
@@ -279,7 +317,7 @@ export default function DocumentsPage() {
     const found = docs.find(
       (d: any) =>
         d.id === targetDocId ||
-        d.id?.toLowerCase() === targetDocId.toLowerCase()
+        d.id?.toLowerCase() === targetDocId.toLowerCase(),
     );
     if (found) {
       setSelectedDoc(found);
@@ -288,13 +326,15 @@ export default function DocumentsPage() {
   }, [docs, targetDocId]);
 
   useEffect(() => {
-    setSelectedProject(currentProject ? currentProject.id : "ALL");
-  }, [currentProject]);
-
-  useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProject, selectedType, selectedUploader, searchQuery, currentProject]);
+  }, [
+    selectedProject,
+    selectedType,
+    selectedUploader,
+    searchQuery,
+    currentProject,
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -333,51 +373,41 @@ export default function DocumentsPage() {
 
       // Uploader filter
       if (selectedUploader !== "ALL") {
-        if ((doc.createdBy || doc.creator?.id) !== selectedUploader) return false;
+        if ((doc.createdBy || doc.creator?.id) !== selectedUploader)
+          return false;
       }
 
       // Search filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const matchesName = (doc.originalFilename || "").toLowerCase().includes(q);
+        const matchesName = (doc.originalFilename || "")
+          .toLowerCase()
+          .includes(q);
         const matchesTitle = (doc.title || "").toLowerCase().includes(q);
-        const matchesProject = (doc.project?.name || "").toLowerCase().includes(q);
+        const matchesProject = (doc.project?.name || "")
+          .toLowerCase()
+          .includes(q);
         const matchesId = (doc.id || "").toLowerCase() === q;
-        if (!matchesName && !matchesTitle && !matchesProject && !matchesId) return false;
+        if (!matchesName && !matchesTitle && !matchesProject && !matchesId)
+          return false;
       }
 
       return true;
     });
   }, [docs, selectedProject, selectedType, selectedUploader, searchQuery]);
 
-  // Unique projects count
-  const uniqueProjectsCount = useMemo(() => {
-    const projectSet = new Set<string>();
-    filteredDocuments.forEach((d) => {
-      if (d.projectId) projectSet.add(d.projectId);
-      else if (d.project?.id) projectSet.add(d.project.id);
-    });
-    return Math.max(projectSet.size, projects?.length || 1);
-  }, [filteredDocuments, projects]);
-
-  const projectFilterOptions: FilterOption[] = useMemo(() => {
-    if (!projects) return [];
-    return projects.map((p, idx) => ({
-      value: p.id,
-      label: p.name,
-      color: PROJECT_FILTER_COLORS[idx % PROJECT_FILTER_COLORS.length],
-    }));
-  }, [projects]);
-
   // Download handler
   const handleDownload = async (doc: any, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     try {
-      showToast(`Downloading "${doc.originalFilename || doc.title}"...`, "info");
+      showToast(
+        `Downloading "${doc.originalFilename || doc.title}"...`,
+        "info",
+      );
       await api.documents.downloadFile(
         doc.projectId,
         doc.id,
-        doc.originalFilename || doc.title
+        doc.originalFilename || doc.title,
       );
     } catch (err: any) {
       showToast(err.message || "Failed to download document", "error");
@@ -394,10 +424,13 @@ export default function DocumentsPage() {
     if (!deleteConfirmDoc) return;
     setDeleting(true);
     try {
-      await api.documents.delete(deleteConfirmDoc.projectId, deleteConfirmDoc.id);
+      await api.documents.delete(
+        deleteConfirmDoc.projectId,
+        deleteConfirmDoc.id,
+      );
       showToast(
         `Deleted “${deleteConfirmDoc.originalFilename || deleteConfirmDoc.title}”`,
-        "success"
+        "success",
       );
       if (selectedDoc?.id === deleteConfirmDoc.id) setSelectedDoc(null);
       setDeleteConfirmDoc(null);
@@ -444,7 +477,8 @@ export default function DocumentsPage() {
       setUploadError("Please choose a file to upload");
       return;
     }
-    const targetProjId = uploadProjectId || currentProject?.id || projects?.[0]?.id;
+    const targetProjId =
+      uploadProjectId || currentProject?.id || projects?.[0]?.id;
     if (!targetProjId) {
       setUploadError("Please select an active project workspace");
       return;
@@ -487,7 +521,9 @@ export default function DocumentsPage() {
   };
 
   // Upload new revision handler
-  const handleRevisionFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRevisionFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file || !revisionsModalDoc) return;
     setUploadingRevision(true);
@@ -498,12 +534,15 @@ export default function DocumentsPage() {
       await api.documents.uploadRevision(
         revisionsModalDoc.projectId,
         revisionsModalDoc.id,
-        formData
+        formData,
       );
-      showToast(`Uploaded new revision for "${revisionsModalDoc.title}"`, "success");
+      showToast(
+        `Uploaded new revision for "${revisionsModalDoc.title}"`,
+        "success",
+      );
       const updatedRevs = await api.documents.listRevisions(
         revisionsModalDoc.projectId,
-        revisionsModalDoc.id
+        revisionsModalDoc.id,
       );
       setRevisionsList(updatedRevs || []);
       await loadData();
@@ -559,26 +598,15 @@ export default function DocumentsPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* BREADCRUMB & HEADER */}
+      <div className="files-workspace space-y-6">
+        {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <nav className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
-              <Link
-                href="/dashboard"
-                className="text-blue-600 hover:text-blue-700 hover:underline"
-              >
-                Home
-              </Link>
-              <span>/</span>
-              <span className="text-slate-800">Files</span>
-            </nav>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 tracking-tight">
-              Files
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-normal">
-              {filteredDocuments.length} uploaded document{filteredDocuments.length === 1 ? "" : "s"} across{" "}
-              {uniqueProjectsCount} active project{uniqueProjectsCount === 1 ? "" : "s"}.
+            <h1 className="files-title">Files</h1>
+            <p className="files-subtitle">
+              {currentProject
+                ? `Files and folders in ${currentProject.name}.`
+                : "Files across all your projects."}
             </p>
           </div>
 
@@ -586,30 +614,35 @@ export default function DocumentsPage() {
           <button
             type="button"
             onClick={() => setUploadModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium shadow-xs transition-all active:scale-[0.98] w-fit"
+            disabled={projects.length === 0}
+            className="files-primary-button"
           >
             <Upload className="w-4 h-4 stroke-[2.2]" />
             <span>Upload file</span>
           </button>
         </div>
 
-        <UploadedFolderSources
-          key={`uploads:${user?.id}:${currentProject?.id}`}
-          projectId={currentProject?.id}
-        />
+        {currentProject ? (
+          <UploadedFolderSources
+            key={`uploads:${user?.id}:${currentProject.id}`}
+            projectId={currentProject.id}
+          />
+        ) : (
+          <div className="files-folder-hint">
+            <FolderOpen size={18} aria-hidden="true" />
+            <p>
+              Select a project in the sidebar to browse or upload folder copies.
+            </p>
+          </div>
+        )}
+        <div className="files-section-heading">
+          <h2>Uploaded files</h2>
+          <span>{filteredDocuments.length}</span>
+        </div>
         {/* FILTER TOOLBAR & VIEW SWITCHER */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pt-1">
+        <div className="files-toolbar flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Left filters */}
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Project Filter */}
-            <FilterDropdown
-              label="Project"
-              allLabel="All projects"
-              value={selectedProject}
-              onChange={setSelectedProject}
-              options={projectFilterOptions}
-            />
-
             {/* Type Filter */}
             <FilterDropdown
               label="Type"
@@ -636,7 +669,8 @@ export default function DocumentsPage() {
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Filter files..."
+                aria-label="Search files"
+                placeholder="Search files…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-800 placeholder-slate-400 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs transition-all"
@@ -644,6 +678,7 @@ export default function DocumentsPage() {
               {searchQuery && (
                 <button
                   type="button"
+                  aria-label="Clear file search"
                   onClick={() => setSearchQuery("")}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
@@ -653,10 +688,11 @@ export default function DocumentsPage() {
             </div>
 
             {/* Grid / List Switcher */}
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/80">
+            <div className="files-view-switch" aria-label="File view">
               <button
                 type="button"
-                onClick={() => setViewMode("grid")}
+                onClick={() => changeView("grid")}
+                aria-pressed={viewMode === "grid"}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   viewMode === "grid"
                     ? "bg-[#0f172a] text-white shadow-xs"
@@ -668,7 +704,8 @@ export default function DocumentsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setViewMode("list")}
+                onClick={() => changeView("list")}
+                aria-pressed={viewMode === "list"}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   viewMode === "list"
                     ? "bg-[#0f172a] text-white shadow-xs"
@@ -683,7 +720,20 @@ export default function DocumentsPage() {
         </div>
 
         {/* LOADING STATE */}
-        {loading ? (
+        {loadError ? (
+          <div role="alert" className="files-empty">
+            <AlertCircle size={24} aria-hidden="true" />
+            <h3>Couldn’t load files</h3>
+            <p>{loadError}</p>
+            <button
+              type="button"
+              className="files-secondary-button"
+              onClick={() => void loadData()}
+            >
+              Try again
+            </button>
+          </div>
+        ) : loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div
@@ -704,44 +754,86 @@ export default function DocumentsPage() {
           </div>
         ) : filteredDocuments.length === 0 ? (
           /* EMPTY STATE */
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-12 text-center space-y-4 shadow-xs">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto shadow-2xs">
+          <div className="files-empty">
+            <div className="files-empty-icon">
               <FolderOpen className="w-7 h-7" />
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
-              <h3 className="text-base font-semibold text-slate-900">No uploaded files found</h3>
+              <h3 className="text-base font-semibold text-slate-900">
+                {searchQuery ||
+                selectedType !== "ALL" ||
+                selectedUploader !== "ALL"
+                  ? "No matching files"
+                  : "No files yet"}
+              </h3>
               <p className="text-xs text-slate-500">
-                {searchQuery || selectedProject !== "ALL" || selectedType !== "ALL"
+                {searchQuery ||
+                selectedUploader !== "ALL" ||
+                selectedType !== "ALL"
                   ? "Try resetting your active filters or search terms."
-                  : "Upload a document to get started with specs, diagrams, and files."}
+                  : "Upload a file to add reference material for your work."}
               </p>
             </div>
             <button
               type="button"
-              onClick={() => setUploadModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-medium shadow-xs transition-all"
+              onClick={() => {
+                if (
+                  searchQuery ||
+                  selectedType !== "ALL" ||
+                  selectedUploader !== "ALL"
+                ) {
+                  setSearchQuery("");
+                  setSelectedType("ALL");
+                  setSelectedUploader("ALL");
+                } else setUploadModalOpen(true);
+              }}
+              disabled={projects.length === 0}
+              className="files-secondary-button"
             >
-              <Upload className="w-3.5 h-3.5" />
-              Upload file
+              {searchQuery ||
+              selectedType !== "ALL" ||
+              selectedUploader !== "ALL" ? (
+                "Clear filters"
+              ) : (
+                <>
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload file
+                </>
+              )}
             </button>
           </div>
         ) : viewMode === "grid" ? (
           /* GRID VIEW */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+          <div className="files-grid">
             {filteredDocuments.map((doc) => {
-              const category = getFileCategory(doc.originalFilename, doc.mimeType);
+              const category = getFileCategory(
+                doc.originalFilename,
+                doc.mimeType,
+              );
               const avatar = getUserAvatarStyle(
                 doc.creator?.displayName,
-                doc.creator?.email
+                doc.creator?.email,
               );
               const projectName = doc.project?.name || "Workspace";
-              const badgeStyle = getProjectBadgeStyle(projectName, doc.project?.key);
+              const badgeStyle = getProjectBadgeStyle(
+                projectName,
+                doc.project?.key,
+              );
 
               return (
                 <div
                   key={doc.id}
                   onClick={() => setSelectedDoc(doc)}
-                  className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all p-5 flex flex-col justify-between h-[210px] cursor-pointer group relative overflow-hidden"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open ${doc.originalFilename || doc.title}`}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedDoc(doc);
+                    }
+                  }}
+                  className="files-card group"
                 >
                   {/* Top content */}
                   <div>
@@ -773,7 +865,9 @@ export default function DocumentsPage() {
                       >
                         {avatar.initials}
                       </div>
-                      <span className="text-xs text-slate-500 truncate">{avatar.name}</span>
+                      <span className="text-xs text-slate-500 truncate">
+                        {avatar.name}
+                      </span>
                     </div>
 
                     {/* Size and Relative time */}
@@ -792,12 +886,12 @@ export default function DocumentsPage() {
           </div>
         ) : (
           /* LIST VIEW */
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+          <div className="files-table">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3 px-5">Document</th>
+                    <th className="py-3 px-5">File</th>
                     <th className="py-3 px-4">Project</th>
                     <th className="py-3 px-4">Type</th>
                     <th className="py-3 px-4">Size</th>
@@ -808,13 +902,19 @@ export default function DocumentsPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {filteredDocuments.map((doc) => {
-                    const category = getFileCategory(doc.originalFilename, doc.mimeType);
+                    const category = getFileCategory(
+                      doc.originalFilename,
+                      doc.mimeType,
+                    );
                     const avatar = getUserAvatarStyle(
                       doc.creator?.displayName,
-                      doc.creator?.email
+                      doc.creator?.email,
                     );
                     const projectName = doc.project?.name || "Workspace";
-                    const badgeStyle = getProjectBadgeStyle(projectName, doc.project?.key);
+                    const badgeStyle = getProjectBadgeStyle(
+                      projectName,
+                      doc.project?.key,
+                    );
 
                     return (
                       <tr
@@ -864,7 +964,9 @@ export default function DocumentsPage() {
                             >
                               {avatar.initials}
                             </div>
-                            <span className="text-slate-600 truncate">{avatar.name}</span>
+                            <span className="text-slate-600 truncate">
+                              {avatar.name}
+                            </span>
                           </div>
                         </td>
 
@@ -919,19 +1021,21 @@ export default function DocumentsPage() {
           uploadModalOpen &&
           createPortal(
             <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="fixed inset-0" onClick={handleCloseUploadModal} />
               <div
-                className="fixed inset-0"
-                onClick={handleCloseUploadModal}
-              />
-              <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 sm:p-7 border border-slate-100 overflow-hidden z-10 animate-in fade-in zoom-in-95">
+                className="files-dialog relative w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 sm:p-7 border border-slate-100 overflow-hidden z-10 animate-in fade-in zoom-in-95"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Upload file"
+              >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h3 className="text-xl font-bold font-serif text-slate-900 tracking-tight">
-                      Upload document
+                      Upload file
                     </h3>
                     <p className="text-sm text-slate-500 mt-0.5">
-                      Adds to {currentProject?.name || "Continuum"}&apos;s knowledge base.
+                      Add reference material to your project.
                     </p>
                   </div>
                   <button
@@ -945,6 +1049,24 @@ export default function DocumentsPage() {
                   </button>
                 </div>
 
+                {!currentProject && (
+                  <label className="files-upload-project">
+                    Project
+                    <select
+                      value={uploadProjectId}
+                      onChange={(event) =>
+                        setUploadProjectId(event.target.value)
+                      }
+                      disabled={uploading}
+                    >
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 {/* Hidden input */}
                 <input
                   type="file"
@@ -962,7 +1084,9 @@ export default function DocumentsPage() {
                   <>
                     <div className="mt-5 rounded-xl border border-[#e57373] bg-[#fbf0ef] px-4 py-3.5 flex items-center gap-3 text-[#c53929] text-sm">
                       <AlertTriangle className="w-5 h-5 text-[#c53929] shrink-0 stroke-[2.2]" />
-                      <span className="leading-snug text-[#c53929] font-normal">{uploadError}</span>
+                      <span className="leading-snug text-[#c53929] font-normal">
+                        {uploadError}
+                      </span>
                     </div>
 
                     <div className="flex items-center justify-end gap-2.5 mt-6">
@@ -1054,6 +1178,15 @@ export default function DocumentsPage() {
                         if (file) handleSelectFile(file);
                       }}
                       onClick={() => fileInputRef.current?.click()}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Choose a file to upload"
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
                       className={`mt-5 border border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
                         isDragging
                           ? "border-blue-500 bg-blue-50/50"
@@ -1096,7 +1229,7 @@ export default function DocumentsPage() {
                 )}
               </div>
             </div>,
-            document.body
+            document.body,
           )}
 
         {/* DOCUMENT DETAILS MODAL */}
@@ -1104,218 +1237,239 @@ export default function DocumentsPage() {
           selectedDoc &&
           createPortal(
             <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="fixed inset-0" onClick={() => setSelectedDoc(null)} />
+              <div
+                className="fixed inset-0"
+                onClick={() => setSelectedDoc(null)}
+              />
               <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
                 {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <div className="flex items-center gap-3 min-w-0 pr-4">
-                  {renderTypeIcon(
-                    getFileCategory(selectedDoc.originalFilename, selectedDoc.mimeType)
-                  )}
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-slate-900 truncate">
-                      {selectedDoc.originalFilename || selectedDoc.title}
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Revision {selectedDoc.revision || 1} &bull;{" "}
-                      {formatFileSize(selectedDoc.sizeBytes)}
-                    </p>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                  <div className="flex items-center gap-3 min-w-0 pr-4">
+                    {renderTypeIcon(
+                      getFileCategory(
+                        selectedDoc.originalFilename,
+                        selectedDoc.mimeType,
+                      ),
+                    )}
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-bold text-slate-900 truncate">
+                        {selectedDoc.originalFilename || selectedDoc.title}
+                      </h3>
+                      <p className="text-[11px] text-slate-500">
+                        Revision {selectedDoc.revision || 1} &bull;{" "}
+                        {formatFileSize(selectedDoc.sizeBytes)}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDoc(null)}
+                    className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 space-y-5 overflow-y-auto flex-1 text-xs">
+                  {/* Metadata Grid */}
+                  <div className="grid grid-cols-2 gap-3 bg-slate-50/70 p-4 rounded-xl border border-slate-100 font-sans">
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                        Project
+                      </span>
+                      <span className="font-semibold text-slate-800 text-xs">
+                        {selectedDoc.project?.name || "Workspace Project"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                        Uploaded By
+                      </span>
+                      <span className="font-semibold text-slate-800 text-xs">
+                        {selectedDoc.creator?.displayName ||
+                          selectedDoc.creator?.email ||
+                          "Unknown user"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                        Uploaded Date
+                      </span>
+                      <span className="text-slate-700 text-xs">
+                        {new Date(selectedDoc.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                        MIME Type
+                      </span>
+                      <span className="font-mono text-[11px] text-slate-600 truncate block">
+                        {selectedDoc.mimeType || "application/octet-stream"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Processing & Ingestion Status */}
+                  <DocumentIndexStatus
+                    key={`${selectedDoc.id}:${selectedDoc.revision}`}
+                    document={selectedDoc}
+                  />
+
+                  {/* Primary Actions */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={(e) => handleDownload(selectedDoc, e)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-xs transition-all"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download File</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => openRevisions(selectedDoc, e)}
+                      className="flex items-center gap-1.5 py-2 px-3 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-all"
+                    >
+                      <History className="w-4 h-4" />
+                      <span>Revisions</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDelete(selectedDoc, e)}
+                      className="p-2 border border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-all"
+                      title="Delete document"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedDoc(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
-
-              {/* Body */}
-              <div className="p-6 space-y-5 overflow-y-auto flex-1 text-xs">
-                {/* Metadata Grid */}
-                <div className="grid grid-cols-2 gap-3 bg-slate-50/70 p-4 rounded-xl border border-slate-100 font-sans">
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                      Project
-                    </span>
-                    <span className="font-semibold text-slate-800 text-xs">
-                      {selectedDoc.project?.name || "Workspace Project"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                      Uploaded By
-                    </span>
-                    <span className="font-semibold text-slate-800 text-xs">
-                      {selectedDoc.creator?.displayName || selectedDoc.creator?.email || "Unknown user"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                      Uploaded Date
-                    </span>
-                    <span className="text-slate-700 text-xs">
-                      {new Date(selectedDoc.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                      MIME Type
-                    </span>
-                    <span className="font-mono text-[11px] text-slate-600 truncate block">
-                      {selectedDoc.mimeType || "application/octet-stream"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Processing & Ingestion Status */}
-                <DocumentIndexStatus
-                  key={`${selectedDoc.id}:${selectedDoc.revision}`}
-                  document={selectedDoc}
-                />
-
-                {/* Primary Actions */}
-                <div className="flex flex-wrap items-center gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={(e) => handleDownload(selectedDoc, e)}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium shadow-xs transition-all"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download File</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => openRevisions(selectedDoc, e)}
-                    className="flex items-center gap-1.5 py-2 px-3 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-all"
-                  >
-                    <History className="w-4 h-4" />
-                    <span>Revisions</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => handleDelete(selectedDoc, e)}
-                    className="p-2 border border-slate-200 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-xl transition-all"
-                    title="Delete document"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body,
+          )}
 
         {/* REVISIONS MODAL */}
         {mounted &&
           revisionsModalDoc &&
           createPortal(
             <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="fixed inset-0" onClick={() => setRevisionsModalDoc(null)} />
+              <div
+                className="fixed inset-0"
+                onClick={() => setRevisionsModalDoc(null)}
+              />
               <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-10 animate-in fade-in zoom-in-95 max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <History className="w-4 h-4 text-blue-600" />
-                  <h3 className="text-sm font-bold text-slate-900 truncate">
-                    Revision History &bull; {revisionsModalDoc.originalFilename || revisionsModalDoc.title}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setRevisionsModalDoc(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-4 overflow-y-auto flex-1">
-                {/* Upload new revision trigger */}
-                <div className="flex items-center justify-between bg-blue-50/50 border border-blue-100 rounded-xl p-3.5">
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-semibold text-blue-900">Upload New Revision</p>
-                    <p className="text-[11px] text-blue-600">
-                      Replaces current file while preserving audit trail
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4 text-blue-600" />
+                    <h3 className="text-sm font-bold text-slate-900 truncate">
+                      Revision History &bull;{" "}
+                      {revisionsModalDoc.originalFilename ||
+                        revisionsModalDoc.title}
+                    </h3>
                   </div>
-                  <input
-                    type="file"
-                    ref={revisionFileInputRef}
-                    className="hidden"
-                    onChange={handleRevisionFileChange}
-                  />
                   <button
                     type="button"
-                    disabled={uploadingRevision}
-                    onClick={() => revisionFileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-medium shadow-xs transition-all"
+                    onClick={() => setRevisionsModalDoc(null)}
+                    className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
                   >
-                    {uploadingRevision ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Upload className="w-3.5 h-3.5" />
-                    )}
-                    <span>{uploadingRevision ? "Uploading..." : "Upload Revision"}</span>
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                {loadingRevisions ? (
-                  <div className="space-y-2">
-                    {[1, 2].map((i) => (
-                      <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />
-                    ))}
+                <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                  {/* Upload new revision trigger */}
+                  <div className="flex items-center justify-between bg-blue-50/50 border border-blue-100 rounded-xl p-3.5">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-blue-900">
+                        Upload New Revision
+                      </p>
+                      <p className="text-[11px] text-blue-600">
+                        Replaces current file while preserving audit trail
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      ref={revisionFileInputRef}
+                      className="hidden"
+                      onChange={handleRevisionFileChange}
+                    />
+                    <button
+                      type="button"
+                      disabled={uploadingRevision}
+                      onClick={() => revisionFileInputRef.current?.click()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-medium shadow-xs transition-all"
+                    >
+                      {uploadingRevision ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5" />
+                      )}
+                      <span>
+                        {uploadingRevision ? "Uploading..." : "Upload Revision"}
+                      </span>
+                    </button>
                   </div>
-                ) : revisionsList.length === 0 ? (
-                  <p className="text-xs text-slate-500 text-center py-6">
-                    No past revisions recorded. Current version is baseline (v1).
-                  </p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {revisionsList.map((rev) => (
-                      <div
-                        key={rev.id || rev.revision}
-                        className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs"
-                      >
-                        <div className="space-y-1 min-w-0 pr-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-blue-600 font-mono">
-                              rev {rev.revision}
-                            </span>
-                            <span className="font-medium text-slate-800 truncate">
-                              {rev.originalFilename}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                            <span>{formatFileSize(rev.sizeBytes)}</span>
-                            <span>&bull;</span>
-                            <span>{formatRelativeTime(rev.createdAt)}</span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            api.documents.downloadFile(
-                              revisionsModalDoc.projectId,
-                              revisionsModalDoc.id,
-                              rev.originalFilename
-                            )
-                          }
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all flex-shrink-0"
-                          title="Download this revision"
+
+                  {loadingRevisions ? (
+                    <div className="space-y-2">
+                      {[1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className="h-16 bg-slate-100 rounded-xl animate-pulse"
+                        />
+                      ))}
+                    </div>
+                  ) : revisionsList.length === 0 ? (
+                    <p className="text-xs text-slate-500 text-center py-6">
+                      No past revisions recorded. Current version is baseline
+                      (v1).
+                    </p>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {revisionsList.map((rev) => (
+                        <div
+                          key={rev.id || rev.revision}
+                          className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs"
                         >
-                          <Download className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                          <div className="space-y-1 min-w-0 pr-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-blue-600 font-mono">
+                                rev {rev.revision}
+                              </span>
+                              <span className="font-medium text-slate-800 truncate">
+                                {rev.originalFilename}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                              <span>{formatFileSize(rev.sizeBytes)}</span>
+                              <span>&bull;</span>
+                              <span>{formatRelativeTime(rev.createdAt)}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              api.documents.downloadFile(
+                                revisionsModalDoc.projectId,
+                                revisionsModalDoc.id,
+                                rev.originalFilename,
+                              )
+                            }
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all flex-shrink-0"
+                            title="Download this revision"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body,
+          )}
 
         {/* DELETE CONFIRMATION MODAL */}
         <DeleteConfirmModal
@@ -1323,7 +1477,9 @@ export default function DocumentsPage() {
           onClose={() => !deleting && setDeleteConfirmDoc(null)}
           onConfirm={handleConfirmDelete}
           title="Delete document"
-          itemName={deleteConfirmDoc?.originalFilename || deleteConfirmDoc?.title}
+          itemName={
+            deleteConfirmDoc?.originalFilename || deleteConfirmDoc?.title
+          }
           itemType="document"
           warningText="This action cannot be undone. If it is already indexed, the AI Copilot will no longer be able to reference it."
           confirmText="Delete document"
@@ -1332,4 +1488,9 @@ export default function DocumentsPage() {
       </div>
     </AppLayout>
   );
+}
+
+export default function DocumentsPage() {
+  const { currentProject, user } = useAuth();
+  return <FilesWorkspace key={`${user?.id}:${currentProject?.id || "ALL"}`} />;
 }

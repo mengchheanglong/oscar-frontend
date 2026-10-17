@@ -310,7 +310,14 @@ export function Sidebar({
                   title="All projects"
                   onClick={() => {
                     setCurrentProject(null);
-                    if (!["/tasks", "/decisions", "/search"].includes(pathname))
+                    if (
+                      ![
+                        "/tasks",
+                        "/decisions",
+                        "/search",
+                        "/documents",
+                      ].includes(pathname)
+                    )
                       router.push("/assistant");
                     onCloseMobile?.();
                   }}
@@ -359,9 +366,12 @@ export function Sidebar({
                             });
                             setCurrentProject(project);
                             if (
-                              !["/tasks", "/decisions", "/search"].includes(
-                                pathname,
-                              )
+                              ![
+                                "/tasks",
+                                "/decisions",
+                                "/search",
+                                "/documents",
+                              ].includes(pathname)
                             )
                               router.push("/assistant");
                             onCloseMobile?.();

@@ -261,3 +261,11 @@ Production build passed after the final changes.
 - Added Knowledge to the sidebar with a Coming soon badge and a consistent node-link icon. Opens `/knowledge` with a clearly labeled Coming soon page describing future source-backed connections.
 - Available without selecting a project. This is an announced placeholder; no graph data, agent introspection, graph APIs, or extraction behavior is claimed or implemented.
 - Verified desktop/mobile layout, TypeScript, lint, and direct authenticated page navigation.
+
+
+### 2026-10-17 — Files workspace refinement
+
+- Replaced the dashboard breadcrumb/oversized heading with a compact Files header, neutral surfaces, a consistent upload action, quieter folder rows, and a responsive file toolbar. The list view is the default; grid/list preference persists locally.
+- Files follows sidebar project selection. All projects opens uploaded documents across projects; folder copies remain explicitly project-scoped with a sidebar-selection hint. Uploading from All projects now shows the destination project rather than silently choosing it.
+- Preserved upload, download, revisions, folder resume, preview, and deletion handlers. Added clear-filter empty states, visible load failures with retry, stale-response protection, and keyboard entry points for file cards and the upload dropzone.
+- Verification: TypeScript/lint and eight folder regression tests passed. Desktop/mobile folder layouts and existing folder expansion were checked. Upload dialog project choice, search reset, and view persistence are verified in the final manual pass. No user files were created, changed, or deleted by this refinement.

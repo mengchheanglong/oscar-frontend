@@ -336,12 +336,12 @@ export function UploadedFolderSources({
   }
   if (!projectId) return null;
   return (
-    <section className="mb-5 rounded-xl border border-slate-200 bg-white p-4">
+    <section className="uploaded-folder-sources">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-sm font-medium">Folders</h2>
           <p className="mt-1 text-xs text-slate-500">
-            Private folder copies for your copilot.
+            Saved folder copies for your project context.
           </p>
         </div>
         <button
@@ -350,7 +350,7 @@ export function UploadedFolderSources({
             resumeTarget.current = null;
             input.current?.click();
           }}
-          className="flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
+          className="files-secondary-button"
         >
           <FolderPlus size={16} />
           Upload folder
@@ -431,7 +431,7 @@ export function UploadedFolderSources({
             <div className="flex items-center gap-2">
               <button
                 aria-expanded={expanded === folder.id}
-                className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm"
+                className="uploaded-folder-row"
                 onClick={() => {
                   setExpanded(expanded === folder.id ? null : folder.id);
                   if (!pages[folder.id]) void loadFiles(folder.id);
@@ -442,8 +442,8 @@ export function UploadedFolderSources({
                   className={expanded === folder.id ? "rotate-90" : ""}
                 />
                 <FolderOpen size={16} />
-                <span className="truncate">{folder.name}</span>
-                <span className="ml-auto text-xs text-slate-500">
+                <span className="uploaded-folder-name">{folder.name}</span>
+                <span className="uploaded-folder-meta">
                   {folder.fileCount} files · {size(folder.bytes)}
                   {folder.status !== "READY"
                     ? " · incomplete"
