@@ -2169,3 +2169,24 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
 .personalization-project select:disabled {
   opacity: 0.45;
 }
+
+.chat-work-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--ws-border);
+  border-radius: 12px;
+  background: var(--ws-input);
+  color: var(--ws-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.chat-work-notice > svg {
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  color: #c18a35;
+}

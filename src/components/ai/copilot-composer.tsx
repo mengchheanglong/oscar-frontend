@@ -29,6 +29,7 @@ interface ComposerProps {
   sources?: { value: string; label: string; icon?: React.ElementType }[];
   sending: boolean;
   loading: boolean;
+  workNotice?: string | null;
   error: string | null;
   failedRequest: string | null;
   onDismissError: () => void;
@@ -51,6 +52,7 @@ export function CopilotComposer({
   sources,
   sending,
   loading,
+  workNotice,
   error,
   failedRequest,
   onDismissError,
@@ -154,6 +156,12 @@ export function CopilotComposer({
   return (
     <footer className="chat-composer">
       <div className="chat-composer-inner space-y-3">
+        {workNotice && (
+          <div role="status" className="chat-work-notice">
+            <AlertCircle aria-hidden="true" />
+            <span>{workNotice}</span>
+          </div>
+        )}
         {error && (
           <div
             role="alert"

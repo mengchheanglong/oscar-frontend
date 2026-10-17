@@ -1476,11 +1476,6 @@ export default function AssistantPage() {
             )}
           </div>
 
-          {work.error && (
-            <p role="status" className="px-6 text-xs text-amber-700">
-              {work.error}
-            </p>
-          )}
           <CopilotComposer
             projectId={currentProject?.id}
             projectName={currentProject?.name}
@@ -1513,6 +1508,7 @@ export default function AssistantPage() {
               !!messagesError ||
               projects.length === 0
             }
+            workNotice={work.error}
             error={sendError}
             failedRequest={failedRequest}
             onDismissError={() => setSendError(null)}
