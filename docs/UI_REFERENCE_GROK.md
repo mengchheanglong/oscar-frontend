@@ -254,3 +254,10 @@ Production build passed after the final changes.
 - New standalone chats save `includeAllWorkspaces: true` in conversation metadata. Browser-only legacy tags are imported to the server; citation heuristics no longer infer a chat's scope. Reopening a standalone chat clears sidebar project selection and restores the All projects composer label.
 - Project folders contain project-scoped chats; the root Chats list contains standalone chats and pinned chats. Backend retrieval uses the saved all-project scope on subsequent turns, preserving actor authorization. Private storage/memory/history and Hermes remain project-scoped internally.
 - Verified TypeScript/lint, desktop layout, real authenticated create/read/reopen scope persistence and root history placement. Temporary QA conversation removed. Backend migration and regression verification are recorded in its implementation guide.
+
+
+### 2026-10-17 — Knowledge Graph preview
+
+- Added Knowledge to the sidebar with a Coming soon badge and a consistent node-link icon. Opens `/knowledge` with a clearly labeled Coming soon page describing future source-backed connections.
+- Available without selecting a project. This is an announced placeholder; no graph data, agent introspection, graph APIs, or extraction behavior is claimed or implemented.
+- Verified desktop/mobile layout, TypeScript, lint, and direct authenticated page navigation.

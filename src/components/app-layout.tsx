@@ -121,7 +121,8 @@ export function AppLayout({
             !pathname.startsWith("/settings") &&
             pathname !== "/team" &&
             pathname !== "/assistant" &&
-            pathname !== "/search" ? (
+            pathname !== "/search" &&
+            pathname !== "/knowledge" ? (
               <div className="flex flex-col items-center justify-center py-20 text-center space-y-5 max-w-md mx-auto">
                 <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 text-codex-accent flex items-center justify-center shadow-sm">
                   <FolderKanban className="w-7 h-7" />

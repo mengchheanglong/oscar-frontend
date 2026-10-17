@@ -15,6 +15,7 @@ type IconName =
   | keyof typeof filledPaths
   | "chat"
   | "overview"
+  | "knowledge"
   | "decisions"
   | "search"
   | "panel"
@@ -92,6 +93,15 @@ export function WorkspaceIcon({
       <>
         <rect x="3" y="3" width="18" height="18" rx="4" />
         <path d="m7 12 3 3 7-7" />
+      </>
+    ),
+    knowledge: (
+      <>
+        <path d="m8 7 7 3m-7 6 7-4M6 9v5m11-1 1 4" />
+        <circle cx="6" cy="6" r="3" />
+        <circle cx="6" cy="17" r="3" />
+        <circle cx="17" cy="11" r="3" />
+        <circle cx="19" cy="20" r="2" />
       </>
     ),
     chevron: <path d="m7 10 5 5 5-5" />,

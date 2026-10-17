@@ -69,6 +69,12 @@ export function Sidebar({
     { label: "Decisions", href: "/decisions", icon: "decisions" as const },
     { label: "Tasks", href: "/tasks", icon: "tasks" as const },
     { label: "Files", href: "/documents", icon: "files" as const },
+    {
+      label: "Knowledge",
+      href: "/knowledge",
+      icon: "knowledge" as const,
+      comingSoon: true,
+    },
   ];
   const displayName =
     user?.displayName || user?.fullName || user?.email || "Your account";
@@ -240,6 +246,9 @@ export function Sidebar({
             >
               <WorkspaceIcon name={link.icon} />
               {!compact && <span>{link.label}</span>}
+              {!compact && link.comingSoon && (
+                <span className="knowledge-soon-badge">Coming soon</span>
+              )}
             </Link>
           );
         })}
