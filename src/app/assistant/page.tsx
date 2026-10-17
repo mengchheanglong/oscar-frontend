@@ -130,6 +130,7 @@ interface Conversation {
   title: string;
   defaultMode: string;
   isPinned?: boolean;
+  includeAllWorkspaces?: boolean;
   createdAt: string;
   updatedAt: string;
   projectKey?: string;
@@ -327,34 +328,21 @@ export default function AssistantPage() {
   useEffect(() => {
     setExcludeTarget(null);
   }, [activeConv?.id, currentProject?.id, user?.id]);
-  const [allProjectConvIds, setAllProjectConvIds] = useState<Set<string>>(
-    () => {
-      if (typeof window === "undefined") return new Set();
-      try {
-        const stored = localStorage.getItem("aiw_all_project_convs");
-        return stored ? new Set(JSON.parse(stored)) : new Set();
-      } catch {
-        return new Set();
-      }
-    },
-  );
-
-  const markAsAllProjectConv = useCallback((id: string) => {
-    setAllProjectConvIds((prev) => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.add(id);
-      try {
-        localStorage.setItem(
-          "aiw_all_project_convs",
-          JSON.stringify(Array.from(next)),
-        );
-      } catch {
-        // ignore storage errors
-      }
-      return next;
-    });
-  }, []);
+  const [legacyWorkspaceChatIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem("aiw_all_project_convs") || "[]",
+      );
+      return new Set(
+        Array.isArray(stored)
+          ? stored.filter((id) => typeof id === "string")
+          : [],
+      );
+    } catch {
+      return new Set();
+    }
+  });
 
   // Search in conversation history
   const [convSearch, setConvSearch] = useState<string>("");
@@ -479,15 +467,30 @@ export default function AssistantPage() {
       const results = await Promise.allSettled(
         projects.map(async (project) => {
           const list = await api.ai.listConversations(project.id);
-          return (Array.isArray(list) ? list : []).map((conversation) => ({
-            ...conversation,
-            projectKey: allProjectConvIds.has(conversation.id)
-              ? "ALL"
-              : project.key,
-            projectName: allProjectConvIds.has(conversation.id)
-              ? "All Workspaces"
-              : project.name,
-          }));
+          return Promise.all(
+            (Array.isArray(list) ? list : []).map(async (conversation) => {
+              // Upgrade browser-tagged legacy chats to durable server-side scope.
+              if (
+                !conversation.includeAllWorkspaces &&
+                legacyWorkspaceChatIds.has(conversation.id)
+              ) {
+                conversation = await api.ai.updateConversation(
+                  project.id,
+                  conversation.id,
+                  { includeAllWorkspaces: true },
+                );
+              }
+              return {
+                ...conversation,
+                projectKey: conversation.includeAllWorkspaces
+                  ? "ALL"
+                  : project.key,
+                projectName: conversation.includeAllWorkspaces
+                  ? "All projects"
+                  : project.name,
+              };
+            }),
+          );
         }),
       );
       if (request !== historyLoadRef.current) return;
@@ -512,7 +515,7 @@ export default function AssistantPage() {
     } finally {
       if (request === historyLoadRef.current) setIsLoading(false);
     }
-  }, [projects, allProjectConvIds]);
+  }, [projects, legacyWorkspaceChatIds]);
 
   const loadMessages = useCallback(
     async (convId: string, convProjectId?: string) => {
@@ -530,17 +533,6 @@ export default function AssistantPage() {
         const res = await api.ai.listMessages(targetProjId, convId);
         if (request !== messageLoadRef.current) return;
         const fetched = Array.isArray(res) ? res : [];
-        const citedProjects = new Set<string>();
-        for (const msg of fetched) {
-          if (msg.citations && Array.isArray(msg.citations)) {
-            for (const cit of msg.citations) {
-              if (cit.projectKey) citedProjects.add(cit.projectKey);
-            }
-          }
-        }
-        if (citedProjects.size > 1) {
-          markAsAllProjectConv(convId);
-        }
         setMessages((prev) => {
           // Keep any active optimistic user messages so they never vanish
           const optimistic = prev.filter((m) => m.id.startsWith("temp-"));
@@ -562,7 +554,7 @@ export default function AssistantPage() {
         if (request === messageLoadRef.current) setIsLoadingMessages(false);
       }
     },
-    [activeConv?.projectId, currentProject?.id, projects, markAsAllProjectConv],
+    [activeConv?.projectId, currentProject?.id, projects],
   );
 
   const work = useConversationWork(
@@ -650,7 +642,7 @@ export default function AssistantPage() {
     setInputContent(draftsRef.current[conversation.id] || "");
     setSendError(null);
     setFailedRequest(null);
-    const project = allProjectConvIds.has(conversation.id)
+    const project = conversation.includeAllWorkspaces
       ? null
       : projects.find((project) => project.id === conversation.projectId) ||
         null;
@@ -801,6 +793,7 @@ export default function AssistantPage() {
           const rawConv = await api.ai.createConversation(targetProjectId, {
             title: text.length > 45 ? text.slice(0, 42) + "..." : text,
             defaultMode: selectedMode,
+            includeAllWorkspaces: !currentProject,
           });
           if (!rawConv)
             throw new Error("Conversation creation returned empty response");
@@ -812,13 +805,10 @@ export default function AssistantPage() {
           currentView.current.conversationId = rawConv.id;
           const targetProj = projects.find((p) => p.id === targetProjectId);
           const isAllMode = !currentProject;
-          if (isAllMode) {
-            markAsAllProjectConv(rawConv.id);
-          }
           const createdConv: Conversation = {
             ...rawConv,
             projectKey: isAllMode ? "ALL" : targetProj?.key,
-            projectName: isAllMode ? "All Workspaces" : targetProj?.name,
+            projectName: isAllMode ? "All projects" : targetProj?.name,
           };
           conv = createdConv;
           skipLoadMessagesRef.current = createdConv.id;
@@ -877,14 +867,12 @@ export default function AssistantPage() {
         const res = await api.ai.postMessage(postProjId, conv.id, {
           content: text,
           mode: selectedMode,
-          includeAllWorkspaces: !currentProject,
+          includeAllWorkspaces:
+            conv.includeAllWorkspaces === true || !currentProject,
         });
 
         if (!inView(conv.id)) return;
         const { userMessage, assistantMessage } = res;
-        if (!currentProject && conv) {
-          markAsAllProjectConv(conv.id);
-        }
 
         setMessages((prev) => [
           ...prev.filter((m) => m.id !== optimisticId),
@@ -902,9 +890,7 @@ export default function AssistantPage() {
                       ? text.slice(0, 45)
                       : c.title,
                   projectKey: !currentProject ? "ALL" : c.projectKey,
-                  projectName: !currentProject
-                    ? "All Workspaces"
-                    : c.projectName,
+                  projectName: !currentProject ? "All projects" : c.projectName,
                 }
               : c,
           ),
@@ -928,7 +914,6 @@ export default function AssistantPage() {
       draftKey,
       isLoadingMessages,
       selectedMode,
-      markAsAllProjectConv,
       useTools,
       work,
     ],
@@ -971,14 +956,16 @@ export default function AssistantPage() {
           </button>
         )}
         {conversations
-          .filter((chat) => chat.projectId === project.id)
+          .filter(
+            (chat) =>
+              chat.projectId === project.id && !chat.includeAllWorkspaces,
+          )
           .map(chatItem)}
       </>
     );
   }
   const rootChats = conversations.filter(
-    (chat) =>
-      chat.isPinned || !currentProject || chat.projectId !== currentProject.id,
+    (chat) => chat.includeAllWorkspaces || chat.isPinned,
   );
   const pinnedChats = rootChats.filter((chat) => chat.isPinned);
   const recentChats = rootChats.filter((chat) => !chat.isPinned);

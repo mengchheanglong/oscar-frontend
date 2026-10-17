@@ -293,21 +293,25 @@ export function Sidebar({
               </div>
             </div>
             {projectsOpen && (
-              <button
-                type="button"
-                className="workspace-nav-link workspace-project"
-                aria-pressed={!currentProject}
-                title="All projects"
-                onClick={() => {
-                  setCurrentProject(null);
-                  if (!["/tasks", "/decisions", "/search"].includes(pathname))
-                    router.push("/assistant");
-                  onCloseMobile?.();
-                }}
-              >
-                <WorkspaceIcon name="overview" />
-                <span>All projects</span>
-              </button>
+              <div className="project-sidebar-row">
+                <button
+                  type="button"
+                  className="workspace-nav-link workspace-project"
+                  aria-pressed={!currentProject}
+                  title="All projects"
+                  onClick={() => {
+                    setCurrentProject(null);
+                    if (!["/tasks", "/decisions", "/search"].includes(pathname))
+                      router.push("/assistant");
+                    onCloseMobile?.();
+                  }}
+                >
+                  <span className="workspace-project-icon" aria-hidden="true">
+                    <WorkspaceIcon name="overview" />
+                  </span>
+                  <span>All projects</span>
+                </button>
+              </div>
             )}
             {projectsOpen &&
               projects

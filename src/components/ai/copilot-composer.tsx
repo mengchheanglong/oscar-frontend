@@ -290,6 +290,15 @@ export function CopilotComposer({
                 </div>
               )}
             </div>
+            {!projectId && (
+              <span
+                className="composer-project-pill"
+                title="Context from all projects you can access"
+              >
+                <WorkspaceIcon name="overview" />
+                <span>All projects</span>
+              </span>
+            )}
             {projectName && onProjectFiles && (
               <button
                 type="button"

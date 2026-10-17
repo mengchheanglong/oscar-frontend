@@ -694,7 +694,11 @@ export const api = {
       apiRequest<any[]>(`/projects/${projectId}/ai/conversations`),
     createConversation: async (
       projectId: string,
-      data?: { title?: string; defaultMode?: string },
+      data?: {
+        title?: string;
+        defaultMode?: string;
+        includeAllWorkspaces?: boolean;
+      },
     ) =>
       apiRequest<any>(`/projects/${projectId}/ai/conversations`, {
         method: "POST",
@@ -703,7 +707,11 @@ export const api = {
     updateConversation: async (
       projectId: string,
       conversationId: string,
-      data: { title?: string; isPinned?: boolean },
+      data: {
+        title?: string;
+        isPinned?: boolean;
+        includeAllWorkspaces?: boolean;
+      },
     ) =>
       apiRequest<any>(
         `/projects/${projectId}/ai/conversations/${conversationId}`,

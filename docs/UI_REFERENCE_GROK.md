@@ -246,3 +246,11 @@ Production build passed after the final changes.
 
 - Audited sidebar, guest chat, login, invite, retained landing components, and static icon assets: all logo placements use the Continuum infinity geometry. Integration/vendor icons remain their own identities.
 - Versioned favicon, SVG icon, and Apple icon URLs to refresh previously cached browser branding. Added a 180px PNG Apple home-screen icon rather than advertising an SVG for that slot. Removed the remaining Grok name from user-facing appearance copy.
+
+
+### 2026-10-17 — Project row alignment and standalone chat scope
+
+- All projects and individual project rows share the same sidebar row wrapper, 44px height, icon position, and label inset. Browser measurements confirmed both labels start at x=57px at the tested desktop width.
+- New standalone chats save `includeAllWorkspaces: true` in conversation metadata. Browser-only legacy tags are imported to the server; citation heuristics no longer infer a chat's scope. Reopening a standalone chat clears sidebar project selection and restores the All projects composer label.
+- Project folders contain project-scoped chats; the root Chats list contains standalone chats and pinned chats. Backend retrieval uses the saved all-project scope on subsequent turns, preserving actor authorization. Private storage/memory/history and Hermes remain project-scoped internally.
+- Verified TypeScript/lint, desktop layout, real authenticated create/read/reopen scope persistence and root history placement. Temporary QA conversation removed. Backend migration and regression verification are recorded in its implementation guide.
