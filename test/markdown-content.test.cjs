@@ -85,3 +85,16 @@ test("blocks executable/local links, raw HTML and remote image requests", () => 
   );
   assert.match(html, /Image description/);
 });
+
+test("workspace annotations do not become extra evidence numbers", () => {
+  const html = render(
+    "Cedar [Evidence #1, QAR66E36]. Both [Evidence #1, #2, P2026].",
+    {
+      citations: [{ title: "Cedar" }, { title: "Juniper" }],
+      onCitationClick: () => {},
+    },
+  );
+  assert.equal((html.match(/<button/g) || []).length, 3);
+  assert.doesNotMatch(html, /Source (66|36|2026) unavailable/);
+  assert.match(html, /Inspect source 2: Juniper/);
+});

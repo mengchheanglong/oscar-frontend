@@ -747,6 +747,7 @@ export const api = {
       projectId: string,
       conversationId: string,
       data: {
+        clientRequestId?: string;
         content: string;
         mode?: string;
         sourceType?: string;

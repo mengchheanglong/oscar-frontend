@@ -21,6 +21,7 @@ import { useProjectWorkspace } from "@/components/project-workspace";
 import type { Project } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
+import { mergeChatTurn, retryRequestKey } from "@/lib/chat-turn";
 import {
   Sparkles,
   Bot,
@@ -110,6 +111,7 @@ interface CitationItem {
 }
 
 interface ChatMessage {
+  clientRequestId?: string | null;
   id: string;
   conversationId: string;
   role: "user" | "assistant" | "system";
@@ -301,6 +303,7 @@ export default function AssistantPage() {
   const [expandedCitation, setExpandedCitation] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
   const [failedRequest, setFailedRequest] = useState<string | null>(null);
+  const chatRequest = useRef<{ signature: string; key: string } | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [messagesError, setMessagesError] = useState<string | null>(null);
   const messageLoadRef = useRef(0);
@@ -864,7 +867,24 @@ export default function AssistantPage() {
           workRequest.current = null;
           return;
         }
+        const signature = JSON.stringify([
+          user?.id,
+          postProjId,
+          conv.id,
+          text,
+          selectedMode,
+          conv.includeAllWorkspaces === true || !currentProject,
+        ]);
+        if (chatRequest.current?.signature !== signature) {
+          chatRequest.current = {
+            signature,
+            key:
+              retryRequestKey(messages, text, selectedMode) ||
+              crypto.randomUUID(),
+          };
+        }
         const res = await api.ai.postMessage(postProjId, conv.id, {
+          clientRequestId: chatRequest.current.key,
           content: text,
           mode: selectedMode,
           includeAllWorkspaces:
@@ -874,11 +894,18 @@ export default function AssistantPage() {
         if (!inView(conv.id)) return;
         const { userMessage, assistantMessage } = res;
 
-        setMessages((prev) => [
-          ...prev.filter((m) => m.id !== optimisticId),
-          userMessage,
-          assistantMessage,
-        ]);
+        setMessages((prev) =>
+          mergeChatTurn(prev, optimisticId, userMessage, assistantMessage),
+        );
+        if (assistantMessage.status === "FAILED") {
+          setSendError(
+            "The answer could not be generated. Send again to retry this saved turn.",
+          );
+          setFailedRequest(text);
+          setInputContent((draft) => draft || text);
+        } else {
+          chatRequest.current = null;
+        }
 
         setConversations((prev) =>
           prev.map((c) =>
@@ -916,6 +943,8 @@ export default function AssistantPage() {
       selectedMode,
       useTools,
       work,
+      messages,
+      user?.id,
     ],
   );
 

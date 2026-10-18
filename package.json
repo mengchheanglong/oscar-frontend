@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:markdown": "node --test test/markdown-content.test.cjs",
+    "test:chat-turn": "node --test test/chat-turn.test.cjs",
     "test:global-search": "node --test test/global-search.test.cjs",
     "test:folder-resume": "node --test test/folder-resume.test.cjs",
     "test:local-folders": "node --test test/local-folders.test.cjs"

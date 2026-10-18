@@ -39,7 +39,7 @@ export function remarkEvidence() {
           return [child];
         }
         const nodes: MarkdownNode[] = [];
-        const pattern = /\[Evidence\s+#?\d+(?:\s*,\s*#?\d+)*\]/gi;
+        const pattern = /\[Evidence\s+#?\d+[^\]\n]*\]/gi;
         let offset = 0;
         for (const match of Array.from(child.value.matchAll(pattern))) {
           if (match.index! > offset)
@@ -47,7 +47,13 @@ export function remarkEvidence() {
               type: "text",
               value: child.value.slice(offset, match.index),
             });
-          for (const number of Array.from(new Set(match[0].match(/\d+/g)))) {
+          // Workspace labels can share a marker (e.g. [Evidence #1, P2026]).
+          // Only numeric source entries count; digits inside a project key do not.
+          const numbers = Array.from(
+            match[0].matchAll(/(?:Evidence\s+#?|,\s*#?)(\d+)(?=\s*(?:,|\]))/gi),
+            (entry) => entry[1],
+          );
+          for (const number of Array.from(new Set(numbers))) {
             nodes.push({
               type: "link",
               url: `#continuum-evidence-${Number(number)}`,
