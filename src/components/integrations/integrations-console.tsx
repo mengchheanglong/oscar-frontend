@@ -145,7 +145,10 @@ export function IntegrationsConsole() {
   const [selectedConnectionId, setSelectedConnectionId] = useState<
     string | null
   >(null);
-  const [loadingConnection, setLoadingConnection] = useState(true);
+  const [loadingConnection, setLoadingConnection] = useState(false);
+  const [connectionsProjectId, setConnectionsProjectId] = useState<string | null>(
+    null,
+  );
   const [issues, setIssues] = useState<any[]>([]);
   const [totalIssues, setTotalIssues] = useState(0);
   const [loadingIssues, setLoadingIssues] = useState(false);
@@ -199,10 +202,26 @@ export function IntegrationsConsole() {
     connections.find((c) => c.id === selectedConnectionId) ||
     connections[0] ||
     null;
+  const isLoadingConnection =
+    !!currentProject &&
+    (loadingConnection || connectionsProjectId !== currentProject.id);
 
   // Load GitHub connections
   const loadConnections = useCallback(async () => {
-    if (!currentProject) return;
+    if (!currentProject) {
+      setConnections([]);
+      setSelectedConnectionId(null);
+      setIssues([]);
+      setTotalIssues(0);
+      setPullRequests([]);
+      setTotalPrs(0);
+      setRepoFiles([]);
+      setTotalFiles(0);
+      setGithubLoadErrors({});
+      setConnectionsProjectId(null);
+      setLoadingConnection(false);
+      return;
+    }
     setLoadingConnection(true);
     try {
       const list = await api.integrations.github.listConnections(
@@ -228,6 +247,7 @@ export function IntegrationsConsole() {
     } catch (err: any) {
       console.error("Failed to load GitHub connections:", err);
     } finally {
+      setConnectionsProjectId(currentProject.id);
       setLoadingConnection(false);
     }
   }, [currentProject, selectedConnectionId]);
@@ -1047,9 +1067,10 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
         {/* ========================================================================= */}
         {activeView === "github" && (
           <GitHubWorkspace
+            projectId={currentProject?.id ?? null}
             connections={connections}
             activeConnection={activeConnection}
-            loadingConnection={loadingConnection}
+            loadingConnection={isLoadingConnection}
             onSelectConnection={(id) => {
               setSelectedConnectionId(id);
               setFileSearchQuery("");

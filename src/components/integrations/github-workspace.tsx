@@ -69,6 +69,7 @@ interface PullRequest {
   labels?: string[];
 }
 interface Props {
+  projectId: string | null;
   connections: Connection[];
   activeConnection: Connection | null;
   loadingConnection: boolean;
@@ -231,7 +232,12 @@ export function GitHubWorkspace(p: Props) {
           )}
           <Button
             variant="outline"
-            disabled={busy}
+            disabled={busy || !p.projectId}
+            title={
+              p.projectId
+                ? undefined
+                : "Select a project before connecting a repository."
+            }
             onClick={p.onToggleConnect}
             className={outline}
           >
@@ -300,7 +306,24 @@ export function GitHubWorkspace(p: Props) {
         )}
       </div>
 
-      {p.loadingConnection && !connection ? (
+      {!p.projectId ? (
+        <div
+          role="status"
+          className="mx-auto max-w-xl rounded-md border border-[#d0d7de] bg-white p-6"
+        >
+          <h2 className="mb-1 text-base font-semibold">Select a project</h2>
+          <p className={`mb-5 text-sm ${muted}`}>
+            GitHub repositories belong to a project. Choose an active project
+            before connecting a repository.
+          </p>
+          <Link
+            href="/settings?section=projects"
+            className={`${green} inline-flex items-center justify-center rounded-md px-3 ${focus}`}
+          >
+            Choose a project
+          </Link>
+        </div>
+      ) : p.loadingConnection && !connection ? (
         <div className="h-48 animate-pulse rounded-md border border-[#d0d7de] bg-[#f6f8fa]" />
       ) : p.showConnectForm || !p.connections.length ? (
         <div className="mx-auto max-w-xl rounded-md border border-[#d0d7de] bg-white p-6">
