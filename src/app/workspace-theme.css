@@ -140,6 +140,16 @@ html[data-workspace-theme] [class~="bg-[#F8F9FC]"],
 html[data-workspace-theme] [class~="bg-[#f8fafc]"] {
   background-color: var(--ws-surface);
 }
+/* Preserve the intended contrast of primary controls and their check badges. */
+html[data-workspace-theme] [class~="bg-white"][class~="text-black"] {
+  background-color: var(--ws-primary);
+  color: var(--ws-on-primary);
+}
+html[data-workspace-theme]
+  :is(button, a)[class~="bg-white"][class~="text-black"]:hover {
+  background-color: var(--ws-hover);
+  color: var(--ws-text);
+}
 html[data-workspace-theme] [class~="bg-slate-200"],
 html[data-workspace-theme] [class~="bg-slate-200/60"],
 html[data-workspace-theme] [class~="bg-slate-200/50"],
