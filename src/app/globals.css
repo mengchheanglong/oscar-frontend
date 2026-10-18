@@ -39,7 +39,7 @@
   }
 }
 
-/* Root Scrollbar - Dark theme for landing page and window */
+/* Root scrollbar for the application window */
 html {
   color-scheme: dark;
   background-color: #08090a;
@@ -47,7 +47,7 @@ html {
   scrollbar-width: thin;
 }
 
-/* Window / root webkit scrollbar - dark to seamlessly match landing page */
+/* Window scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -66,7 +66,7 @@ html {
   background: #08090a !important;
 }
 
-/* AppLayout Shell - light scrollbar for dashboard, assistant, and all workspace pages */
+/* AppLayout scrollbar styling */
 .app-layout-shell,
 .app-layout-shell * {
   scrollbar-color: #CBD5E1 transparent;

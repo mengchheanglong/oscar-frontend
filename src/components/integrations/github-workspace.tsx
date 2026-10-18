@@ -127,13 +127,14 @@ const focus =
 
 export function GitHubWorkspace(p: Props) {
   const [tab, setTab] = useState<"code" | "issues" | "pulls" | "settings">(
-    "code"
+    "code",
   );
   const [directory, setDirectory] = useState("");
   const [expandedIssue, setExpandedIssue] = useState<string | null>(null);
   const connection = p.activeConnection;
   const loadError = tab === "settings" ? undefined : p.loadErrors[tab];
-  const connected = connection?.status === "CONNECTED";
+  const connected = !!connection && connection.status !== "DISCONNECTED";
+  const syncPending = connection?.status === "SYNCING";
   const busy = p.syncing || p.syncingCode || p.disconnecting;
   const repoUrl = connection
     ? `https://github.com/${connection.repositoryOwner}/${connection.repositoryName}`
@@ -239,6 +240,11 @@ export function GitHubWorkspace(p: Props) {
         </div>
       </div>
 
+      {syncPending && !p.syncing && (
+        <p role="status" className="text-sm mb-4 text-[var(--ws-muted)]">
+          Repository sync is incomplete. Select Sync from GitHub to resume.
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-5">
         <div className="grid min-w-0 grid-cols-[20px_minmax(0,1fr)] items-start gap-2 text-base sm:flex sm:flex-wrap sm:items-center sm:text-lg">
           <BookOpen size={20} className={muted} />
@@ -257,7 +263,12 @@ export function GitHubWorkspace(p: Props) {
           </h1>
           {connected && (
             <span className="col-start-2 inline-flex w-fit items-center gap-1 rounded-full border border-[#d0d7de] px-2 py-0.5 text-[11px] text-[#656d76]">
-              <CheckCircle2 size={12} className="text-[#1a7f37]" /> Connected
+              <CheckCircle2 size={12} className="text-[#1a7f37]" />{" "}
+              {connection?.status === "ERROR"
+                ? "Sync interrupted"
+                : syncPending
+                  ? "Sync incomplete"
+                  : "Connected"}
             </span>
           )}
         </div>
@@ -605,7 +616,7 @@ export function GitHubWorkspace(p: Props) {
                                     directory
                                       .split("/")
                                       .slice(0, i + 1)
-                                      .join("/")
+                                      .join("/"),
                                   )
                                 }
                               >
@@ -641,7 +652,7 @@ export function GitHubWorkspace(p: Props) {
                               <button
                                 onClick={() =>
                                   goTo(
-                                    directory.split("/").slice(0, -1).join("/")
+                                    directory.split("/").slice(0, -1).join("/"),
                                   )
                                 }
                                 className={`flex w-full items-center gap-3 border-b border-[#d0d7de] px-4 py-2.5 text-sm text-[#0969da] hover:bg-[#f6f8fa] ${focus}`}
@@ -827,7 +838,7 @@ export function GitHubWorkspace(p: Props) {
                                             setExpandedIssue(
                                               expandedIssue === issue.id
                                                 ? null
-                                                : issue.id
+                                                : issue.id,
                                             )
                                           }
                                           className={`mt-2 text-xs text-[#0969da] hover:underline ${focus}`}

@@ -24,22 +24,19 @@ Legacy `aiw_*` storage keys, API environment names, database migration identifie
 and the existing isolated development database remain compatible with current
 local data. Repository branding changes do not migrate or reset that data.
 
-Next.js 14 App Router frontend for the Continuum, connected to the NestJS backend API.
+Next.js 14 App Router frontend for Continuum, connected to its NestJS API.
 
 ## Features
 
-- **Operational Copilot**: General Workspace mode for research, analysis, planning, and real project work across disciplines; specialized project modes remain available.
+- **Chat and citations**: Chat across the workspace or within a selected project, with grounded answers and source citations.
 - **Agent work**: Project-scoped Hermes runs with persisted progress, Markdown reports, cancellation, explicit retries, and task proposals in the existing review dialog. Requires the backend run migration and a prepared/enabled Hermes runtime; configuration is documented in the backend's `docs/HERMES_RUNTIME.md`.
-- **Private Copilot Memory**: Review, save, edit, and remove project context, working preferences, and lessons. Remember on a reply opens an editable draft before confirmation. Requires the backend's copilot-memory migration.
-- **Public Showcase & Landing Page**: Modern hero sections with Aceternity & MagicUI-inspired animations, glassmorphism, and responsive layout.
-- **Authentication & Sessions**: Server-side cookie sessions with CSRF synchronizer tokens, 1-click demo logins, and persistent auth state.
-- **Workspace Dashboard**: Bangkok timezone (`Asia/Bangkok`) overdue task calculations, real-time completion progress (`done / (total - cancelled)`), quick actions hub, and recent activity feed.
-- **Requirements**: Functional specifications, project-local keys (`AIW-REQ-X`), expandable acceptance criteria, multi-status filters, and versioned revisions.
-- **Architectural Decisions (ADR)**: Structured views separating Decision Outcome from Context & Rationale, with project-local keys (`AIW-DEC-X`).
-- **Tasks**: Actionable work items with due dates, priority badges, requirement links, 1-click status progression, and overdue warnings.
-- **Meetings**: Meeting logs with smart time defaults, attendee tracking, and expandable notes & transcripts with versioning.
-- **Documents**: File repository supporting PDF, DOCX, TXT, and Markdown (up to 20 MiB) with drag-and-drop upload, SHA-256 checksums, and streaming downloads.
-- **Universal Search**: Multi-entity keyword search with clickable suggestion pills, faceted category tabs (`countsByType`), and snippets.
+- **Copilot Memory**: Save, review, edit, and remove private preferences and useful lessons for future conversations.
+- **Authentication & Sessions**: Server-side cookie sessions with CSRF synchronizer tokens and persistent auth state.
+- **Global Search**: Search knowledge across every project from one workspace-wide view.
+- **Decisions and Tasks**: Review architecture decisions and manage work in project context or across all projects.
+- **Files**: Upload and search project documents, and manage private folder copies with resumable uploads.
+- **Knowledge Graph**: A visual map of workspace knowledge is planned and currently marked “Coming soon.”
+- **Projects, settings, and integrations**: Manage project context, membership, account preferences, GitHub, MCP, and Hermes connections.
 - **Non-blocking Toast Feedback**: Smooth notifications for all asynchronous user interactions.
 
 ## Getting Started
@@ -76,15 +73,6 @@ pnpm start
 Local Windows builds use regular Next.js output to avoid standalone dependency
 links interfering with repeated build cleanup. Linux production builds retain
 standalone output for the existing container deployment.
-
-## Demo Accounts
-
-Pre-seeded in the development database:
-
-- **Alice Developer** (`alice@example.com` / `Password123!`): Project Owner of Alpha Workspace (AIW)
-- **Bob Manager** (`bob@example.com` / `Password123!`): Project Manager in AIW
-- **Charlie QA** (`charlie@example.com` / `Password123!`): Contributor in Secure Workspace (SEC)
-- **System Admin** (`admin@example.com` / `Password123!`): Global Administrator
 
 ## Hermes integration
 
@@ -136,39 +124,6 @@ IPv4 backend address avoids another app's localhost IPv6 listener.
 Checks: `pnpm test:folder-resume` verifies fingerprint compatibility, block
 boundaries, changed content and pause handling. The legacy scanner checks remain
 available with `pnpm test:local-folders`.
-
-## Personal workspace navigation (2026-10-16)
-
-Home shows recent projects and the selected project's unfinished checklist,
-conversations and agent runs. It replaces the management-statistics dashboard.
-The main navigation is Home, Projects, Tasks, Files, Search, AI Copilot and Settings.
-AI Copilot, its modes, Hermes execution, memory and history recall are unchanged.
-
-Project pages provide links to Tasks, Files, Decisions and project Settings.
-The overview contains the project brief rather than a software-delivery dashboard.
-Use project files for detailed goals, requirements, research and meeting notes.
-Requirements and Meetings are removed from primary navigation and creation
-shortcuts; their existing routes, records and backend contracts are retained.
-Decisions remain available inside the current project. Tasks offer a Kanban board and list view with creation, editing, assignees, priorities,
-due dates and project filters. Review, blocked, done and cancelled stay distinct.
-
-Project Settings contains existing edit/archive/ownership actions and project
-membership controls (add an existing account, change access, confirmed removal).
-Backend authorization remains authoritative. Settings contains Account,
-Integrations and project sharing; user administration is shown only to admins.
-The previous integrations URL still works, alongside /settings/integrations.
-Files combines existing document uploads and private uploaded folder copies.
-No existing records are migrated or deleted by this UI change.
-
-Verification: frontend lint, TypeScript and production build passed. Local browser
-QA covered navigation, project settings/member display, nested integrations,
-files/folders, checklist creation and completion persisted through an API read,
-and temporary task cleanup. Desktop and 390px Home screenshots were inspected;
-no horizontal overflow was observed on the mobile Home. No membership changes
-or AI generation were performed. AIW accepted-decision lookup failed (fetch
-failed); no assigned task was supplied or marked complete. Backend continuity
-work and frontend Copilot/API edits already present were left uncommitted and
-unchanged. Only this navigation slice is committed locally on develop.
 
 ## One Copilot conversation
 

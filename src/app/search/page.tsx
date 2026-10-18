@@ -242,7 +242,7 @@ export default function SearchPage() {
                         ? "bg-[#161927] text-white shadow-xs font-semibold"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
-                    title="Reciprocal Rank Fusion: combines semantic vectors and keyword FTS for maximum recall"
+                    title="Combine related meaning with matching words"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                     <span>Best match</span>
@@ -255,7 +255,7 @@ export default function SearchPage() {
                         ? "bg-[#161927] text-white shadow-xs font-semibold"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
-                    title="Cosine similarity over OpenAI 1536-dimensional pgvector embeddings"
+                    title="Find related information beyond matching words"
                   >
                     <Cpu className="w-3.5 h-3.5 text-blue-400" />
                     <span>Meaning</span>
@@ -268,7 +268,7 @@ export default function SearchPage() {
                         ? "bg-[#161927] text-white shadow-xs font-semibold"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
-                    title="Exact PostgreSQL full-text search"
+                    title="Find matching words in titles and content"
                   >
                     <SearchIcon className="w-3.5 h-3.5 text-slate-400" />
                     <span>Exact words</span>
@@ -277,6 +277,13 @@ export default function SearchPage() {
               </div>
             </div>
           </details>
+          {searchMode === "semantic" && (
+            <p className="text-xs text-codex-muted">
+              Meaning search covers documents, tasks, decisions, and connected
+              GitHub content. For uploaded folder copies, use Best match or
+              Exact words.
+            </p>
+          )}
           {/* Search Input Bar */}
           <form onSubmit={handleSearch} className="flex gap-2.5">
             <div className="relative flex-1">

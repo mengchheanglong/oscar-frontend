@@ -361,7 +361,7 @@ export function TeamManagement({
           {!inSettings && (
             <div className="flex items-center gap-1.5 text-xs text-[var(--ws-muted)] mb-1">
               <Link href="/assistant" className="text-blue-400 hover:underline">
-                Dashboard
+                Chat
               </Link>
               <span>/</span>
               <span className="text-[var(--ws-text)]">Team</span>

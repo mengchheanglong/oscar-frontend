@@ -725,15 +725,18 @@ export const api = {
         projectId: string,
         connectionId?: string,
         accessToken?: string,
+        signal?: AbortSignal,
       ) =>
         apiRequest<{
           syncedCount: number;
           totalCount: number;
           syncedPrCount?: number;
           totalPrCount?: number;
-          lastSyncedAt: string;
+          lastSyncedAt: string | null;
+          hasMore: boolean;
         }>(`/projects/${projectId}/integrations/github/sync`, {
           method: "POST",
+          signal,
           body: JSON.stringify({ connectionId, accessToken }),
         }),
       syncCode: async (

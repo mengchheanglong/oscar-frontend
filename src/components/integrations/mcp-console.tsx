@@ -58,7 +58,7 @@ export function McpConsole({
   const [editorId, setEditorId] = useState("codex");
   const [copied, setCopied] = useState<string | null>(null);
   const editor = editors.find((item) => item.id === editorId) || editors[0];
-  const verificationPrompt = `Use the ai-workspace MCP server to list tasks for project "${projectKey}".`;
+  const verificationPrompt = `Use the Continuum MCP server to list tasks for project "${projectKey}".`;
 
   useEffect(() => {
     if (!copied) return;
@@ -230,9 +230,8 @@ export function McpConsole({
             </div>
           </section>
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center">
               <h2 className="text-sm font-semibold text-slate-900">Workspace tools</h2>
-              <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-500">32 tools</span>
             </div>
             <div className="mt-5 space-y-5">
               {capabilities.map(({ icon: Icon, title, description }) => (

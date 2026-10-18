@@ -5,6 +5,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api";
+import { syncGitHubPages } from "@/lib/github-sync";
 import { parseGitHubRepositoryUrl } from "@/lib/github-repository-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +110,8 @@ type CategoryFilter = "all" | "ai" | "vcs";
 
 export function IntegrationsConsole() {
   const { currentProject } = useAuth();
+  const syncRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => syncRequest.current?.abort(), [currentProject?.id]);
   const { showToast } = useToast();
 
   // Navigation state: "directory" | "mcp" | "github" | "hermes"
@@ -205,7 +208,9 @@ export function IntegrationsConsole() {
       const list = await api.integrations.github.listConnections(
         currentProject.id,
       );
-      const conns = Array.isArray(list) ? list : [];
+      const conns = Array.isArray(list)
+        ? list.filter((connection) => connection.status !== "DISCONNECTED")
+        : [];
       setConnections(conns);
       if (conns.length > 0) {
         if (
@@ -371,19 +376,37 @@ export function IntegrationsConsole() {
     }
     setRepositoryUrlError(null);
     setConnecting(true);
+    const operation = new AbortController();
+    syncRequest.current = operation;
     try {
       const newConn = await api.integrations.github.connect(currentProject.id, {
         ...repository,
         accessToken: token.trim() || undefined,
       });
-      showToast("Connected GitHub repository successfully!", "success");
+      await syncGitHubPages(
+        () =>
+          api.integrations.github.sync(
+            currentProject.id,
+            newConn.id,
+            token.trim() || undefined,
+            operation.signal,
+          ),
+        operation.signal,
+      );
+      showToast(
+        "Repository connected and issues and pull requests synced.",
+        "success",
+      );
       setShowConnectForm(false);
       setRepositoryUrl("");
       setToken("");
       setSelectedConnectionId(newConn.id);
       await loadConnections();
     } catch (err: any) {
-      showToast(err.message || "Failed to connect repository", "error");
+      if (!operation.signal.aborted) {
+        showToast(err.message || "Failed to connect repository", "error");
+        await loadConnections();
+      }
     } finally {
       setConnecting(false);
     }
@@ -392,21 +415,31 @@ export function IntegrationsConsole() {
   const handleSyncGithub = async () => {
     if (!currentProject || !activeConnection) return;
     setSyncing(true);
+    const operation = new AbortController();
+    syncRequest.current = operation;
     try {
-      const res = await api.integrations.github.sync(
-        currentProject.id,
-        activeConnection.id,
-        syncAccessToken.trim() || undefined,
+      const res = await syncGitHubPages(
+        () =>
+          api.integrations.github.sync(
+            currentProject.id,
+            activeConnection.id,
+            syncAccessToken.trim() || undefined,
+            operation.signal,
+          ),
+        operation.signal,
       );
       showToast(
-        `Sync completed: ${res.syncedCount ?? 0} issues and ${res.syncedPrCount ?? 0} PRs synchronized!`,
+        `Sync completed: ${res.issues} issues and ${res.pullRequests} pull requests updated.`,
         "success",
       );
       await loadConnections();
       await loadIssues(activeConnection.id);
       await loadPullRequests(activeConnection.id);
     } catch (err: any) {
-      showToast(err.message || "Sync failed", "error");
+      if (!operation.signal.aborted) {
+        showToast(err.message || "Sync interrupted. Retry to resume.", "error");
+        await loadConnections();
+      }
     } finally {
       setSyncing(false);
       setSyncAccessToken("");
@@ -561,23 +594,23 @@ export function IntegrationsConsole() {
    - In Codex: add to .codex/config.toml or run \`codex mcp add continuum ...\`
    - In Antigravity: add to ~/.gemini/config/mcp_config.json or .agents/mcp_config.json
 2. Test the connection by running MCP tool \`list_tasks\` for project "${projectKey}".
-3. Full Platform Capabilities (32 MCP Tools plus Resources):
+3. Available Continuum MCP tools and resources:
    - Tasks & Kanban: list_tasks, get_task, create_task, update_task_status (real-time board sync)
    - Architecture ADRs: list_decisions, get_decision, propose_decision
    - Documents & RAG: list_documents, get_document, search_workspace (keyword, semantic, hybrid)
    - GitHub VCS: get_github_integration, list_github_issues
-   - Workspace Health: get_dashboard, get_activity_stream, list_projects, get_project, list_project_members
+   - Workspace activity and projects: get_activity_stream, list_projects, get_project, list_project_members
    - Reviewed AI Actions: generate_decision_task_proposal, list_ai_proposals, get_ai_proposal, update_ai_proposal, confirm_ai_proposal, reject_ai_proposal
 4. Workflow Rules:
    - Consult accepted architecture decisions (\`list_decisions\`) before making design changes.
    - AI generation saves drafts only. Review/edit with get_ai_proposal and update_ai_proposal, then confirm only user-authorized selected items using the current version and a stable idempotency key. Reuse that key when retrying. Reject unwanted drafts.
-   - When any assigned task is completed and verified, automatically call \`update_task_status\` to set it to "DONE" on our Continuum dashboard.`;
+   - When any assigned task is completed and verified, automatically call \`update_task_status\` to set it to "DONE" on the Continuum project task board.`;
 
   // Pre-formatted MCP Configs
   const cursorConfigJson = JSON.stringify(
     {
       mcpServers: {
-        "continuum": {
+        continuum: {
           command: "node",
           args: ["<PATH_TO_BACKEND>/dist/mcp/cli.js"],
           env: {
@@ -609,7 +642,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
   const antigravityConfigJson = JSON.stringify(
     {
       mcpServers: {
-        "continuum": {
+        continuum: {
           command: "node",
           args: ["<PATH_TO_BACKEND>/dist/mcp/cli.js"],
           env: {

@@ -104,8 +104,8 @@ export default function AcceptInvitePage() {
         setCsrfToken(responseData.csrfToken);
       }
 
-      // Hard redirect to dashboard to re-initialize full user session & state
-      window.location.href = "/dashboard";
+      // Reload the assistant to initialize the authenticated workspace.
+      window.location.href = "/assistant";
     } catch (err: any) {
       setSubmitError(err.message || "Failed to accept invitation. Please try again.");
       setSubmitting(false);

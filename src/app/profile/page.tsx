@@ -202,7 +202,7 @@ export default function ProfilePage() {
         {/* Breadcrumb matching Team and Projects pages */}
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
           <Link href="/assistant" className="text-[#2563eb] hover:underline font-medium">
-            Dashboard
+            Chat
           </Link>
           <span>/</span>
           <span className="text-slate-800 font-medium">Profile & Settings</span>
