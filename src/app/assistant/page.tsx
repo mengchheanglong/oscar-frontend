@@ -11,24 +11,7 @@ import type { Project } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import { mergeChatTurn, retryRequestKey } from "@/lib/chat-turn";
-import {
-  Sparkles,
-  Bot,
-  Plus,
-  Copy,
-  Check,
-  FileText,
-  FileCheck2,
-  GitPullRequest,
-  CheckSquare,
-  Calendar,
-  AlertCircle,
-  Loader2,
-  ChevronDown,
-  Eye,
-  X,
-  ArrowUpRight,
-} from "lucide-react";
+import { Sparkles, Bot, Plus, Copy, Check, FileText, GitPullRequest, CheckSquare, AlertCircle, Loader2, ChevronDown, Eye, X, ArrowUpRight } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
@@ -52,14 +35,10 @@ const getSourceLink = (
   const qs = params.toString() ? `?${params.toString()}` : "";
 
   switch (sourceType) {
-    case "REQUIREMENT":
-      return `/requirements${qs}`;
     case "DECISION":
       return `/decisions${qs}`;
     case "TASK":
       return `/tasks${qs}`;
-    case "MEETING":
-      return `/meetings${qs}`;
     case "DOCUMENT":
       return `/documents${qs}`;
     case "LOCAL_FILE":
@@ -160,10 +139,8 @@ const MODES = [
 
 const SOURCE_TYPE_ICONS: Record<string, React.ElementType> = {
   DOCUMENT: FileText,
-  REQUIREMENT: FileCheck2,
   DECISION: GitPullRequest,
   TASK: CheckSquare,
-  MEETING: Calendar,
 };
 
 function getModeConfig(key: string) {
@@ -313,6 +290,7 @@ export default function AssistantPage() {
     setInspectError(null);
 
     const loadDetails = async () => {
+      if (["REQUIREMENT", "MEETING"].includes(inspectingCitation.sourceType)) { setInspectError("This source belongs to a retired feature."); setLoadingInspectDetails(false); return; }
       try {
         const id = inspectingCitation.sourceId;
         const type = inspectingCitation.sourceType;
@@ -325,18 +303,6 @@ export default function AssistantPage() {
           const list = await api.decisions.list(targetProjId);
           const found = (Array.isArray(list) ? list : []).find(
             (d: any) => d.id === id,
-          );
-          if (!isCancelled && found) setInspectingDetails(found);
-        } else if (type === "REQUIREMENT") {
-          const list = await api.requirements.list(targetProjId);
-          const found = (Array.isArray(list) ? list : []).find(
-            (r: any) => r.id === id,
-          );
-          if (!isCancelled && found) setInspectingDetails(found);
-        } else if (type === "MEETING") {
-          const list = await api.meetings.list(targetProjId);
-          const found = (Array.isArray(list) ? list : []).find(
-            (m: any) => m.id === id,
           );
           if (!isCancelled && found) setInspectingDetails(found);
         } else if (type === "DOCUMENT") {
@@ -1076,13 +1042,13 @@ export default function AssistantPage() {
                     Copilot.
                   </p>
                   <div className="mt-6 flex justify-center">
-                    <Link
-                      href="/projects"
+                    <button
+                      onClick={projectWorkspace.openCreate}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-codex-accent text-white text-xs font-medium shadow-xs hover:bg-codex-hover"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Create Project</span>
-                    </Link>
+                    </button>
                   </div>
                 </div>
               ) : messages.length === 0 && !isSending ? (
@@ -1506,10 +1472,6 @@ export default function AssistantPage() {
                     <CheckSquare className="w-4 h-4" />
                   ) : inspectingCitation.sourceType === "DECISION" ? (
                     <GitPullRequest className="w-4 h-4" />
-                  ) : inspectingCitation.sourceType === "REQUIREMENT" ? (
-                    <FileCheck2 className="w-4 h-4" />
-                  ) : inspectingCitation.sourceType === "MEETING" ? (
-                    <Calendar className="w-4 h-4" />
                   ) : (
                     <FileText className="w-4 h-4" />
                   )}
@@ -1665,66 +1627,9 @@ export default function AssistantPage() {
                     </div>
                   )}
 
-                  {/* REQUIREMENT DETAILS */}
-                  {inspectingCitation.sourceType === "REQUIREMENT" && (
-                    <div className="space-y-2 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200">
-                      <div className="flex items-center gap-2 text-[11px]">
-                        <span className="font-semibold text-slate-700">
-                          Status:
-                        </span>
-                        <span className="font-mono px-2 py-0.5 rounded bg-white border border-slate-200 font-medium text-slate-800">
-                          {inspectingDetails.status}
-                        </span>
-                        <span className="font-semibold text-slate-700 ml-2">
-                          Priority:
-                        </span>
-                        <span className="font-mono px-2 py-0.5 rounded bg-white border border-slate-200 font-medium text-slate-800">
-                          {inspectingDetails.priority}
-                        </span>
-                      </div>
-                      {inspectingDetails.description && (
-                        <div className="pt-1 whitespace-pre-wrap text-slate-800">
-                          {inspectingDetails.description}
-                        </div>
-                      )}
-                      {inspectingDetails.acceptanceCriteria && (
-                        <div className="space-y-1 pt-2 border-t border-slate-200/60">
-                          <div className="font-semibold text-slate-700">
-                            Acceptance Criteria:
-                          </div>
-                          <p className="whitespace-pre-wrap text-slate-600">
-                            {inspectingDetails.acceptanceCriteria}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
 
-                  {/* MEETING DETAILS */}
-                  {inspectingCitation.sourceType === "MEETING" && (
-                    <div className="space-y-2 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200">
-                      {inspectingDetails.agenda && (
-                        <div>
-                          <span className="font-semibold text-slate-700">
-                            Agenda:
-                          </span>
-                          <p className="whitespace-pre-wrap text-slate-800 mt-0.5">
-                            {inspectingDetails.agenda}
-                          </p>
-                        </div>
-                      )}
-                      {inspectingDetails.notes && (
-                        <div className="pt-2 border-t border-slate-200/60">
-                          <span className="font-semibold text-slate-700">
-                            Notes:
-                          </span>
-                          <p className="whitespace-pre-wrap text-slate-800 mt-0.5">
-                            {inspectingDetails.notes}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+
+
 
                   {/* DOCUMENT DETAILS */}
                   {inspectingCitation.sourceType === "LOCAL_FILE" && (

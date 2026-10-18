@@ -32,6 +32,8 @@ import {
 import { IntegrationsConsole } from "@/components/integrations/integrations-console";
 import { PersonalizationSettings } from "@/components/personalization-settings";
 import { TeamManagement } from "@/components/team/team-management";
+import { useProjectWorkspace } from "@/components/project-workspace";
+import { ProjectAccess } from "@/components/project-access";
 
 type SettingsTab =
   | "account"
@@ -83,6 +85,7 @@ export default function SettingsWorkspace({
   initialTab?: SettingsTab;
 }) {
   const router = useRouter();
+  const projectWorkspace = useProjectWorkspace();
   const {
     user,
     isLoading,
@@ -880,13 +883,13 @@ export default function SettingsWorkspace({
                       scopes.
                     </p>
                   </div>
-                  <Link
-                    href="/projects"
+                  <button
+                    onClick={projectWorkspace.openCreate}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-medium text-black hover:bg-slate-200 transition-colors"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     <span>New Project</span>
-                  </Link>
+                  </button>
                 </div>
 
                 {/* Active Project Highlight */}
@@ -916,14 +919,9 @@ export default function SettingsWorkspace({
                         href={`/projects/${currentProject.id}`}
                         className="rounded-lg border border-[var(--ws-border)] bg-[var(--ws-surface)] px-3 py-1.5 text-xs text-[var(--ws-text)] hover:bg-[var(--ws-hover)] transition-colors"
                       >
-                        Overview
+                        Project settings
                       </Link>
-                      <Link
-                        href="/requirements"
-                        className="rounded-lg border border-[var(--ws-border)] bg-[var(--ws-surface)] px-3 py-1.5 text-xs text-[var(--ws-text)] hover:bg-[var(--ws-hover)] transition-colors"
-                      >
-                        Requirements
-                      </Link>
+
                       <Link
                         href="/tasks"
                         className="rounded-lg border border-[var(--ws-border)] bg-[var(--ws-surface)] px-3 py-1.5 text-xs text-[var(--ws-text)] hover:bg-[var(--ws-hover)] transition-colors"
@@ -940,7 +938,7 @@ export default function SettingsWorkspace({
                         href="/documents"
                         className="rounded-lg border border-[var(--ws-border)] bg-[var(--ws-surface)] px-3 py-1.5 text-xs text-[var(--ws-text)] hover:bg-[var(--ws-hover)] transition-colors"
                       >
-                        Documents
+                        Files
                       </Link>
                       <button
                         type="button"
@@ -950,6 +948,10 @@ export default function SettingsWorkspace({
                         Team
                       </button>
                     </div>
+                    <details className="border-t border-[var(--ws-border)] pt-4">
+                      <summary className="cursor-pointer text-sm font-medium">Project access</summary>
+                      <div className="pt-4"><ProjectAccess key={currentProject.id} projectId={currentProject.id} /></div>
+                    </details>
                   </div>
                 )}
 
@@ -1234,7 +1236,7 @@ export default function SettingsWorkspace({
                     </div>
                     <p className="text-xs text-[var(--ws-muted)] leading-relaxed">
                       All workspace queries, document vectors, task items, and
-                      meetings are strictly isolated by your active project ID.
+                      files are strictly isolated by your active project ID.
                       Cross-project data leaks are blocked at the database query
                       level.
                     </p>

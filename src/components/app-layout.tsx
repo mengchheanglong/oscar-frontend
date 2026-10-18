@@ -5,10 +5,9 @@ import { useAuth } from "@/context/auth-context";
 import { WorkspaceIcon } from "@/components/workspace-icons";
 import { ProjectSidePanel } from "@/components/project-workspace";
 import { Sidebar } from "@/components/sidebar";
-import Link from "next/link";
+
 import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { FolderKanban, ChevronRight, Plus } from "lucide-react";
+
 import { CommandPalette } from "@/components/command-palette";
 
 export function AppLayout({
@@ -30,8 +29,7 @@ export function AppLayout({
   navigationOpen?: boolean;
   onCloseNavigation?: () => void;
 }) {
-  const { user, currentProject, projects, setCurrentProject, isLoading } =
-    useAuth();
+  const { user, isLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const pathname = usePathname();
@@ -112,69 +110,7 @@ export function AppLayout({
                 : "flex-1 px-4 sm:px-8 py-6 overflow-y-auto max-w-7xl w-full mx-auto min-h-0 [scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,0.15)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-400"
             }
           >
-            {!currentProject &&
-            pathname !== "/projects" &&
-            pathname !== "/dashboard" &&
-            pathname !== "/tasks" &&
-            pathname !== "/decisions" &&
-            pathname !== "/profile" &&
-            !pathname.startsWith("/settings") &&
-            pathname !== "/team" &&
-            pathname !== "/assistant" &&
-            pathname !== "/search" &&
-            pathname !== "/knowledge" &&
-            pathname !== "/documents" ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center space-y-5 max-w-md mx-auto">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 text-codex-accent flex items-center justify-center shadow-sm">
-                  <FolderKanban className="w-7 h-7" />
-                </div>
-                <div className="space-y-1.5">
-                  <h2 className="text-xl font-bold text-codex-text">
-                    Select a Workspace
-                  </h2>
-                  <p className="text-xs text-codex-muted leading-relaxed">
-                    Select a project to open its files, checklist, and
-                    decisions.
-                  </p>
-                </div>
-
-                {projects.length > 0 ? (
-                  <div className="w-full space-y-2 pt-2 text-left">
-                    <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Available Workspaces:
-                    </div>
-                    <div className="grid grid-cols-1 gap-2">
-                      {projects.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setCurrentProject(p)}
-                          className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-codex-border hover:border-codex-accent/50 hover:shadow-sm transition-all group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs font-bold text-codex-accent bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                              {p.key}
-                            </span>
-                            <span className="text-xs font-semibold text-codex-text group-hover:text-codex-accent">
-                              {p.name}
-                            </span>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-codex-accent" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <Link href="/projects">
-                    <Button className="bg-codex-accent hover:bg-codex-hover text-white text-xs gap-1.5">
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Create Workspace</span>
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            ) : (
-              children
-            )}
+            {children}
           </main>
           <ProjectSidePanel />
         </div>

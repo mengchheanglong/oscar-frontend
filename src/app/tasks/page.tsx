@@ -49,8 +49,6 @@ interface TaskItem {
   project?: ProjectInfo | null;
   blockedReason?: string | null;
   dueDate?: string | null;
-  requirementId?: string | null;
-  sourceMeetingId?: string | null;
   aiProvenance?: {
     sourceEntityType: string;
     sourceRevision: number;

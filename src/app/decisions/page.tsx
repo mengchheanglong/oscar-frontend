@@ -43,13 +43,6 @@ interface DecisionItem {
     displayName?: string;
     email?: string;
   } | null;
-  requirementId?: string | null;
-  requirement?: {
-    id: string;
-    title: string;
-    displayKey?: string;
-    key?: string;
-  } | null;
   supersedesDecisionId?: string | null;
   supersededByDecisionId?: string | null;
   version: number;
@@ -158,7 +151,6 @@ function DecisionWorkspace() {
 
   const [items, setItems] = useState<DecisionItem[]>([]);
   const [members, setMembers] = useState<any[]>([]);
-  const [requirements, setRequirements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // View state: 'list' | 'detail' | 'new' | 'edit'
@@ -175,7 +167,6 @@ function DecisionWorkspace() {
   const [createTitle, setCreateTitle] = useState("");
   const [createRationale, setCreateRationale] = useState("");
   const [createProjectId, setCreateProjectId] = useState("");
-  const [createRequirementId, setCreateRequirementId] = useState("");
   const [submittingCreate, setSubmittingCreate] = useState(false);
 
   // Edit Form state
@@ -244,19 +235,6 @@ function DecisionWorkspace() {
 
       const flattened = decisionsResults.flat();
       setItems(flattened);
-
-      // 4. Load requirements for current project
-      if (currentProject) {
-        const reqs = await api.requirements
-          .list(currentProject.id)
-          .catch(() => []);
-        setRequirements(reqs || []);
-      } else {
-        const reqsRes = await api.requirements
-          .listAll({ pageSize: 100 })
-          .catch(() => ({ data: [] }));
-        setRequirements(reqsRes.data || []);
-      }
     } catch (err: any) {
       console.error("Failed to load decisions:", err);
       showToast(err.message || "Failed to load decisions", "error");
@@ -352,7 +330,6 @@ function DecisionWorkspace() {
         ? selectedProjectId
         : currentProject?.id || projects[0]?.id || "",
     );
-    setCreateRequirementId("");
     setViewState("new");
     if (typeof window !== "undefined") {
       window.history.pushState(null, "", `/decisions?create=true`);
@@ -397,7 +374,6 @@ function DecisionWorkspace() {
         title: createTitle.trim(),
         decisionText: createTitle.trim(),
         rationale: createRationale.trim() || undefined,
-        requirementId: createRequirementId || undefined,
       });
 
       showToast(
@@ -819,31 +795,7 @@ function DecisionWorkspace() {
                 </div>
 
                 {/* Related items Card */}
-                <div className="bg-white border border-codex-border/80 rounded-2xl p-6 shadow-xs space-y-3">
-                  <h2 className="text-sm font-bold text-slate-900 font-serif">
-                    Related items
-                  </h2>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {activeDec.requirementId ? (
-                      <Link
-                        href={`/requirements?id=${activeDec.requirementId}`}
-                        className="inline-flex items-center gap-1 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs text-blue-600"
-                      >
-                        <FileCheck2 className="h-3 w-3" />
-                        {activeDec.requirement?.displayKey ||
-                          requirements.find(
-                            (requirement) =>
-                              requirement.id === activeDec.requirementId,
-                          )?.displayKey ||
-                          "Linked requirement"}
-                      </Link>
-                    ) : (
-                      <span className="text-xs text-slate-500">
-                        No linked requirement.
-                      </span>
-                    )}
-                  </div>
-                </div>
+
 
                 {/* AI Task Proposals & Engineering Handoff Actions */}
                 <div className="bg-white border border-codex-border/80 rounded-2xl p-5 shadow-xs flex items-center justify-between gap-3 flex-wrap">

@@ -13,9 +13,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  ListTodo,
-  FileCheck2,
-  Layers,
   ChevronRight,
   ShieldCheck,
   RefreshCw,
@@ -42,7 +39,6 @@ export function ProposalReviewDialog({
   const { showToast } = useToast();
   const [draft, setDraft] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [includeSummary, setIncludeSummary] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [confirmedResults, setConfirmedResults] = useState<any[] | null>(null);
@@ -52,9 +48,10 @@ export function ProposalReviewDialog({
 
   useEffect(() => {
     if (isOpen && projectId) {
-      api.projects.getMembers(projectId)
+      api.projects
+        .getMembers(projectId)
         .then((res: any) => {
-          const list = Array.isArray(res) ? res : (res?.data || []);
+          const list = Array.isArray(res) ? res : res?.data || [];
           setMembers(list);
         })
         .catch(() => setMembers([]));
@@ -66,24 +63,19 @@ export function ProposalReviewDialog({
       setDraft(JSON.parse(JSON.stringify(proposal.draftJson)));
       setConfirmedResults(null);
       setErrorMsg(null);
-      setIncludeSummary(proposal.draftJson.type === "MEETING_ANALYSIS");
-      savedDraft.current = { version: proposal.version, json: JSON.stringify(proposal.draftJson) };
+      savedDraft.current = {
+        version: proposal.version,
+        json: JSON.stringify(proposal.draftJson),
+      };
       confirmation.current = null;
 
       // Default select all items
       const ids = new Set<string>();
-      if (proposal.draftJson.type === "CREATE_TASKS" && proposal.draftJson.items) {
+      if (
+        proposal.draftJson.type === "CREATE_TASKS" &&
+        proposal.draftJson.items
+      ) {
         proposal.draftJson.items.forEach((item: any) => ids.add(item.itemId));
-      } else if (proposal.draftJson.type === "MEETING_ANALYSIS") {
-        if (proposal.draftJson.decisions) {
-          proposal.draftJson.decisions.forEach((d: any) => ids.add(d.itemId));
-        }
-        if (proposal.draftJson.requirements) {
-          proposal.draftJson.requirements.forEach((r: any) => ids.add(r.itemId));
-        }
-        if (proposal.draftJson.actionItems) {
-          proposal.draftJson.actionItems.forEach((a: any) => ids.add(a.itemId));
-        }
       }
       setSelectedIds(ids);
     }
@@ -105,10 +97,6 @@ export function ProposalReviewDialog({
     const ids = new Set<string>();
     if (draft.type === "CREATE_TASKS" && draft.items) {
       draft.items.forEach((item: any) => ids.add(item.itemId));
-    } else if (draft.type === "MEETING_ANALYSIS") {
-      draft.decisions?.forEach((d: any) => ids.add(d.itemId));
-      draft.requirements?.forEach((r: any) => ids.add(r.itemId));
-      draft.actionItems?.forEach((a: any) => ids.add(a.itemId));
     }
     setSelectedIds(ids);
   };
@@ -117,30 +105,25 @@ export function ProposalReviewDialog({
     setSelectedIds(new Set());
   };
 
-  const handleUpdateItem = (type: string, itemId: string, field: string, value: any) => {
+  const handleUpdateItem = (
+    type: string,
+    itemId: string,
+    field: string,
+    value: any,
+  ) => {
     const updated = { ...draft };
     if (type === "task" && updated.items) {
       const idx = updated.items.findIndex((i: any) => i.itemId === itemId);
       if (idx >= 0) updated.items[idx][field] = value;
-    } else if (type === "decision" && updated.decisions) {
-      const idx = updated.decisions.findIndex((i: any) => i.itemId === itemId);
-      if (idx >= 0) updated.decisions[idx][field] = value;
-    } else if (type === "requirement" && updated.requirements) {
-      const idx = updated.requirements.findIndex((i: any) => i.itemId === itemId);
-      if (idx >= 0) updated.requirements[idx][field] = value;
-    } else if (type === "actionItem" && updated.actionItems) {
-      const idx = updated.actionItems.findIndex((i: any) => i.itemId === itemId);
-      if (idx >= 0) updated.actionItems[idx][field] = value;
     }
     setDraft(updated);
   };
 
   const handleConfirm = async () => {
-    if (selectedIds.size === 0 && !(draft.type === "MEETING_ANALYSIS" && includeSummary)) {
-      setErrorMsg("Please select at least one item or include summary to confirm.");
+    if (selectedIds.size === 0) {
+      setErrorMsg("Please select at least one task to confirm.");
       return;
     }
-
     setSubmitting(true);
     setErrorMsg(null);
     try {
@@ -152,23 +135,33 @@ export function ProposalReviewDialog({
           draftJson: draft,
         });
         currentVersion = updated.version;
-        savedDraft.current = { version: updated.version, json: JSON.stringify(draft) };
+        savedDraft.current = {
+          version: updated.version,
+          json: JSON.stringify(draft),
+        };
       }
 
       // Confirm with current version
       const payload = {
         version: currentVersion,
         selectedItemIds: Array.from(selectedIds),
-        includeSummary: draft.type === "MEETING_ANALYSIS" && includeSummary,
       };
       const encoded = JSON.stringify(payload);
       if (confirmation.current?.payload !== encoded) {
         confirmation.current = { payload: encoded, key: crypto.randomUUID() };
       }
-      const res = await api.ai.confirmProposal(projectId, proposal.id, payload, confirmation.current.key);
+      const res = await api.ai.confirmProposal(
+        projectId,
+        proposal.id,
+        payload,
+        confirmation.current.key,
+      );
 
       setConfirmedResults(res.resultRecordIds);
-      showToast("AI proposal successfully confirmed! Records created.", "success");
+      showToast(
+        "AI proposal successfully confirmed! Records created.",
+        "success",
+      );
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to confirm proposal");
@@ -199,7 +192,6 @@ export function ProposalReviewDialog({
     proposal.proposalType === "TASK_PROPOSAL" &&
     proposal.sourceEntityType === "DECISION";
   const isTaskProposal = proposal.proposalType === "TASK_PROPOSAL";
-  const isMeetingAnalysis = proposal.proposalType === "MEETING_ANALYSIS";
 
   const handleClose = () => {
     if (confirmedResults) {
@@ -223,14 +215,20 @@ export function ProposalReviewDialog({
                   {isDecisionTaskProposal
                     ? "Architectural Decision Task Proposals"
                     : isTaskProposal
-                    ? "Review Task Proposals"
-                    : "Review Meeting Analysis"}
+                      ? "Review Task Proposals"
+                      : "Review Meeting Analysis"}
                 </h3>
-                <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 font-mono">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 font-mono"
+                >
                   {proposal.status}
                 </Badge>
                 {isDecisionTaskProposal && (
-                  <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-medium">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-medium"
+                  >
                     ADR Source
                   </Badge>
                 )}
@@ -238,9 +236,7 @@ export function ProposalReviewDialog({
               <p className="text-xs text-slate-500 mt-1">
                 {isDecisionTaskProposal
                   ? "AI has broken down this architectural decision into actionable development tasks. Review, assign team members, and confirm to persist on the board."
-                  : isTaskProposal
-                  ? "AI has generated structured proposals. Select, review, and confirm items to create records."
-                  : "AI has analyzed the meeting transcript. Select, review, and confirm items to create records."}
+                  : "Select, review, and confirm tasks to add them to the board."}
               </p>
             </div>
           </div>
@@ -266,7 +262,10 @@ export function ProposalReviewDialog({
             <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-emerald-900 space-y-3.5 shadow-xs">
               <div className="flex items-center gap-2 text-sm font-bold font-serif text-emerald-800">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <span>Successfully created {confirmedResults.length} records in project!</span>
+                <span>
+                  Successfully created {confirmedResults.length} records in
+                  project!
+                </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
                 {confirmedResults.map((rec: any, idx: number) => (
@@ -274,7 +273,9 @@ export function ProposalReviewDialog({
                     key={idx}
                     className="p-3 rounded-xl bg-white border border-emerald-200/80 shadow-2xs flex items-center justify-between text-xs"
                   >
-                    <span className="text-slate-500 font-medium">{rec.entityType}:</span>
+                    <span className="text-slate-500 font-medium">
+                      {rec.entityType}:
+                    </span>
                     <span className="font-mono font-bold text-slate-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                       {rec.key || rec.id}
                     </span>
@@ -291,7 +292,10 @@ export function ProposalReviewDialog({
                   Done
                 </Button>
                 <Link href="/tasks" onClick={handleClose}>
-                  <Button size="sm" className="bg-codex-accent hover:bg-codex-hover text-white text-xs gap-1 shadow-xs">
+                  <Button
+                    size="sm"
+                    className="bg-codex-accent hover:bg-codex-hover text-white text-xs gap-1 shadow-xs"
+                  >
                     <span>View on Kanban Board</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </Button>
@@ -302,17 +306,42 @@ export function ProposalReviewDialog({
             <>
               {isTaskProposal && (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 space-y-2">
-                  <p>No tasks are saved until you confirm. Source: {proposal.sourceEntityType.toLowerCase()} revision {proposal.sourceRevision}.</p>
+                  <p>
+                    No tasks are saved until you confirm. Source:{" "}
+                    {proposal.sourceEntityType.toLowerCase()} revision{" "}
+                    {proposal.sourceRevision}.
+                  </p>
                   <p className="font-semibold">Supporting document sources</p>
-                  {draft.sourceReferences?.length ? draft.sourceReferences.map((source: { chunkId: string; title: string; revision: number; locator: string }) => (
-                    <p key={source.chunkId}>{source.title} · revision {source.revision} · {source.locator}</p>
-                  )) : <p>No supporting document sources were retrieved for this draft.</p>}
+                  {draft.sourceReferences?.length ? (
+                    draft.sourceReferences.map(
+                      (source: {
+                        chunkId: string;
+                        title: string;
+                        revision: number;
+                        locator: string;
+                      }) => (
+                        <p key={source.chunkId}>
+                          {source.title} · revision {source.revision} ·{" "}
+                          {source.locator}
+                        </p>
+                      ),
+                    )
+                  ) : (
+                    <p>
+                      No supporting document sources were retrieved for this
+                      draft.
+                    </p>
+                  )}
                 </div>
               )}
               {/* Batch Actions */}
               <div className="flex items-center justify-between text-xs text-slate-500 pb-2.5 border-b border-slate-100">
                 <span>
-                  Selected: <strong className="text-codex-accent font-semibold">{selectedIds.size}</strong> of {draft.items?.length || (draft.decisions?.length || 0) + (draft.requirements?.length || 0) + (draft.actionItems?.length || 0)} items
+                  Selected:{" "}
+                  <strong className="text-codex-accent font-semibold">
+                    {selectedIds.size}
+                  </strong>{" "}
+                  of {draft.items?.length || 0} items
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -358,7 +387,12 @@ export function ProposalReviewDialog({
                             <Input
                               value={item.title}
                               onChange={(e) =>
-                                handleUpdateItem("task", item.itemId, "title", e.target.value)
+                                handleUpdateItem(
+                                  "task",
+                                  item.itemId,
+                                  "title",
+                                  e.target.value,
+                                )
                               }
                               className="h-8 text-xs font-semibold bg-white border-slate-200 text-slate-900 focus:ring-1 focus:ring-codex-accent"
                               placeholder="Task title"
@@ -367,7 +401,12 @@ export function ProposalReviewDialog({
                               rows={2}
                               value={item.description || ""}
                               onChange={(e) =>
-                                handleUpdateItem("task", item.itemId, "description", e.target.value)
+                                handleUpdateItem(
+                                  "task",
+                                  item.itemId,
+                                  "description",
+                                  e.target.value,
+                                )
                               }
                               className="w-full text-xs p-2.5 rounded-lg bg-slate-50/50 border border-slate-200 text-slate-700 focus:outline-none focus:bg-white focus:ring-1 focus:ring-codex-accent transition-colors"
                               placeholder="Task description"
@@ -376,7 +415,12 @@ export function ProposalReviewDialog({
                               <select
                                 value={item.priority}
                                 onChange={(e) =>
-                                  handleUpdateItem("task", item.itemId, "priority", e.target.value)
+                                  handleUpdateItem(
+                                    "task",
+                                    item.itemId,
+                                    "priority",
+                                    e.target.value,
+                                  )
                                 }
                                 className="h-7.5 rounded-lg bg-white border border-slate-200 px-2.5 text-[11px] text-slate-800 shadow-2xs focus:outline-none focus:ring-1 focus:ring-codex-accent cursor-pointer"
                               >
@@ -389,25 +433,41 @@ export function ProposalReviewDialog({
                                 type="date"
                                 value={item.dueDate || ""}
                                 onChange={(e) =>
-                                  handleUpdateItem("task", item.itemId, "dueDate", e.target.value)
+                                  handleUpdateItem(
+                                    "task",
+                                    item.itemId,
+                                    "dueDate",
+                                    e.target.value,
+                                  )
                                 }
                                 className="h-7.5 w-36 text-[11px] bg-white border-slate-200 text-slate-800 shadow-2xs"
                               />
                               <select
                                 value={item.assigneeId || ""}
                                 onChange={(e) =>
-                                  handleUpdateItem("task", item.itemId, "assigneeId", e.target.value || null)
+                                  handleUpdateItem(
+                                    "task",
+                                    item.itemId,
+                                    "assigneeId",
+                                    e.target.value || null,
+                                  )
                                 }
                                 className="h-7.5 rounded-lg bg-white border border-slate-200 px-2.5 text-[11px] text-slate-800 shadow-2xs max-w-[210px] focus:outline-none focus:ring-1 focus:ring-codex-accent cursor-pointer"
                                 title="Assign to team member"
                               >
                                 <option value="">Assignee: Unassigned</option>
                                 {members.map((m: any) => {
-                                  const name = m.user?.displayName || m.user?.email || m.userId;
-                                  const role = m.user?.professionalRole ? ` (${m.user.professionalRole})` : "";
+                                  const name =
+                                    m.user?.displayName ||
+                                    m.user?.email ||
+                                    m.userId;
+                                  const role = m.user?.professionalRole
+                                    ? ` (${m.user.professionalRole})`
+                                    : "";
                                   return (
                                     <option key={m.userId} value={m.userId}>
-                                      Assign to: {name}{role}
+                                      Assign to: {name}
+                                      {role}
                                     </option>
                                   );
                                 })}
@@ -422,176 +482,6 @@ export function ProposalReviewDialog({
               )}
 
               {/* Meeting Analysis Display */}
-              {isMeetingAnalysis && (
-                <div className="space-y-5">
-                  {/* Summary Section */}
-                  {draft.summary && (
-                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-900 font-serif flex items-center gap-2">
-                          <FileCheck2 className="w-4 h-4 text-codex-accent" />
-                          <span>Meeting Executive Summary</span>
-                        </label>
-                        <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={includeSummary}
-                            onChange={(e) => setIncludeSummary(e.target.checked)}
-                            className="h-3.5 w-3.5 rounded border-slate-300 text-codex-accent"
-                          />
-                          <span>Save to Meeting</span>
-                        </label>
-                      </div>
-                      <textarea
-                        rows={3}
-                        value={draft.summary}
-                        onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
-                        className="w-full text-xs p-2.5 rounded-lg bg-white border border-slate-200 text-slate-800 focus:outline-none focus:ring-1 focus:ring-codex-accent"
-                      />
-                    </div>
-                  )}
-
-                  {/* Decisions Section */}
-                  {draft.decisions && draft.decisions.length > 0 && (
-                    <div className="space-y-2.5">
-                      <h4 className="text-xs font-bold text-slate-800 font-serif flex items-center gap-2">
-                        <Layers className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Identified Decisions ({draft.decisions.length})</span>
-                      </h4>
-                      {draft.decisions.map((d: any) => {
-                        const isSelected = selectedIds.has(d.itemId);
-                        return (
-                          <div
-                            key={d.itemId}
-                            className={`p-3.5 rounded-xl border transition-all ${
-                              isSelected
-                                ? "bg-white border-amber-200/90 shadow-2xs ring-1 ring-amber-50"
-                                : "bg-slate-50/60 border-slate-200 opacity-60"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2.5">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleSelect(d.itemId)}
-                                className="mt-1 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
-                              />
-                              <div className="flex-1 space-y-2">
-                                <Input
-                                  value={d.title}
-                                  onChange={(e) =>
-                                    handleUpdateItem("decision", d.itemId, "title", e.target.value)
-                                  }
-                                  className="h-7.5 text-xs font-semibold bg-white border-slate-200 text-slate-900"
-                                />
-                                <textarea
-                                  rows={2}
-                                  value={d.decisionText}
-                                  onChange={(e) =>
-                                    handleUpdateItem("decision", d.itemId, "decisionText", e.target.value)
-                                  }
-                                  className="w-full text-xs p-2 rounded-lg bg-slate-50/50 border border-slate-200 text-slate-700 focus:outline-none focus:bg-white focus:ring-1 focus:ring-amber-500"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Requirements Section */}
-                  {draft.requirements && draft.requirements.length > 0 && (
-                    <div className="space-y-2.5">
-                      <h4 className="text-xs font-bold text-slate-800 font-serif flex items-center gap-2">
-                        <FileCheck2 className="w-3.5 h-3.5 text-codex-accent" />
-                        <span>Identified Requirements ({draft.requirements.length})</span>
-                      </h4>
-                      {draft.requirements.map((r: any) => {
-                        const isSelected = selectedIds.has(r.itemId);
-                        return (
-                          <div
-                            key={r.itemId}
-                            className={`p-3.5 rounded-xl border transition-all ${
-                              isSelected
-                                ? "bg-white border-blue-200/90 shadow-2xs ring-1 ring-blue-50"
-                                : "bg-slate-50/60 border-slate-200 opacity-60"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2.5">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleSelect(r.itemId)}
-                                className="mt-1 h-4 w-4 rounded border-slate-300 text-codex-accent focus:ring-blue-500 cursor-pointer"
-                              />
-                              <div className="flex-1 space-y-2">
-                                <Input
-                                  value={r.title}
-                                  onChange={(e) =>
-                                    handleUpdateItem("requirement", r.itemId, "title", e.target.value)
-                                  }
-                                  className="h-7.5 text-xs font-semibold bg-white border-slate-200 text-slate-900"
-                                />
-                                <textarea
-                                  rows={2}
-                                  value={r.acceptanceCriteria || ""}
-                                  onChange={(e) =>
-                                    handleUpdateItem("requirement", r.itemId, "acceptanceCriteria", e.target.value)
-                                  }
-                                  placeholder="Acceptance Criteria"
-                                  className="w-full text-xs p-2 rounded-lg bg-slate-50/50 border border-slate-200 text-slate-700 focus:outline-none focus:bg-white focus:ring-1 focus:ring-codex-accent"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Action Items Section */}
-                  {draft.actionItems && draft.actionItems.length > 0 && (
-                    <div className="space-y-2.5">
-                      <h4 className="text-xs font-bold text-slate-800 font-serif flex items-center gap-2">
-                        <ListTodo className="w-3.5 h-3.5 text-codex-accent" />
-                        <span>Action Items / Tasks ({draft.actionItems.length})</span>
-                      </h4>
-                      {draft.actionItems.map((a: any) => {
-                        const isSelected = selectedIds.has(a.itemId);
-                        return (
-                          <div
-                            key={a.itemId}
-                            className={`p-3.5 rounded-xl border transition-all ${
-                              isSelected
-                                ? "bg-white border-blue-200/90 shadow-2xs ring-1 ring-blue-50"
-                                : "bg-slate-50/60 border-slate-200 opacity-60"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2.5">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleSelect(a.itemId)}
-                                className="mt-1 h-4 w-4 rounded border-slate-300 text-codex-accent focus:ring-blue-500 cursor-pointer"
-                              />
-                              <div className="flex-1 space-y-2">
-                                <Input
-                                  value={a.title}
-                                  onChange={(e) =>
-                                    handleUpdateItem("actionItem", a.itemId, "title", e.target.value)
-                                  }
-                                  className="h-7.5 text-xs font-semibold bg-white border-slate-200 text-slate-900"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
             </>
           )}
         </div>

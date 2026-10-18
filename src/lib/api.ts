@@ -336,17 +336,6 @@ export const api = {
       ),
   },
 
-  dashboard: {
-    get: async (projectId: string, timezone = "Asia/Bangkok") =>
-      apiRequest<any>(
-        `/projects/${projectId}/dashboard?timezone=${encodeURIComponent(timezone)}`,
-      ),
-    getActivity: async (projectId: string, page = 1, pageSize = 20) =>
-      apiEnvelopeRequest<any[]>(
-        `/projects/${projectId}/activity?page=${page}&pageSize=${pageSize}`,
-      ),
-  },
-
   search: {
     query: async (
       projectId: string,
@@ -364,76 +353,6 @@ export const api = {
     },
   },
 
-  requirements: {
-    list: async (projectId: string, status?: string) => {
-      let url = `/projects/${projectId}/requirements`;
-      if (status) url += `?status=${encodeURIComponent(status)}`;
-      return apiRequest<any[]>(url);
-    },
-    listAll: async (params?: {
-      projectId?: string;
-      status?: string;
-      priority?: string;
-      search?: string;
-      page?: number;
-      pageSize?: number;
-    }) => {
-      const q = new URLSearchParams();
-      if (params?.projectId && params.projectId !== "ALL")
-        q.append("projectId", params.projectId);
-      if (params?.status && params.status !== "ALL")
-        q.append("status", params.status);
-      if (params?.priority && params.priority !== "ALL")
-        q.append("priority", params.priority);
-      if (params?.search) q.append("search", params.search);
-      if (params?.page) q.append("page", String(params.page));
-      if (params?.pageSize) q.append("pageSize", String(params.pageSize));
-      const qs = q.toString() ? `?${q.toString()}` : "";
-      return apiEnvelopeRequest<any[]>(`/requirements${qs}`);
-    },
-    create: async (
-      projectId: string,
-      data: {
-        title: string;
-        description?: string;
-        acceptanceCriteria?: string;
-        priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-      },
-    ) =>
-      apiRequest<any>(`/projects/${projectId}/requirements`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    update: async (
-      projectId: string,
-      requirementId: string,
-      data: {
-        version: number;
-        title?: string;
-        description?: string;
-        acceptanceCriteria?: string;
-        status?: string;
-        priority?: string;
-      },
-    ) =>
-      apiRequest<any>(`/projects/${projectId}/requirements/${requirementId}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
-    listRevisions: async (projectId: string, requirementId: string) =>
-      apiRequest<any[]>(
-        `/projects/${projectId}/requirements/${requirementId}/revisions`,
-      ),
-    listTasks: async (projectId: string, requirementId: string) =>
-      apiRequest<any[]>(
-        `/projects/${projectId}/requirements/${requirementId}/tasks`,
-      ),
-    delete: async (projectId: string, requirementId: string) =>
-      apiRequest<any>(`/projects/${projectId}/requirements/${requirementId}`, {
-        method: "DELETE",
-      }),
-  },
-
   decisions: {
     list: async (projectId: string, status?: string) => {
       let url = `/projects/${projectId}/decisions`;
@@ -446,7 +365,6 @@ export const api = {
         title: string;
         decisionText: string;
         rationale?: string;
-        requirementId?: string;
         supersedesDecisionId?: string;
       },
     ) =>
@@ -517,9 +435,7 @@ export const api = {
         priority?: string;
         assigneeId?: string;
         blockedReason?: string;
-        dueDate?: string; // YYYY-MM-DD
-        requirementId?: string;
-        sourceMeetingId?: string;
+        dueDate?: string;
       },
     ) =>
       apiRequest<any>(`/projects/${projectId}/tasks`, {
@@ -546,49 +462,6 @@ export const api = {
       }),
     delete: async (projectId: string, taskId: string) =>
       apiRequestRaw(`/projects/${projectId}/tasks/${taskId}`, {
-        method: "DELETE",
-      }),
-  },
-
-  meetings: {
-    list: async (projectId: string) =>
-      apiRequest<any[]>(`/projects/${projectId}/meetings`),
-    create: async (
-      projectId: string,
-      data: {
-        title: string;
-        startsAt: string; // ISO 8601
-        endsAt: string; // ISO 8601
-        agenda?: string;
-        notes?: string;
-        transcriptText?: string;
-        attendeeUserIds?: string[];
-      },
-    ) =>
-      apiRequest<any>(`/projects/${projectId}/meetings`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      }),
-    update: async (
-      projectId: string,
-      meetingId: string,
-      data: {
-        version?: number;
-        title?: string;
-        startsAt?: string;
-        endsAt?: string;
-        agenda?: string;
-        notes?: string;
-        transcriptText?: string;
-        attendeeUserIds?: string[];
-      },
-    ) =>
-      apiRequest<any>(`/projects/${projectId}/meetings/${meetingId}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      }),
-    delete: async (projectId: string, meetingId: string) =>
-      apiRequestRaw(`/projects/${projectId}/meetings/${meetingId}`, {
         method: "DELETE",
       }),
   },
@@ -761,26 +634,12 @@ export const api = {
           body: JSON.stringify(data),
         },
       ),
-    generateTaskProposal: async (projectId: string, requirementId: string) =>
-      apiRequest<any>(
-        `/projects/${projectId}/ai/requirements/${requirementId}/task-proposals`,
-        {
-          method: "POST",
-        },
-      ),
     generateDecisionTaskProposal: async (
       projectId: string,
       decisionId: string,
     ) =>
       apiRequest<{ proposal: any }>(
         `/projects/${projectId}/ai/decisions/${decisionId}/task-proposals`,
-        {
-          method: "POST",
-        },
-      ),
-    generateMeetingAnalysis: async (projectId: string, meetingId: string) =>
-      apiRequest<any>(
-        `/projects/${projectId}/ai/meetings/${meetingId}/analysis-proposals`,
         {
           method: "POST",
         },
@@ -815,7 +674,6 @@ export const api = {
       data: {
         version: number;
         selectedItemIds?: string[];
-        includeSummary?: boolean;
       },
       idempotencyKey?: string,
     ) => {

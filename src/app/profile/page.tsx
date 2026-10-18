@@ -201,7 +201,7 @@ export default function ProfilePage() {
       <div className="space-y-6 max-w-6xl mx-auto pb-12">
         {/* Breadcrumb matching Team and Projects pages */}
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
-          <Link href="/dashboard" className="text-[#2563eb] hover:underline font-medium">
+          <Link href="/assistant" className="text-[#2563eb] hover:underline font-medium">
             Dashboard
           </Link>
           <span>/</span>
@@ -525,7 +525,7 @@ export default function ProfilePage() {
                   Workspace Memberships ({projects.length})
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Projects you are a member of with access to requirements, tasks, and files.
+                  Projects you are a member of with access to decisions, tasks, and files.
                 </p>
               </div>
 

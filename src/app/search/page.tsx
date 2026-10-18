@@ -6,19 +6,7 @@ import { api } from "@/lib/api";
 import { searchAcrossProjects, mergeSearchResults } from "@/lib/global-search";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Search as SearchIcon,
-  FileText,
-  FileCheck2,
-  GitPullRequest,
-  CheckSquare,
-  Calendar,
-  ExternalLink,
-  X,
-  Sparkles,
-  Cpu,
-  Code2,
-} from "lucide-react";
+import { Search as SearchIcon, FileText, GitPullRequest, CheckSquare, ExternalLink, X, Sparkles, Cpu, Code2 } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 
@@ -35,10 +23,8 @@ function GithubIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
 }
 
 const TYPE_ICONS: Record<string, any> = {
-  REQUIREMENT: FileCheck2,
   DECISION: GitPullRequest,
   TASK: CheckSquare,
-  MEETING: Calendar,
   DOCUMENT: FileText,
   GITHUB_ISSUE: GithubIcon,
   GITHUB_PR: GitPullRequest,
@@ -46,10 +32,8 @@ const TYPE_ICONS: Record<string, any> = {
 };
 
 const TYPE_LINKS: Record<string, string> = {
-  REQUIREMENT: "/requirements",
   DECISION: "/decisions",
   TASK: "/tasks",
-  MEETING: "/meetings",
   DOCUMENT: "/documents",
   GITHUB_ISSUE: "/integrations",
   GITHUB_PR: "/integrations",
@@ -57,10 +41,8 @@ const TYPE_LINKS: Record<string, string> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  REQUIREMENT: "bg-blue-50 text-blue-700 border border-blue-200",
   DECISION: "bg-purple-50 text-purple-700 border border-purple-200",
   TASK: "bg-[#E8F5E9] text-[#2D8A60] border border-green-200",
-  MEETING: "bg-cyan-50 text-cyan-700 border border-cyan-200",
   DOCUMENT: "bg-amber-50 text-amber-700 border border-amber-200",
   GITHUB_ISSUE: "bg-slate-900 text-white border border-slate-700",
   GITHUB_PR: "bg-emerald-50 text-emerald-800 border border-emerald-200",
@@ -205,10 +187,8 @@ export default function SearchPage() {
 
   const counts = meta?.countsByType || {};
   const totalCount =
-    (counts.REQUIREMENT || 0) +
     (counts.DECISION || 0) +
     (counts.TASK || 0) +
-    (counts.MEETING || 0) +
     (counts.DOCUMENT || 0) +
     (counts.GITHUB_ISSUE || 0) +
     (counts.GITHUB_PR || 0) +
@@ -337,16 +317,7 @@ export default function SearchPage() {
             >
               All Results ({totalCount || results.length})
             </button>
-            <button
-              onClick={() => handleTypeChange("REQUIREMENT")}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                selectedType === "REQUIREMENT"
-                  ? "bg-[#161927] text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Requirements ({counts.REQUIREMENT || 0})
-            </button>
+
             <button
               onClick={() => handleTypeChange("TASK")}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
@@ -367,16 +338,7 @@ export default function SearchPage() {
             >
               Decisions ({counts.DECISION || 0})
             </button>
-            <button
-              onClick={() => handleTypeChange("MEETING")}
-              className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                selectedType === "MEETING"
-                  ? "bg-[#161927] text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Meetings ({counts.MEETING || 0})
-            </button>
+
             <button
               onClick={() => handleTypeChange("DOCUMENT")}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
@@ -462,7 +424,7 @@ export default function SearchPage() {
             </div>
             {results.map((item, idx) => {
               const Icon = TYPE_ICONS[item.type] || FileText;
-              const baseLink = TYPE_LINKS[item.type] || "/dashboard";
+              const baseLink = TYPE_LINKS[item.type] || "/assistant";
               const searchParam = item.key || item.title;
               const externalUrl =
                 item.type === "GITHUB_ISSUE" && item.metadata?.htmlUrl

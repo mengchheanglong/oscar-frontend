@@ -43,9 +43,9 @@ interface McpConsoleProps {
 }
 
 const capabilities = [
-  { icon: CheckSquare, title: "Tasks & requirements", description: "Plan work and keep progress in sync." },
+  { icon: CheckSquare, title: "Tasks", description: "Plan work and keep progress in sync." },
   { icon: FileText, title: "Documents & search", description: "Find answers in your project knowledge." },
-  { icon: GitBranch, title: "Decisions & meetings", description: "Bring project context into your editor." },
+  { icon: GitBranch, title: "Decisions", description: "Bring project context into your editor." },
   { icon: Sparkles, title: "AI proposals", description: "Generate drafts to review and confirm." },
 ];
 

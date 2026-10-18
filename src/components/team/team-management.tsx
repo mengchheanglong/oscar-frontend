@@ -352,7 +352,7 @@ export function TeamManagement({
         <div>
           {!inSettings && (
             <div className="flex items-center gap-1.5 text-xs text-[var(--ws-muted)] mb-1">
-              <Link href="/dashboard" className="text-blue-400 hover:underline">
+              <Link href="/assistant" className="text-blue-400 hover:underline">
                 Dashboard
               </Link>
               <span>/</span>

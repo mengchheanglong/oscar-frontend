@@ -564,12 +564,10 @@ export function IntegrationsConsole() {
 3. Full Platform Capabilities (32 MCP Tools plus Resources):
    - Tasks & Kanban: list_tasks, get_task, create_task, update_task_status (real-time board sync)
    - Architecture ADRs: list_decisions, get_decision, propose_decision
-   - Requirements: list_requirements, get_requirement, create_requirement, update_requirement_status
-   - Meetings & Transcripts: list_meetings, get_meeting, create_meeting
    - Documents & RAG: list_documents, get_document, search_workspace (keyword, semantic, hybrid)
    - GitHub VCS: get_github_integration, list_github_issues
    - Workspace Health: get_dashboard, get_activity_stream, list_projects, get_project, list_project_members
-   - Reviewed AI Actions: generate_task_proposal, generate_decision_task_proposal, generate_meeting_analysis, list_ai_proposals, get_ai_proposal, update_ai_proposal, confirm_ai_proposal, reject_ai_proposal
+   - Reviewed AI Actions: generate_decision_task_proposal, list_ai_proposals, get_ai_proposal, update_ai_proposal, confirm_ai_proposal, reject_ai_proposal
 4. Workflow Rules:
    - Consult accepted architecture decisions (\`list_decisions\`) before making design changes.
    - AI generation saves drafts only. Review/edit with get_ai_proposal and update_ai_proposal, then confirm only user-authorized selected items using the current version and a stable idempotency key. Reuse that key when retrying. Reject unwanted drafts.
