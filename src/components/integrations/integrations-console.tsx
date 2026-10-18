@@ -111,6 +111,10 @@ type CategoryFilter = "all" | "ai" | "vcs";
 export function IntegrationsConsole() {
   const { currentProject } = useAuth();
   const syncRequest = useRef<AbortController | null>(null);
+  const connectionRequestId = useRef(0);
+  const connectionRequestController = useRef<AbortController | null>(null);
+  const issuesRequestId = useRef(0);
+  const pullRequestsRequestId = useRef(0);
   useEffect(() => () => syncRequest.current?.abort(), [currentProject?.id]);
   const { showToast } = useToast();
 
@@ -146,9 +150,12 @@ export function IntegrationsConsole() {
     string | null
   >(null);
   const [loadingConnection, setLoadingConnection] = useState(false);
-  const [connectionsProjectId, setConnectionsProjectId] = useState<string | null>(
+  const [connectionLoadError, setConnectionLoadError] = useState<string | null>(
     null,
   );
+  const [connectionsProjectId, setConnectionsProjectId] = useState<
+    string | null
+  >(null);
   const [issues, setIssues] = useState<any[]>([]);
   const [totalIssues, setTotalIssues] = useState(0);
   const [loadingIssues, setLoadingIssues] = useState(false);
@@ -197,17 +204,47 @@ export function IntegrationsConsole() {
   const [revokingKey, setRevokingKey] = useState(false);
   const [copiedToken, setCopiedToken] = useState(false);
 
-  // Active Connection for multi-repo
+  // Do not show a repository from the previously selected project while the
+  // current project's connections are still loading.
+  const projectConnections =
+    currentProject && connectionsProjectId === currentProject.id
+      ? connections
+      : [];
   const activeConnection =
-    connections.find((c) => c.id === selectedConnectionId) ||
-    connections[0] ||
+    projectConnections.find((c) => c.id === selectedConnectionId) ||
+    projectConnections[0] ||
     null;
   const isLoadingConnection =
     !!currentProject &&
     (loadingConnection || connectionsProjectId !== currentProject.id);
 
+  // Clear project-scoped GitHub data immediately when the selected project changes.
+  useEffect(() => {
+    issuesRequestId.current += 1;
+    pullRequestsRequestId.current += 1;
+    fileLoadRequest.current += 1;
+    setConnections([]);
+    setSelectedConnectionId(null);
+    setConnectionsProjectId(null);
+    setConnectionLoadError(null);
+    setIssues([]);
+    setTotalIssues(0);
+    setLoadingIssues(false);
+    setPullRequests([]);
+    setTotalPrs(0);
+    setLoadingPrs(false);
+    setRepoFiles([]);
+    setTotalFiles(0);
+    setLoadingFiles(false);
+    setGithubLoadErrors({});
+  }, [currentProject?.id]);
+
   // Load GitHub connections
   const loadConnections = useCallback(async () => {
+    const requestId = ++connectionRequestId.current;
+    connectionRequestController.current?.abort();
+    connectionRequestController.current = null;
+
     if (!currentProject) {
       setConnections([]);
       setSelectedConnectionId(null);
@@ -219,42 +256,69 @@ export function IntegrationsConsole() {
       setTotalFiles(0);
       setGithubLoadErrors({});
       setConnectionsProjectId(null);
+      setConnectionLoadError(null);
       setLoadingConnection(false);
       return;
     }
+
+    const projectId = currentProject.id;
+    const controller = new AbortController();
+    connectionRequestController.current = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
     setLoadingConnection(true);
+    setConnectionLoadError(null);
     try {
       const list = await api.integrations.github.listConnections(
-        currentProject.id,
+        projectId,
+        controller.signal,
       );
+      if (requestId !== connectionRequestId.current) return;
       const conns = Array.isArray(list)
         ? list.filter((connection) => connection.status !== "DISCONNECTED")
         : [];
       setConnections(conns);
       if (conns.length > 0) {
-        if (
-          !selectedConnectionId ||
-          !conns.some((c) => c.id === selectedConnectionId)
-        ) {
-          setSelectedConnectionId(conns[0].id);
-        }
+        setSelectedConnectionId((selectedId) =>
+          selectedId && conns.some((connection) => connection.id === selectedId)
+            ? selectedId
+            : conns[0].id,
+        );
       } else {
         setSelectedConnectionId(null);
         setIssues([]);
+        setTotalIssues(0);
         setPullRequests([]);
+        setTotalPrs(0);
         setRepoFiles([]);
+        setTotalFiles(0);
       }
     } catch (err: any) {
-      console.error("Failed to load GitHub connections:", err);
+      if (requestId === connectionRequestId.current) {
+        setConnections([]);
+        setSelectedConnectionId(null);
+        setConnectionLoadError(
+          err?.name === "AbortError"
+            ? "Loading repositories took too long. Check your connection and try again."
+            : "Could not load repositories. Check your connection and try again.",
+        );
+        if (err?.name !== "AbortError") {
+          console.error("Failed to load GitHub connections:", err);
+        }
+      }
     } finally {
-      setConnectionsProjectId(currentProject.id);
-      setLoadingConnection(false);
+      window.clearTimeout(timeout);
+      if (requestId === connectionRequestId.current) {
+        setConnectionsProjectId(projectId);
+        setLoadingConnection(false);
+        connectionRequestController.current = null;
+      }
     }
-  }, [currentProject, selectedConnectionId]);
+  }, [currentProject]);
 
   const loadIssues = useCallback(
     async (connId?: string) => {
       if (!currentProject) return;
+      const requestId = ++issuesRequestId.current;
       setLoadingIssues(true);
       setGithubLoadErrors((previous) => ({ ...previous, issues: undefined }));
       try {
@@ -267,16 +331,19 @@ export function IntegrationsConsole() {
             limit: 50,
           },
         );
+        if (requestId !== issuesRequestId.current) return;
         setIssues(res.items || []);
         setTotalIssues(res.total ?? res.items?.length ?? 0);
       } catch (err: any) {
-        setGithubLoadErrors((previous) => ({
-          ...previous,
-          issues: err.message || "Please try again.",
-        }));
-        console.error("Failed to load issues:", err);
+        if (requestId === issuesRequestId.current) {
+          setGithubLoadErrors((previous) => ({
+            ...previous,
+            issues: err.message || "Please try again.",
+          }));
+          console.error("Failed to load issues:", err);
+        }
       } finally {
-        setLoadingIssues(false);
+        if (requestId === issuesRequestId.current) setLoadingIssues(false);
       }
     },
     [currentProject, selectedState, issueSearchQuery],
@@ -285,6 +352,7 @@ export function IntegrationsConsole() {
   const loadPullRequests = useCallback(
     async (connId?: string) => {
       if (!currentProject) return;
+      const requestId = ++pullRequestsRequestId.current;
       setLoadingPrs(true);
       setGithubLoadErrors((previous) => ({ ...previous, pulls: undefined }));
       try {
@@ -297,16 +365,19 @@ export function IntegrationsConsole() {
             limit: 50,
           },
         );
+        if (requestId !== pullRequestsRequestId.current) return;
         setPullRequests(res.items || []);
         setTotalPrs(res.total ?? res.items?.length ?? 0);
       } catch (err: any) {
-        setGithubLoadErrors((previous) => ({
-          ...previous,
-          pulls: err.message || "Please try again.",
-        }));
-        console.error("Failed to load PRs:", err);
+        if (requestId === pullRequestsRequestId.current) {
+          setGithubLoadErrors((previous) => ({
+            ...previous,
+            pulls: err.message || "Please try again.",
+          }));
+          console.error("Failed to load PRs:", err);
+        }
       } finally {
-        setLoadingPrs(false);
+        if (requestId === pullRequestsRequestId.current) setLoadingPrs(false);
       }
     },
     [currentProject, prState, prSearchQuery],
@@ -371,6 +442,14 @@ export function IntegrationsConsole() {
     loadConnections();
     loadApiKeys();
   }, [loadConnections, loadApiKeys]);
+
+  useEffect(
+    () => () => {
+      connectionRequestId.current += 1;
+      connectionRequestController.current?.abort();
+    },
+    [],
+  );
 
   const activeRepositoryId =
     activeConnection?.status === "CONNECTED" ? activeConnection.id : undefined;
@@ -1068,9 +1147,11 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
         {activeView === "github" && (
           <GitHubWorkspace
             projectId={currentProject?.id ?? null}
-            connections={connections}
+            connections={projectConnections}
             activeConnection={activeConnection}
             loadingConnection={isLoadingConnection}
+            connectionLoadError={connectionLoadError}
+            onRetryConnections={loadConnections}
             onSelectConnection={(id) => {
               setSelectedConnectionId(id);
               setFileSearchQuery("");

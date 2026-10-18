@@ -699,9 +699,10 @@ export const api = {
   },
   integrations: {
     github: {
-      listConnections: async (projectId: string) =>
+      listConnections: async (projectId: string, signal?: AbortSignal) =>
         apiRequest<any[]>(
           `/projects/${projectId}/integrations/github/connections`,
+          { signal },
         ),
       getConnection: async (projectId: string, connectionId?: string) => {
         const qs = connectionId ? `?connectionId=${connectionId}` : "";

@@ -73,6 +73,8 @@ interface Props {
   connections: Connection[];
   activeConnection: Connection | null;
   loadingConnection: boolean;
+  connectionLoadError: string | null;
+  onRetryConnections: () => void;
   onSelectConnection: (id: string) => void;
   onBack: () => void;
   showConnectForm: boolean;
@@ -232,7 +234,7 @@ export function GitHubWorkspace(p: Props) {
           )}
           <Button
             variant="outline"
-            disabled={busy || !p.projectId}
+            disabled={busy || p.loadingConnection || !p.projectId}
             title={
               p.projectId
                 ? undefined
@@ -324,7 +326,35 @@ export function GitHubWorkspace(p: Props) {
           </Link>
         </div>
       ) : p.loadingConnection && !connection ? (
-        <div className="h-48 animate-pulse rounded-md border border-[#d0d7de] bg-[#f6f8fa]" />
+        <div
+          role="status"
+          aria-live="polite"
+          className="mx-auto flex max-w-xl items-center gap-3 rounded-lg border border-[var(--ws-border)] bg-[var(--ws-surface)] p-5 text-sm text-[var(--ws-muted)]"
+        >
+          <Loader2 size={16} className="shrink-0 animate-spin" />
+          <span>Checking this project’s GitHub repositories…</span>
+        </div>
+      ) : p.connectionLoadError ? (
+        <div
+          role="alert"
+          className="mx-auto flex max-w-xl flex-wrap items-center justify-between gap-4 rounded-lg border border-[var(--ws-border)] bg-[var(--ws-surface)] p-5"
+        >
+          <div>
+            <h2 className="text-sm font-semibold text-[var(--ws-text)]">
+              Couldn’t load repositories
+            </h2>
+            <p className="mt-1 text-sm text-[var(--ws-muted)]">
+              {p.connectionLoadError}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={p.onRetryConnections}
+            className={outline}
+          >
+            <RefreshCw size={14} className="mr-1.5" /> Try again
+          </Button>
+        </div>
       ) : p.showConnectForm || !p.connections.length ? (
         <div className="mx-auto max-w-xl rounded-md border border-[#d0d7de] bg-white p-6">
           <h2 className="mb-1 text-base font-semibold">Connect a repository</h2>
