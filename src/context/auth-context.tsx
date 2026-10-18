@@ -179,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCurrentProjectState(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem("aiw_current_project");
+      sessionStorage.removeItem("aiw_guest_draft");
     }
     setCsrfToken(null);
   };

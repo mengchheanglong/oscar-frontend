@@ -1,22 +1,49 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  Suspense,
+} from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { WorkspaceIcon } from "@/components/workspace-icons";
-import { ChatNavigationItem, type NavigationChat } from "@/components/ai/chat-navigation";
+import {
+  ChatNavigationItem,
+  type NavigationChat,
+} from "@/components/ai/chat-navigation";
 import { useProjectWorkspace } from "@/components/project-workspace";
 import type { Project } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import { mergeChatTurn, retryRequestKey } from "@/lib/chat-turn";
-import { Sparkles, Bot, Plus, Copy, Check, FileText, GitPullRequest, CheckSquare, AlertCircle, Loader2, ChevronDown, Eye, X, ArrowUpRight } from "lucide-react";
+import {
+  Sparkles,
+  Bot,
+  Plus,
+  Copy,
+  Check,
+  FileText,
+  GitPullRequest,
+  CheckSquare,
+  AlertCircle,
+  Loader2,
+  ChevronDown,
+  Eye,
+  X,
+  ArrowUpRight,
+} from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { CopilotComposer } from "@/components/ai/copilot-composer";
-import { useConversationWork, ConversationWorkStatus } from "@/components/ai/conversation-work";
+import {
+  useConversationWork,
+  ConversationWorkStatus,
+} from "@/components/ai/conversation-work";
 import { agentRuns } from "@/lib/agent-runs";
 
 const getSourceLink = (
@@ -290,7 +317,11 @@ export default function AssistantPage() {
     setInspectError(null);
 
     const loadDetails = async () => {
-      if (["REQUIREMENT", "MEETING"].includes(inspectingCitation.sourceType)) { setInspectError("This source belongs to a retired feature."); setLoadingInspectDetails(false); return; }
+      if (["REQUIREMENT", "MEETING"].includes(inspectingCitation.sourceType)) {
+        setInspectError("This source belongs to a retired feature.");
+        setLoadingInspectDetails(false);
+        return;
+      }
       try {
         const id = inspectingCitation.sourceId;
         const type = inspectingCitation.sourceType;
@@ -474,7 +505,9 @@ export default function AssistantPage() {
         if (guestDraft) {
           draft = guestDraft.slice(0, 20000);
           draftsRef.current[key] = draft;
-          sessionStorage.removeItem("aiw_guest_draft");
+          // Keep the handoff until the first project exists, so creating it
+          // does not discard the message brought through sign-up.
+          if (projects.length > 0) sessionStorage.removeItem("aiw_guest_draft");
         }
       } catch {}
     }
@@ -1396,6 +1429,11 @@ export default function AssistantPage() {
             value={inputContent}
             onChange={(value) => {
               draftsRef.current[draftKey] = value;
+              if (projects.length === 0) {
+                try {
+                  sessionStorage.setItem("aiw_guest_draft", value);
+                } catch {}
+              }
               setInputContent(value);
             }}
             onSend={() => void handleSendMessage()}
@@ -1547,6 +1585,18 @@ export default function AssistantPage() {
               )}
 
               {/* Live Source Record Details (if loaded) */}
+              {inspectingCitation.sourceType === "DOCUMENT" &&
+                inspectingDetails?.revision &&
+                inspectingDetails.revision !== inspectingCitation.revision && (
+                  <p
+                    role="status"
+                    className="rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-700"
+                  >
+                    This answer cites revision {inspectingCitation.revision}.
+                    The file is now on revision {inspectingDetails.revision};
+                    opening the source shows the latest file.
+                  </p>
+                )}
               {loadingInspectDetails ? (
                 <div className="py-6 flex flex-col items-center justify-center gap-2 text-slate-400">
                   <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
@@ -1555,7 +1605,7 @@ export default function AssistantPage() {
               ) : inspectingDetails ? (
                 <div className="space-y-3 pt-2 border-t border-slate-100">
                   <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    Source Record Details
+                    Current source details
                   </div>
 
                   {/* TASK DETAILS */}
@@ -1626,10 +1676,6 @@ export default function AssistantPage() {
                       )}
                     </div>
                   )}
-
-
-
-
 
                   {/* DOCUMENT DETAILS */}
                   {inspectingCitation.sourceType === "LOCAL_FILE" && (

@@ -3,10 +3,24 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
-import { searchAcrossProjects, mergeSearchResults } from "@/lib/global-search";
+import {
+  searchAcrossProjects,
+  mergeSearchResults,
+  searchResultHref,
+} from "@/lib/global-search";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search as SearchIcon, FileText, GitPullRequest, CheckSquare, ExternalLink, X, Sparkles, Cpu, Code2 } from "lucide-react";
+import {
+  Search as SearchIcon,
+  FileText,
+  GitPullRequest,
+  CheckSquare,
+  ExternalLink,
+  X,
+  Sparkles,
+  Cpu,
+  Code2,
+} from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 
@@ -29,15 +43,6 @@ const TYPE_ICONS: Record<string, any> = {
   GITHUB_ISSUE: GithubIcon,
   GITHUB_PR: GitPullRequest,
   GITHUB_CODE: Code2,
-};
-
-const TYPE_LINKS: Record<string, string> = {
-  DECISION: "/decisions",
-  TASK: "/tasks",
-  DOCUMENT: "/documents",
-  GITHUB_ISSUE: "/integrations",
-  GITHUB_PR: "/integrations",
-  GITHUB_CODE: "/integrations",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -424,15 +429,7 @@ export default function SearchPage() {
             </div>
             {results.map((item, idx) => {
               const Icon = TYPE_ICONS[item.type] || FileText;
-              const baseLink = TYPE_LINKS[item.type] || "/assistant";
-              const searchParam = item.key || item.title;
-              const externalUrl =
-                item.type === "GITHUB_ISSUE" && item.metadata?.htmlUrl
-                  ? (item.metadata.htmlUrl as string)
-                  : null;
-              const targetUrl =
-                externalUrl ||
-                `${baseLink}?id=${item.id}${searchParam ? `&search=${encodeURIComponent(searchParam)}` : ""}`;
+              const targetUrl = searchResultHref(item);
               const colorClass =
                 TYPE_COLORS[item.type] || "bg-slate-100 text-slate-700";
 

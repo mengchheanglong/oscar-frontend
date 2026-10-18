@@ -13,7 +13,15 @@ import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
-import { UserPlus, Clock, Copy, Trash2, Search, CheckCircle2, X } from "lucide-react";
+import {
+  UserPlus,
+  Clock,
+  Copy,
+  Trash2,
+  Search,
+  CheckCircle2,
+  X,
+} from "lucide-react";
 
 const INVITE_PROF_ROLE_OPTIONS = [
   { value: "DEVELOPER", label: "Developer" },
@@ -363,7 +371,8 @@ export function TeamManagement({
             {inSettings ? "Team & Members" : "Team"}
           </h1>
           <p className="text-xs text-[var(--ws-muted)] mt-1">
-            You, people who share a project with you, and invitations you sent.
+            You, people who share a project with you, and invitations you
+            created.
           </p>
         </div>
 
@@ -391,7 +400,8 @@ export function TeamManagement({
               </h2>
               <p className="text-xs text-[var(--ws-muted)]">
                 Enter email addresses and choose their initial professional and
-                workspace access roles.
+                workspace access roles. Create invitation links to share with
+                them.
               </p>
             </div>
             <button
@@ -506,7 +516,7 @@ export function TeamManagement({
               }
               className="rounded-xl bg-white px-4 py-1.5 text-xs font-medium text-black hover:bg-slate-200 transition-colors disabled:opacity-50"
             >
-              {inviting ? "Sending..." : "Send Invitations"}
+              {inviting ? "Creating..." : "Create invitation links"}
             </button>
           </div>
         </form>

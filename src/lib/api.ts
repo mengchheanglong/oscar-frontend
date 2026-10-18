@@ -638,12 +638,15 @@ export const api = {
       projectId: string,
       decisionId: string,
     ) =>
-      apiRequest<{ proposal: any }>(
-        `/projects/${projectId}/ai/decisions/${decisionId}/task-proposals`,
-        {
-          method: "POST",
-        },
-      ),
+      apiRequest<{
+        id: string;
+        projectId: string;
+        version: number;
+        draftJson: Record<string, any>;
+        status: string;
+      }>(`/projects/${projectId}/ai/decisions/${decisionId}/task-proposals`, {
+        method: "POST",
+      }),
     listProposals: async (projectId: string, params?: { status?: string }) => {
       const q = new URLSearchParams();
       if (params?.status) q.append("status", params.status);

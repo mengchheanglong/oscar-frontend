@@ -471,7 +471,7 @@ function DecisionWorkspace() {
         dec.projectId,
         dec.id,
       );
-      setActiveProposal(res.proposal);
+      setActiveProposal(res);
       showToast(
         "Generated AI task proposal! Review the suggested breakdown.",
         "success",
@@ -796,7 +796,6 @@ function DecisionWorkspace() {
 
                 {/* Related items Card */}
 
-
                 {/* AI Task Proposals & Engineering Handoff Actions */}
                 <div className="bg-white border border-codex-border/80 rounded-2xl p-5 shadow-xs flex items-center justify-between gap-3 flex-wrap">
                   <div className="space-y-0.5">
@@ -805,8 +804,8 @@ function DecisionWorkspace() {
                       <span>AI Task Breakdown</span>
                     </div>
                     <p className="text-[11px] text-slate-500">
-                      Use DeepSeek V4 Pro to propose engineering tasks directly
-                      from this ADR.
+                      Draft tasks from this decision, then review them before
+                      adding them to your project.
                     </p>
                   </div>
 

@@ -11,7 +11,7 @@ vm.runInNewContext(
       target: ts.ScriptTarget.ES2020,
     },
   }).outputText,
-  { exports: lib },
+  { exports: lib, URL, URLSearchParams },
 );
 const projects = Array.from({ length: 6 }, (_, i) => ({
   id: String(i),
@@ -108,4 +108,45 @@ test("empty accessible project list never issues a search request", async () => 
   assert.equal(result.rows.length, 0);
   assert.equal(result.meta.total, 0);
   assert.equal(result.failed.length, 0);
+});
+
+test("folder results open the original private folder path instead of treating the file ID as a document", () => {
+  const href = lib.searchResultHref({
+    id: "file-id",
+    type: "DOCUMENT",
+    projectId: "alpha",
+    metadata: {
+      sourceType: "LOCAL_FILE",
+      folderId: "folder-id",
+      relativePath: "finance/a & b.md",
+    },
+  });
+  const target = new URL(href, "http://localhost:3002");
+  assert.equal(target.pathname, "/documents");
+  assert.equal(target.searchParams.get("folderId"), "folder-id");
+  assert.equal(target.searchParams.get("path"), "finance/a & b.md");
+  assert.equal(target.searchParams.get("projectId"), "alpha");
+  assert.equal(target.searchParams.has("id"), false);
+});
+
+test("GitHub issue, PR and code results open safe source URLs", () => {
+  for (const type of ["GITHUB_ISSUE", "GITHUB_PR", "GITHUB_CODE"]) {
+    const item = {
+      id: "source",
+      type,
+      projectId: "alpha",
+      metadata: { htmlUrl: "https://github.com/org/repo/pull/1" },
+    };
+    assert.equal(lib.searchResultHref(item), item.metadata.htmlUrl);
+    for (const htmlUrl of [
+      "javascript:alert(1)",
+      "https://github.com.evil.test/path",
+    ]) {
+      assert.ok(
+        lib
+          .searchResultHref({ ...item, metadata: { htmlUrl } })
+          .startsWith("/integrations?"),
+      );
+    }
+  }
 });

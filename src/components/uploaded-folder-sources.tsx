@@ -88,6 +88,27 @@ export function UploadedFolderSources({
     alive = useRef(true),
     request = useRef<AbortController | null>(null);
   const base = `/projects/${projectId}/uploaded-folders`;
+  const openedTarget = useRef<string | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const folderId = params.get("folderId");
+    const path = params.get("path");
+    const target = `${projectId}:${folderId}:${path}`;
+    if (
+      !folderId ||
+      !path ||
+      openedTarget.current === target ||
+      (params.get("projectId") && params.get("projectId") !== projectId) ||
+      !folders.some((folder) => folder.id === folderId)
+    )
+      return;
+    openedTarget.current = target;
+    setExpanded(folderId);
+    void loadFiles(folderId);
+    void read(folderId, path);
+    // Deep links open once after the owner-scoped folder list is available.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folders, projectId]);
   async function refresh() {
     const [data, policy] = await Promise.all([
       apiRequest<Folder[]>(base),

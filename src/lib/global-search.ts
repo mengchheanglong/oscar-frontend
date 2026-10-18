@@ -21,6 +21,51 @@ type Query = (
   meta?: { total?: number; countsByType?: Record<string, number> };
 }>;
 
+export function searchResultHref(item: {
+  id: string;
+  type: string;
+  projectId: string;
+  key?: string;
+  title?: string;
+  metadata?: Record<string, any>;
+}): string {
+  if (
+    item.type.startsWith("GITHUB_") &&
+    typeof item.metadata?.htmlUrl === "string"
+  ) {
+    try {
+      const url = new URL(item.metadata.htmlUrl);
+      if (url.protocol === "https:" && url.hostname === "github.com")
+        return url.href;
+    } catch {
+      /* Fall back to the integration page for unavailable source URLs. */
+    }
+  }
+  if (
+    item.metadata?.sourceType === "LOCAL_FILE" &&
+    item.metadata.folderId &&
+    item.metadata.relativePath
+  ) {
+    return `/documents?${new URLSearchParams({
+      projectId: item.projectId,
+      folderId: item.metadata.folderId,
+      path: item.metadata.relativePath,
+    })}`;
+  }
+  const base =
+    (
+      {
+        DOCUMENT: "/documents",
+        TASK: "/tasks",
+        DECISION: "/decisions",
+      } as Record<string, string>
+    )[item.type] || "/integrations";
+  const params = new URLSearchParams({ id: item.id });
+  if (item.key || item.title)
+    params.set("search", item.key || item.title || "");
+  return `${base}?${params}`;
+}
+
 // Reuse the authenticated project endpoints, so global search retains their access checks.
 export async function searchAcrossProjects(
   projects: Scope[],

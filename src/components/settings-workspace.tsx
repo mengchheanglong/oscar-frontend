@@ -949,8 +949,15 @@ export default function SettingsWorkspace({
                       </button>
                     </div>
                     <details className="border-t border-[var(--ws-border)] pt-4">
-                      <summary className="cursor-pointer text-sm font-medium">Project access</summary>
-                      <div className="pt-4"><ProjectAccess key={currentProject.id} projectId={currentProject.id} /></div>
+                      <summary className="cursor-pointer text-sm font-medium">
+                        Project access
+                      </summary>
+                      <div className="pt-4">
+                        <ProjectAccess
+                          key={currentProject.id}
+                          projectId={currentProject.id}
+                        />
+                      </div>
                     </details>
                   </div>
                 )}
@@ -1217,11 +1224,11 @@ export default function SettingsWorkspace({
               <div className="space-y-8">
                 <div>
                   <h1 className="text-xl font-medium tracking-tight text-[var(--ws-text)]">
-                    Data Controls & AI Isolation
+                    Data controls
                   </h1>
                   <p className="text-xs text-[var(--ws-muted)] mt-1">
-                    Manage tenant data isolation, Copilot context memory, and
-                    model privacy.
+                    Review project access, saved memory, and conversation
+                    controls.
                   </p>
                 </div>
 
@@ -1235,10 +1242,10 @@ export default function SettingsWorkspace({
                       </h3>
                     </div>
                     <p className="text-xs text-[var(--ws-muted)] leading-relaxed">
-                      All workspace queries, document vectors, task items, and
-                      files are strictly isolated by your active project ID.
-                      Cross-project data leaks are blocked at the database query
-                      level.
+                      Project chats use the selected project. Standalone chats
+                      and global search can use all projects you can access.
+                      Your uploaded folder copies stay private to you within
+                      their project.
                     </p>
                   </div>
 
@@ -1247,13 +1254,13 @@ export default function SettingsWorkspace({
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-blue-400" />
                       <h3 className="font-medium text-xs text-[var(--ws-text)]">
-                        DeepSeek V4 Pro Model Policy
+                        AI processing
                       </h3>
                     </div>
                     <p className="text-xs text-[var(--ws-muted)] leading-relaxed">
-                      AI generation uses the committed DeepSeek V4 Pro model
-                      adapter. Workspace content is transmitted securely and is
-                      never retained for unauthorized public training.
+                      Relevant messages and project context are sent to the
+                      configured AI service to generate answers. Search and
+                      indexing may also send text to the embedding service.
                     </p>
                   </div>
 
@@ -1273,40 +1280,34 @@ export default function SettingsWorkspace({
                       status.
                     </p>
                     <div className="pt-1">
-                      <Link
-                        href="/assistant"
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("personalization")}
                         className="inline-flex items-center gap-1 rounded-xl border border-[var(--ws-border)] bg-[var(--ws-bg)] px-3 py-1.5 text-xs text-[var(--ws-text)] hover:bg-[var(--ws-hover)] transition-colors"
                       >
-                        <span>Open Assistant</span>
+                        <span>Manage saved memory</span>
                         <ArrowUpRight className="h-3 w-3" />
-                      </Link>
+                      </button>
                     </div>
                   </div>
 
                   {/* Conversation Reset */}
                   <div className="p-6 space-y-3">
                     <h3 className="font-medium text-xs text-[var(--ws-text)]">
-                      Reset Active Conversation
+                      Start a new conversation
                     </h3>
                     <p className="text-xs text-[var(--ws-muted)] leading-relaxed">
-                      Clear the current multi-turn session cache in this
-                      browser. Indexed workspace project data remains completely
-                      unaffected.
+                      Open an empty chat. Existing conversations and project
+                      files stay saved.
                     </p>
                     <button
                       type="button"
                       onClick={() => {
-                        if (typeof window !== "undefined") {
-                          localStorage.removeItem(
-                            "aiw_current_conversation_id",
-                          );
-                        }
-                        showToast("Session context reset", "info");
-                        router.push("/assistant");
+                        router.push("/assistant?new=1");
                       }}
                       className="rounded-xl border border-[var(--ws-border)] bg-[var(--ws-bg)] px-3.5 py-2 text-xs font-medium text-rose-300 hover:bg-rose-500/10 hover:border-rose-500/30 transition-colors"
                     >
-                      Clear Browser Chat Session
+                      New chat
                     </button>
                   </div>
                 </div>
@@ -1336,8 +1337,8 @@ export default function SettingsWorkspace({
                         Team & User Directory
                       </h3>
                       <p className="text-xs text-[var(--ws-muted)] mt-0.5">
-                        View registered workspace members, assign professional
-                        roles, and monitor active logins.
+                        View people who share your projects, their roles, and
+                        their account status.
                       </p>
                     </div>
                     <button
@@ -1345,7 +1346,7 @@ export default function SettingsWorkspace({
                       onClick={() => setActiveTab("team")}
                       className="rounded-xl bg-white px-3.5 py-2 text-xs font-medium text-black hover:bg-slate-200 transition-colors shrink-0 text-center"
                     >
-                      Manage Team
+                      View team
                     </button>
                   </div>
 

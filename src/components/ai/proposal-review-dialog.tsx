@@ -212,35 +212,32 @@ export function ProposalReviewDialog({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-base font-bold text-slate-900 font-serif">
-                  {isDecisionTaskProposal
-                    ? "Architectural Decision Task Proposals"
-                    : isTaskProposal
-                      ? "Review Task Proposals"
-                      : "Review Meeting Analysis"}
+                  Review suggested tasks
                 </h3>
                 <Badge
                   variant="outline"
                   className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 font-mono"
                 >
-                  {proposal.status}
+                  {confirmedResults ? "CONFIRMED" : proposal.status}
                 </Badge>
                 {isDecisionTaskProposal && (
                   <Badge
                     variant="outline"
                     className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-medium"
                   >
-                    ADR Source
+                    From decision
                   </Badge>
                 )}
               </div>
               <p className="text-xs text-slate-500 mt-1">
                 {isDecisionTaskProposal
-                  ? "AI has broken down this architectural decision into actionable development tasks. Review, assign team members, and confirm to persist on the board."
+                  ? "Review the tasks drafted from this decision, assign them, and choose which to add to your board."
                   : "Select, review, and confirm tasks to add them to the board."}
               </p>
             </div>
           </div>
           <button
+            aria-label="Close proposal review"
             onClick={handleClose}
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all cursor-pointer"
           >
@@ -263,8 +260,9 @@ export function ProposalReviewDialog({
               <div className="flex items-center gap-2 text-sm font-bold font-serif text-emerald-800">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                 <span>
-                  Successfully created {confirmedResults.length} records in
-                  project!
+                  Added {confirmedResults.length}{" "}
+                  {confirmedResults.length === 1 ? "task" : "tasks"} to your
+                  project.
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2">
@@ -480,8 +478,6 @@ export function ProposalReviewDialog({
                   })}
                 </div>
               )}
-
-              {/* Meeting Analysis Display */}
             </>
           )}
         </div>
