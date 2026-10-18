@@ -1,1 +1,0 @@
-import React from 'react'; export const DropdownMenu = ({ children }: any) => <div className="dropdown">{children}</div>;

@@ -1,1 +1,0 @@
-import React from 'react'; export const Tabs = ({ children }: any) => <div className="tabs">{children}</div>;

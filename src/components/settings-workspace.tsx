@@ -1,13 +1,9 @@
 "use client";
-
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import {
-  useWorkspaceTheme,
-  type WorkspaceTheme,
-} from "@/context/workspace-theme";
+import { useWorkspaceTheme } from "@/context/workspace-theme";
 import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api";
 import {
@@ -25,15 +21,10 @@ import {
   Copy,
   Trash2,
   Plus,
-  ExternalLink,
   LogOut,
-  Lock,
   CheckCircle2,
-  AlertCircle,
   RefreshCw,
   Sparkles,
-  GitBranch,
-  Cpu,
   Boxes,
   Eye,
   EyeOff,

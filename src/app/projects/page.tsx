@@ -10,22 +10,8 @@ import { api } from "@/lib/api";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Plus,
-  Search,
-  Check,
-  AlertCircle,
-  Briefcase,
-  FileText,
-  ChevronRight,
-  Folder,
-  ArrowRight,
-  ShieldCheck,
-  Users,
-  Loader2,
-  UserCheck,
-} from "lucide-react";
+
+import { Plus, Search, AlertCircle, Folder, ArrowRight, Users, Loader2 } from "lucide-react";
 
 interface ProjectDisplayItem {
   id: string;

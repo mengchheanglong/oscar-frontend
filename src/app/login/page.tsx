@@ -4,19 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { ApiError } from "@/lib/api";
-import {
-  Eye,
-  EyeOff,
-  AlertCircle,
-  ArrowLeft,
-  Mail,
-  Loader2,
-  FileText,
-  Folder,
-  HelpCircle,
-  Check,
-  Sparkles,
-} from "lucide-react";
+import { Eye, EyeOff, AlertCircle, ArrowLeft, Mail, Loader2, Check } from "lucide-react";
 import { WorkspaceIcon } from "@/components/workspace-icons";
 import { WorkspaceAppearance } from "@/context/workspace-theme";
 

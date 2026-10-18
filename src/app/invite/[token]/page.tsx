@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { api, setCsrfToken } from "@/lib/api";
 import { ContinuumLogo } from "@/components/continuum-logo";
 import {
   Sparkles,
-  Shield,
   Eye,
   EyeOff,
-  CheckCircle2,
   AlertCircle,
   ArrowRight,
   UserCheck,
@@ -23,7 +21,6 @@ export default function AcceptInvitePage() {
   const params = useParams();
   const rawToken = params?.token as string;
   const token = rawToken ? decodeURIComponent(rawToken) : "";
-  const router = useRouter();
 
   const [preview, setPreview] = useState<{
     email: string;

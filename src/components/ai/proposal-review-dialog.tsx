@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useToast } from "@/context/toast-context";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,6 @@ import {
   Sparkles,
   CheckCircle2,
   XCircle,
-  Clock,
   AlertTriangle,
   ListTodo,
   FileCheck2,
@@ -21,7 +20,6 @@ import {
   ShieldCheck,
   RefreshCw,
   X,
-  User,
 } from "lucide-react";
 
 interface ProposalReviewDialogProps {

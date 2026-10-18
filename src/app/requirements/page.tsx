@@ -14,7 +14,6 @@ import { FilterDropdown, FilterOption } from "@/components/ui/filter-dropdown";
 import {
   Plus,
   Search,
-  ChevronDown,
   X,
   FileCheck2,
   Sparkles,
@@ -22,10 +21,7 @@ import {
   ExternalLink,
   History,
   Copy,
-  CheckCircle2,
-  AlertCircle,
   Trash2,
-  Check,
 } from "lucide-react";
 
 interface ProjectInfo {

@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useAuth, Project } from "@/context/auth-context";
@@ -16,20 +15,11 @@ import {
   Pencil,
   Plus,
   Search,
-  Calendar,
   Sparkles,
   History,
   Trash2,
-  Copy,
-  CheckCircle2,
-  ExternalLink,
   FileCheck2,
-  CheckSquare,
-  Bot,
-  AlertCircle,
-  FolderKanban,
   X,
-  ChevronDown,
 } from "lucide-react";
 
 interface DecisionItem {

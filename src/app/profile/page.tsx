@@ -10,10 +10,7 @@ import { Input } from "@/components/ui/input";
 import { CustomDropdown, type CustomDropdownOption } from "@/components/ui/custom-dropdown";
 import {
   User,
-  Lock,
   Folder,
-  CheckCircle2,
-  ExternalLink,
   LogOut,
   Eye,
   EyeOff,

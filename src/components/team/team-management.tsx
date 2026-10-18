@@ -13,20 +13,7 @@ import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { api } from "@/lib/api";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
-import {
-  Users,
-  UserPlus,
-  Shield,
-  Clock,
-  Copy,
-  Trash2,
-  Search,
-  CheckCircle2,
-  X,
-  ChevronDown,
-  Check,
-  Sparkles,
-} from "lucide-react";
+import { UserPlus, Clock, Copy, Trash2, Search, CheckCircle2, X } from "lucide-react";
 
 const INVITE_PROF_ROLE_OPTIONS = [
   { value: "DEVELOPER", label: "Developer" },

@@ -1,14 +1,11 @@
 "use client";
-
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import { searchAcrossProjects, mergeSearchResults } from "@/lib/global-search";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Search as SearchIcon,
   FileText,
@@ -19,7 +16,6 @@ import {
   ExternalLink,
   X,
   Sparkles,
-  Database,
   Cpu,
   Code2,
 } from "lucide-react";

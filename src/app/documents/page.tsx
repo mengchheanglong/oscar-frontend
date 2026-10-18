@@ -1,9 +1,7 @@
 "use client";
 import { UploadedFolderSources } from "@/components/uploaded-folder-sources";
-
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
@@ -24,12 +22,8 @@ import {
   History,
   X,
   Trash2,
-  ExternalLink,
-  ChevronDown,
   Loader2,
   FolderOpen,
-  Sparkles,
-  RefreshCw,
   AlertCircle,
   AlertTriangle,
 } from "lucide-react";

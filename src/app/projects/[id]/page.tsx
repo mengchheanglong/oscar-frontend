@@ -3,39 +3,26 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth, Project } from "@/context/auth-context";
+import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { ProjectAccess } from "@/components/project-access";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import {
-  Calendar,
-  Clock,
-  User,
-  Zap,
-  Check,
   MoreHorizontal,
   Pencil,
-  PlusCircle,
   FileText,
   Upload,
   UserPlus,
-  Circle,
-  CheckCircle2,
   AlertCircle,
   ArrowRight,
   ExternalLink,
-  Download,
-  Copy,
   Plus,
-  ShieldCheck,
-  Shield,
   Trash2,
   Archive,
-  RefreshCw,
   X,
   Search,
   LayoutList,
@@ -47,7 +34,7 @@ import {
   Loader2,
   Info,
 } from "lucide-react";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 // --- Safe string extractors to guarantee no objects are rendered as React children ---
 function getAssigneeName(assignee: any, fallback = "Unassigned"): string {
@@ -180,50 +167,16 @@ function getTaskDisplayKey(task: any, fallbackProjectKey = "AIW"): string {
   return "TASK-1";
 }
 
-function formatRelativeTime(dateStr?: string | Date): string {
-  if (!dateStr) return "recently";
-  try {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    if (diffMs < 0) return "just now";
-    const diffMin = Math.floor(diffMs / 60000);
-    if (diffMin < 1) return "just now";
-    if (diffMin < 60) return `${diffMin}m ago`;
-    const diffHours = Math.floor(diffMin / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-  } catch {
-    return "recently";
-  }
-}
-
-function formatActivityAction(act: any): string {
-  const action = String(act.action || "").toLowerCase();
-  const entityType = String(act.entityType || "item").toLowerCase();
-  const details = act.details?.title || act.details?.name || "";
-  if (action === "create") return `created ${entityType}${details ? ` "${details}"` : ""}`;
-  if (action === "update") return `updated ${entityType}${details ? ` "${details}"` : ""}`;
-  if (action === "delete") return `deleted ${entityType}`;
-  return `${action} ${entityType}`;
-}
-
-
-
-
-
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params?.id as string;
-  const { projects, currentProject, setCurrentProject, user: currentUser } = useAuth();
+  const { projects, currentProject, setCurrentProject } = useAuth();
   const { showToast } = useToast();
 
   const [projectData, setProjectData] = useState<any>(null);
   const [projectNotFound, setProjectNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "requirements" | "tasks" | "documents" | "audit" | "settings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "requirements" | "tasks" | "documents" | "settings">("overview");
   useEffect(() => {
     const syncTab = () => setActiveTab(window.location.hash === "#settings" ? "settings" : "overview");
     syncTab();
@@ -231,16 +184,10 @@ export default function ProjectDetailPage() {
     return () => window.removeEventListener("hashchange", syncTab);
   }, [projectId]);
 
-
   // Tab data states (100% real backend database entities)
   const [tabRequirements, setTabRequirements] = useState<any[]>([]);
   const [tabTasks, setTabTasks] = useState<any[]>([]);
   const [tabDocuments, setTabDocuments] = useState<any[]>([]);
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [dashboardStats, setDashboardStats] = useState<any>(null);
-  const [loadingInitial, setLoadingInitial] = useState(true);
-  const [loadingTabData, setLoadingTabData] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
   // Requirements tab filters and view states
@@ -276,7 +223,6 @@ export default function ProjectDetailPage() {
 
   // Dynamic Members state
   const [members, setMembers] = useState<any[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [candidateSearch, setCandidateSearch] = useState("");
   const [candidates, setCandidates] = useState<any[]>([]);
@@ -284,27 +230,13 @@ export default function ProjectDetailPage() {
   const [selectedCandidates, setSelectedCandidates] = useState<Record<string, "CONTRIBUTOR" | "MANAGER" | "VIEWER">>({});
   const [submittingMember, setSubmittingMember] = useState(false);
 
-  // Ownership transfer state
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [newOwnerUserId, setNewOwnerUserId] = useState("");
-  const [submittingTransfer, setSubmittingTransfer] = useState(false);
-
-  // Audit Log tab state
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [auditTotal, setAuditTotal] = useState(0);
-  const [auditPage, setAuditPage] = useState(1);
-  const [loadingAudit, setLoadingAudit] = useState(false);
-
   const loadMembers = React.useCallback(async () => {
     if (!projectId) return;
-    setLoadingMembers(true);
     try {
       const list = await api.projects.getMembers(projectId);
       setMembers(list && list.length > 0 ? list : []);
     } catch (err: any) {
       console.error("Failed to load project members", err);
-    } finally {
-      setLoadingMembers(false);
     }
   }, [projectId]);
 
@@ -351,25 +283,9 @@ export default function ProjectDetailPage() {
     });
   }, [candidates, candidateSearch]);
 
-  const loadAuditLogs = React.useCallback(async (page = 1) => {
-    if (!projectId) return;
-    setLoadingAudit(true);
-    try {
-      const res = await api.projects.getAuditLogs(projectId, page, 25);
-      setAuditLogs(res.data || []);
-      setAuditTotal(res.meta?.total || (res.data?.length ?? 0));
-      setAuditPage(page);
-    } catch (err: any) {
-      console.error("Failed to load audit logs", err);
-    } finally {
-      setLoadingAudit(false);
-    }
-  }, [projectId]);
-
   // Master data loader for project workspace (100% real backend entities)
   const loadAllProjectData = React.useCallback(async () => {
     if (!projectId) return;
-    setLoadingInitial(true);
 
     try {
       // 1. Load project details if not in memory
@@ -392,12 +308,11 @@ export default function ProjectDetailPage() {
       }
 
       // 2. Parallel fetch for all workspace entities
-      const [membersRes, reqsRes, tasksRes, docsRes, dashRes] = await Promise.allSettled([
+      const [membersRes, reqsRes, tasksRes, docsRes] = await Promise.allSettled([
         api.projects.getMembers(projectId),
         api.requirements.list(projectId),
         api.tasks.list(projectId),
         api.documents.list(projectId),
-        api.dashboard.get(projectId),
       ]);
 
       if (membersRes.status === "fulfilled" && Array.isArray(membersRes.value)) {
@@ -423,30 +338,14 @@ export default function ProjectDetailPage() {
       } else {
         setTabDocuments([]);
       }
-
-      if (dashRes.status === "fulfilled" && dashRes.value) {
-        setDashboardStats(dashRes.value);
-        if (Array.isArray(dashRes.value.recentActivity)) {
-          setRecentActivities(dashRes.value.recentActivity);
-        }
-      }
     } catch (err: any) {
       console.error("Failed to load project workspace data", err);
-    } finally {
-      setLoadingInitial(false);
     }
   }, [projectId, projects, currentProject?.id, setCurrentProject]);
 
   useEffect(() => {
     loadAllProjectData();
   }, [loadAllProjectData]);
-
-  // Load audit logs when audit tab is active
-  useEffect(() => {
-    if (activeTab === "audit") {
-      loadAuditLogs(auditPage);
-    }
-  }, [activeTab, auditPage, loadAuditLogs]);
 
   // Filtered requirements
   const filteredRequirements = useMemo(() => {
@@ -529,53 +428,6 @@ export default function ProjectDetailPage() {
       );
     });
   }, [tabDocuments, docSearch]);
-
-  // Dynamic Overview metrics
-  const totalTasksCount = tabTasks.length;
-  const doneTasksCount = useMemo(() => {
-    return tabTasks.filter((t) => {
-      const s = formatTaskStatus(t.status).toLowerCase();
-      return s === "done" || s === "completed";
-    }).length;
-  }, [tabTasks]);
-
-  const progressPercent = useMemo(() => {
-    if (totalTasksCount > 0) {
-      return Math.round((doneTasksCount / totalTasksCount) * 100);
-    }
-    return dashboardStats?.taskProgress?.percentage ?? 0;
-  }, [totalTasksCount, doneTasksCount, dashboardStats]);
-
-  const daysLeft = useMemo(() => {
-    const target = projectData?.targetDate || projectData?.deadline;
-    if (!target) return null;
-    try {
-      const targetTime = new Date(target).getTime();
-      const now = Date.now();
-      const diff = Math.ceil((targetTime - now) / (1000 * 60 * 60 * 24));
-      return isNaN(diff) ? null : diff;
-    } catch {
-      return null;
-    }
-  }, [projectData?.targetDate, projectData?.deadline]);
-
-  const projectOwnerMember = useMemo(() => {
-    return (
-      members.find((m) => m.accessRole === "OWNER") ||
-      null
-    );
-  }, [members]);
-
-  const projectLeadName = useMemo(() => {
-    if (projectOwnerMember) {
-      const u = projectOwnerMember.user || projectOwnerMember;
-      return u?.displayName || u?.email || "Not assigned";
-    }
-    if (projectData?.owner) {
-      return projectData.owner.displayName || projectData.owner.email || "Not assigned";
-    }
-    return "Not assigned";
-  }, [projectOwnerMember, projectData]);
 
   // Real document upload
   const handleUploadFile = async (file: File) => {
@@ -690,24 +542,6 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const handleTransferOwnership = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newOwnerUserId) return;
-    setSubmittingTransfer(true);
-    try {
-      await api.projects.transferOwnership(projectId, { newOwnerUserId });
-      showToast("Project ownership transferred successfully", "success");
-      setShowTransferModal(false);
-      await loadMembers();
-      const updatedProj = await api.projects.get(projectId);
-      setProjectData(updatedProj);
-    } catch (err: any) {
-      showToast(err.message || "Failed to transfer ownership", "error");
-    } finally {
-      setSubmittingTransfer(false);
-    }
-  };
-
   const handleArchiveToggle = async () => {
     const isArchived = projectData?.status === "ARCHIVED";
     try {
@@ -720,7 +554,6 @@ export default function ProjectDetailPage() {
         setProjectData(res);
         showToast("Project archived", "info");
       }
-      setShowOptions(false);
     } catch (err: any) {
       showToast(err.message || "Failed to toggle archive status", "error");
     }
@@ -728,11 +561,6 @@ export default function ProjectDetailPage() {
 
   const projectName = projectData?.name || "Unknown project";
   const projectKey = projectData?.key || "AIW";
-
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    showToast(`Copied ${label} to clipboard!`, "info");
-  };
 
   if (projectNotFound) {
     return (
@@ -834,9 +662,7 @@ export default function ProjectDetailPage() {
           <p className="text-sm text-slate-500">Manage sharing and project access. Membership applies only to this project.</p>
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" onClick={() => setShowEditModal(true)}>Edit project</Button>
-            <Button variant="outline" onClick={() => setShowTransferModal(true)}>Transfer ownership</Button>
             <Button variant="outline" onClick={handleArchiveToggle}>{projectData?.status === "ARCHIVED" ? "Unarchive project" : "Archive project"}</Button>
-            <Button variant="outline" onClick={() => setActiveTab("audit")}>Activity</Button>
           </div>
           <ProjectAccess key={projectId} projectId={projectId} />
         </div>}

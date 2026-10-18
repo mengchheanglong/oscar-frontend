@@ -99,28 +99,3 @@ html {
 .app-layout-shell aside::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25) !important;
 }
-
-/* Continuous Non-Stop Meteor Shower */
-@keyframes meteor-shower {
-  0% {
-    transform: rotate(215deg) translateX(0);
-    opacity: 0;
-  }
-  6% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    transform: rotate(215deg) translateX(-850px);
-    opacity: 0;
-  }
-}
-
-.animate-meteor-continuous {
-  animation-name: meteor-shower;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  will-change: transform, opacity;
-}

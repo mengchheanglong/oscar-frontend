@@ -1,12 +1,5 @@
 "use client";
-
-import React, {
-  useEffect,
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
@@ -22,22 +15,12 @@ import {
   Check,
   LayoutGrid,
   List,
-  ChevronDown,
   AlertCircle,
   X,
   Trash2,
-  AlertTriangle,
-  Sparkles,
-  Link as LinkIcon,
-  Bot,
   GripVertical,
 } from "lucide-react";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 interface ProjectInfo {
   id: string;
@@ -137,8 +120,6 @@ function getInitials(name?: string | null): string {
 }
 
 function getAssigneeColor(name: string): string {
-  const trimmed = name.trim();
-
   const colors = [
     "bg-amber-600",
     "bg-blue-600",
@@ -262,8 +243,6 @@ function TaskWorkspace() {
 
   // Modals
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [createInitialStatus, setCreateInitialStatus] =
-    useState<TaskItem["status"]>("TODO");
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
 
   // Create Form State
@@ -593,7 +572,6 @@ function TaskWorkspace() {
   };
 
   const openCreateModal = (initialStatus: TaskItem["status"] = "TODO") => {
-    setCreateInitialStatus(initialStatus);
     setCreateStatus(initialStatus);
     setCreateProjectId(
       selectedProjectId !== "ALL"

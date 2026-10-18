@@ -1,22 +1,11 @@
 "use client";
-
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-  Suspense,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { WorkspaceIcon } from "@/components/workspace-icons";
-import {
-  ChatNavigationItem,
-  type NavigationChat,
-} from "@/components/ai/chat-navigation";
+import { ChatNavigationItem, type NavigationChat } from "@/components/ai/chat-navigation";
 import { useProjectWorkspace } from "@/components/project-workspace";
 import type { Project } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
@@ -26,41 +15,25 @@ import {
   Sparkles,
   Bot,
   Plus,
-  Trash2,
-  Search,
-  PanelLeftClose,
-  PanelLeft,
   Copy,
   Check,
-  Filter,
   FileText,
   FileCheck2,
   GitPullRequest,
   CheckSquare,
   Calendar,
-  ShieldCheck,
   AlertCircle,
   Loader2,
   ChevronDown,
-  MessageSquare,
-  Zap,
-  Code2,
-  TestTube,
-  Server,
-  Presentation,
   Eye,
   X,
   ArrowUpRight,
-  ArrowLeft,
 } from "lucide-react";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { CopilotComposer } from "@/components/ai/copilot-composer";
-import {
-  useConversationWork,
-  ConversationWorkStatus,
-} from "@/components/ai/conversation-work";
+import { useConversationWork, ConversationWorkStatus } from "@/components/ai/conversation-work";
 import { agentRuns } from "@/lib/agent-runs";
 
 const getSourceLink = (
@@ -185,16 +158,6 @@ const MODES = [
   },
 ];
 
-const SOURCE_OPTIONS = [
-  { value: "", label: "All project sources", icon: Filter },
-  { value: "DOCUMENT", label: "Documents", icon: FileText },
-  { value: "LOCAL_FILE", label: "Folder files", icon: FileText },
-  { value: "REQUIREMENT", label: "Requirements", icon: FileCheck2 },
-  { value: "DECISION", label: "Decisions", icon: GitPullRequest },
-  { value: "TASK", label: "Tasks", icon: CheckSquare },
-  { value: "MEETING", label: "Meetings", icon: Calendar },
-];
-
 const SOURCE_TYPE_ICONS: Record<string, React.ElementType> = {
   DOCUMENT: FileText,
   REQUIREMENT: FileCheck2,
@@ -220,43 +183,6 @@ function UserAvatar({ name }: { name?: string }) {
       {initials}
     </div>
   );
-}
-
-type DateGroup = "Today" | "Yesterday" | "Previous 7 Days" | "Older";
-
-function groupConversationsByDate(
-  conversations: Conversation[],
-): Record<DateGroup, Conversation[]> {
-  const groups: Record<DateGroup, Conversation[]> = {
-    Today: [],
-    Yesterday: [],
-    "Previous 7 Days": [],
-    Older: [],
-  };
-
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  ).getTime();
-  const startOfYesterday = startOfToday - 86400000;
-  const startOf7DaysAgo = startOfToday - 7 * 86400000;
-
-  for (const conv of conversations) {
-    const time = new Date(conv.updatedAt || conv.createdAt).getTime();
-    if (time >= startOfToday) {
-      groups["Today"].push(conv);
-    } else if (time >= startOfYesterday) {
-      groups["Yesterday"].push(conv);
-    } else if (time >= startOf7DaysAgo) {
-      groups["Previous 7 Days"].push(conv);
-    } else {
-      groups["Older"].push(conv);
-    }
-  }
-
-  return groups;
 }
 
 export default function AssistantPage() {
@@ -346,9 +272,6 @@ export default function AssistantPage() {
       return new Set();
     }
   });
-
-  // Search in conversation history
-  const [convSearch, setConvSearch] = useState<string>("");
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const [inspectingCitation, setInspectingCitation] =

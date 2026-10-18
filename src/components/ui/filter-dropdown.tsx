@@ -2,7 +2,7 @@
 
 import { WorkspaceIcon } from "@/components/workspace-icons";
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
 export interface FilterOption {
   value: string;
