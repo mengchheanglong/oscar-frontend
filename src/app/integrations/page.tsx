@@ -1,5 +1,16 @@
 "use client";
+import { Suspense } from "react";
 import SettingsWorkspace from "@/components/settings-workspace";
 export default function IntegrationsPage() {
-  return <SettingsWorkspace initialTab="integrations" />;
+  return (
+    <Suspense
+      fallback={
+        <div role="status" className="workspace-loading">
+          Loading settings…
+        </div>
+      }
+    >
+      <SettingsWorkspace initialTab="integrations" />
+    </Suspense>
+  );
 }

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useWorkspaceTheme } from "@/context/workspace-theme";
 import { useToast } from "@/context/toast-context";
@@ -85,6 +85,8 @@ export default function SettingsWorkspace({
   initialTab?: SettingsTab;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sectionParam = searchParams.get("section");
   const projectWorkspace = useProjectWorkspace();
   const {
     user,
@@ -112,7 +114,6 @@ export default function SettingsWorkspace({
       router.replace("/login");
       return;
     }
-    const section = new URLSearchParams(window.location.search).get("section");
     const sections: SettingsTab[] = [
       "account",
       "appearance",
@@ -125,11 +126,11 @@ export default function SettingsWorkspace({
     ];
     if (user.systemRole === "ADMIN") sections.push("admin");
     setActiveTabState(
-      sections.includes(section as SettingsTab)
-        ? (section as SettingsTab)
+      sections.includes(sectionParam as SettingsTab)
+        ? (sectionParam as SettingsTab)
         : initialTab,
     );
-  }, [isLoading, user, initialTab, router]);
+  }, [isLoading, user, initialTab, router, sectionParam]);
 
   // Profile Edit State
   const [displayName, setDisplayName] = useState(user?.displayName || "");
