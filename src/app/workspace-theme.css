@@ -2640,3 +2640,213 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
     padding-right: 8px;
   }
 }
+
+/* Shared collection surfaces: Goals and Knowledge use the Files visual language. */
+.collection-workspace {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-bottom: 32px;
+}
+.collection-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.collection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.collection-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  height: auto;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: none;
+}
+.collection-action-primary {
+  background: var(--ws-primary) !important;
+  color: var(--ws-on-primary) !important;
+  border-color: transparent;
+  box-shadow: none;
+}
+.collection-action-primary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+.collection-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.collection-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.collection-select {
+  min-height: 36px;
+  max-width: 100%;
+  border: 1px solid var(--ws-border);
+  border-radius: 10px;
+  padding: 7px 22px 7px 10px;
+  background-color: var(--ws-input);
+  color: var(--ws-text);
+  font-size: 12px;
+  font-weight: 400;
+}
+.collection-select:focus-visible {
+  outline: 2px solid var(--ws-soft);
+  outline-offset: 2px;
+}
+.collection-search {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+  margin-left: auto;
+}
+.collection-search > svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  color: var(--ws-muted);
+  pointer-events: none;
+}
+.collection-search input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--ws-border);
+  border-radius: 10px;
+  padding: 7px 12px 7px 35px;
+  background: var(--ws-input);
+  color: var(--ws-text);
+  font-size: 12px;
+  box-shadow: none;
+}
+.collection-search input::placeholder {
+  color: var(--ws-muted);
+}
+.collection-search input:focus-visible {
+  outline: 2px solid var(--ws-soft);
+  outline-offset: 2px;
+}
+.collection-status-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.collection-status-tabs button {
+  flex-shrink: 0;
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  color: var(--ws-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.collection-status-tabs button:hover,
+.collection-status-tabs button[aria-pressed="true"] {
+  background: var(--ws-hover);
+  color: var(--ws-text);
+}
+.collection-status-tabs button:focus-visible {
+  outline: 2px solid var(--ws-soft);
+  outline-offset: -2px;
+}
+.collection-empty-state {
+  display: flex;
+  min-height: 240px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 40px 24px;
+  border: 1px solid var(--ws-border);
+  border-radius: 16px;
+  background: var(--ws-surface);
+  text-align: center;
+}
+.collection-empty-icon {
+  margin-bottom: 5px;
+  color: var(--ws-muted);
+}
+.collection-empty-icon svg {
+  width: 26px;
+  height: 26px;
+  stroke-width: 1.5;
+}
+.collection-empty-state h3 {
+  color: var(--ws-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+.collection-empty-state p {
+  max-width: 390px;
+  color: var(--ws-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.collection-empty-action {
+  margin-top: 8px;
+}
+@media (max-width: 639px) {
+  .collection-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .collection-toolbar {
+    gap: 10px;
+  }
+  .collection-search {
+    flex-basis: 100%;
+    min-width: 0;
+    order: 2;
+  }
+  .collection-filters {
+    flex: 1 1 100%;
+  }
+  .collection-select {
+    flex: 1;
+    min-width: 0;
+  }
+  .collection-empty-state {
+    min-height: 240px;
+    padding: 32px 20px;
+  }
+}
+
+@media (max-width: 639px) {
+  .goals-toolbar .collection-search {
+    flex: 1;
+    min-width: 160px;
+    order: 0;
+  }
+}
+
+.goals-toolbar .files-view-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  border-radius: 7px;
+}

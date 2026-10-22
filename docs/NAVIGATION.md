@@ -38,3 +38,17 @@ checked desktop and 393px layouts, project scope, the Decisions menu, both searc
 Knowledge tabs, and the legacy Platforms redirect. This is UI regression coverage,
 not a claim of live provider acceptance. The normal backend on port 3001 remains
 stopped pending activation of the updated application.
+
+## Goals and Memories visual refinement — 2026-10-22
+
+Goals and Memories share the Files page's neutral palette, 1120px content width,
+compact actions, 36px filters/search, and solid rounded empty-state surface. Goals
+uses the normal page canvas rather than a boxed header and nested scrolling area.
+Memory status filters retain their behavior and expose their pressed state. Color
+is retained for meaningful status indicators; recall and form actions use the
+workspace palette. Goal table scrolling stays inside its container on mobile.
+
+Verification: frontend lint, typecheck, all 29 existing tests, and the production
+build passed. Synthetic browser checks covered empty and populated pages, Goals
+grid/table switching, add forms, and 393px layouts without page overflow. These
+are visual changes; no backend/API or user-record changes were made.

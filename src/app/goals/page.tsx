@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
+import { CollectionEmptyState } from "@/components/collection-empty-state";
 import { api } from "@/lib/api";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,7 @@ const CATEGORY_COLORS: Record<GoalCategory, string> = {
 const STATUS_COLORS: Record<GoalStatus, string> = {
   PLANNED: "bg-sky-50 text-sky-700 border-sky-200",
   ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  ACHIEVED: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  ACHIEVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
   PAUSED: "bg-amber-50 text-amber-700 border-amber-200",
   ABANDONED: "bg-rose-50 text-rose-700 border-rose-200",
 };
@@ -686,34 +687,29 @@ export default function GoalsPage() {
 
   return (
     <AppLayout>
-      <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
+      <div className="collection-workspace space-y-6">
         {/* Header Bar */}
-        <header className="bg-card border-b border-border px-6 py-4 flex-shrink-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-7xl mx-auto w-full">
+        <header>
+          <div className="collection-header">
             <div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                  <Target className="w-4 h-4" />
-                </div>
-                <h1 className="text-xl font-bold text-foreground tracking-tight">
-                  Goals
-                </h1>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Define measurable outcomes, connect initiatives to tasks, and
-                review progress with OSCAR.
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+                Goals
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Define what matters, measure progress, and plan your next steps
+                with OSCAR.
               </p>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="collection-actions">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => launchStrategicReview()}
-                className="text-xs border-amber-200 bg-amber-50/60 hover:bg-amber-100/60 text-amber-800 font-medium flex items-center gap-1.5"
+                className="collection-action"
               >
                 <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-                Strategic Review
+                Strategic review
               </Button>
 
               <Button
@@ -722,41 +718,43 @@ export default function GoalsPage() {
                   setFormScope(currentProject?.id || "PERSONAL");
                   openGoalForm();
                 }}
-                className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium flex items-center gap-1.5 shadow-2xs"
+                className="collection-action collection-action-primary"
               >
                 <Plus className="w-4 h-4" />
-                New Goal
+                New goal
               </Button>
             </div>
           </div>
         </header>
 
         {/* Filter and Search Bar */}
-        <div className="bg-card border-b border-border px-6 py-3 flex-shrink-0">
-          <div className="flex flex-wrap items-center justify-between gap-3 max-w-7xl mx-auto w-full">
-            <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+        <div>
+          <div className="collection-toolbar goals-toolbar">
+            <div className="collection-filters">
               {/* Scope filter */}
               <select
+                aria-label="Goal scope"
                 value={scopeFilter}
                 onChange={(e) => setScopeFilter(e.target.value as any)}
-                className="text-xs border border-border rounded-lg px-2.5 py-1.5 bg-card text-foreground font-medium focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+                className="collection-select"
               >
-                <option value="ALL">All Scopes</option>
+                <option value="ALL">All scopes</option>
                 {currentProject && (
                   <option value="PROJECT">
                     Project: {currentProject.name}
                   </option>
                 )}
-                <option value="PERSONAL">Personal Goals</option>
+                <option value="PERSONAL">Personal goals</option>
               </select>
 
               {/* Status filter */}
               <select
+                aria-label="Goal status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-xs border border-border rounded-lg px-2.5 py-1.5 bg-card text-foreground font-medium focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+                className="collection-select"
               >
-                <option value="ALL">All Statuses</option>
+                <option value="ALL">All statuses</option>
                 <option value="ACTIVE">Active</option>
                 <option value="PLANNED">Planned</option>
                 <option value="ACHIEVED">Achieved</option>
@@ -766,11 +764,12 @@ export default function GoalsPage() {
 
               {/* Category filter */}
               <select
+                aria-label="Goal category"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="text-xs border border-border rounded-lg px-2.5 py-1.5 bg-card text-foreground font-medium focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+                className="collection-select"
               >
-                <option value="ALL">All Categories</option>
+                <option value="ALL">All categories</option>
                 <option value="BUSINESS">Business</option>
                 <option value="TECHNICAL">Technical</option>
                 <option value="FINANCIAL">Financial</option>
@@ -779,27 +778,27 @@ export default function GoalsPage() {
               </select>
 
               {/* Search input */}
-              <div className="relative flex-1 min-w-[180px] max-w-xs">
-                <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search goals..."
-                  className="pl-8 text-xs py-1 h-8 rounded-lg"
-                />
-              </div>
+            </div>
+            <div className="collection-search">
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Input
+                aria-label="Search goals"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search goals..."
+              />
             </div>
 
-            <div className="flex items-center gap-1 bg-muted p-0.5 rounded-lg border border-border/60">
+            <div
+              className="files-view-switch"
+              role="group"
+              aria-label="Goal view"
+            >
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
                 aria-label="Grid view"
-                className={`p-1.5 rounded-md text-xs font-medium transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-card text-foreground shadow-2xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                aria-pressed={viewMode === "grid"}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
@@ -807,11 +806,7 @@ export default function GoalsPage() {
                 type="button"
                 onClick={() => setViewMode("table")}
                 aria-label="Table view"
-                className={`p-1.5 rounded-md text-xs font-medium transition-colors ${
-                  viewMode === "table"
-                    ? "bg-card text-foreground shadow-2xs"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                aria-pressed={viewMode === "table"}
               >
                 <ListIcon className="w-3.5 h-3.5" />
               </button>
@@ -820,40 +815,44 @@ export default function GoalsPage() {
         </div>
 
         {/* Content Area */}
-        <section
-          aria-label="Goal results"
-          className="flex-1 overflow-y-auto px-6 py-6"
-        >
+        <section aria-label="Goal results" className="min-w-0">
           <div className="max-w-7xl mx-auto w-full">
             {loading ? (
               <div className="py-20 flex flex-col items-center justify-center text-muted-foreground">
-                <RefreshCw className="w-6 h-6 animate-spin mb-3 text-indigo-500" />
+                <RefreshCw className="w-6 h-6 animate-spin mb-3 text-muted-foreground" />
                 <span className="text-xs font-medium">Loading goals...</span>
               </div>
             ) : filteredGoals.length === 0 ? (
-              <div className="bg-card border border-dashed border-slate-300 rounded-2xl p-12 text-center max-w-lg mx-auto">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
-                  <Target className="w-6 h-6" />
-                </div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  No Goals Found
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1 mb-5">
-                  {searchQuery ||
+              <CollectionEmptyState
+                icon={<Target />}
+                title={
+                  searchQuery ||
                   statusFilter !== "ALL" ||
-                  categoryFilter !== "ALL"
-                    ? "Try adjusting your filters to find matching goals."
-                    : "Start by defining your first strategic goal to give OSCAR context on what matters."}
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => openGoalForm()}
-                  className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
-                >
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  Create Goal
-                </Button>
-              </div>
+                  categoryFilter !== "ALL" ||
+                  scopeFilter !== "ALL"
+                    ? "No matching goals"
+                    : "No goals yet"
+                }
+                description={
+                  searchQuery ||
+                  statusFilter !== "ALL" ||
+                  categoryFilter !== "ALL" ||
+                  scopeFilter !== "ALL"
+                    ? "Try another search or adjust your filters."
+                    : "Set a goal so OSCAR knows what you’re working toward."
+                }
+                action={
+                  <Button
+                    size="sm"
+                    onClick={() => openGoalForm()}
+                    variant="outline"
+                    className="collection-action"
+                  >
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    Create goal
+                  </Button>
+                }
+              />
             ) : viewMode === "grid" ? (
               /* Grid / Card View */
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -875,7 +874,7 @@ export default function GoalsPage() {
                         }
                       }}
                       onClick={() => openGoalDrawer(goal)}
-                      className="group bg-card rounded-xl border border-border/90 hover:border-indigo-300 p-5 shadow-2xs hover:shadow-sm transition-all cursor-pointer flex flex-col justify-between"
+                      className="group bg-card rounded-xl border border-border/90 hover:border-[var(--ws-soft)] p-5 shadow-2xs hover:shadow-sm transition-all cursor-pointer flex flex-col justify-between"
                     >
                       <div>
                         {/* Top Pills */}
@@ -897,7 +896,7 @@ export default function GoalsPage() {
                         </div>
 
                         {/* Title & Target */}
-                        <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-600 transition-colors line-clamp-2">
+                        <h3 className="text-sm font-semibold text-foreground group-hover:text-foreground transition-colors line-clamp-2">
                           {goal.title}
                         </h3>
 
@@ -925,7 +924,7 @@ export default function GoalsPage() {
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
                               (goal.measuredProgress ?? goal.progress) >= 100
-                                ? "bg-indigo-600"
+                                ? "bg-[var(--ws-text)]"
                                 : (goal.measuredProgress ?? goal.progress) >= 50
                                   ? "bg-emerald-500"
                                   : "bg-blue-500"
@@ -968,7 +967,7 @@ export default function GoalsPage() {
               </div>
             ) : (
               /* Table View */
-              <div className="bg-card border border-border/90 rounded-xl overflow-hidden shadow-2xs">
+              <div className="bg-card border border-border rounded-2xl overflow-x-auto">
                 <table className="w-full text-left text-xs text-muted-foreground">
                   <thead className="bg-muted/80 text-[11px] font-semibold text-foreground uppercase border-b border-border">
                     <tr>
@@ -1042,7 +1041,7 @@ export default function GoalsPage() {
                           <div className="flex items-center gap-2">
                             <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-indigo-600 rounded-full"
+                                className="h-full bg-[var(--ws-text)] rounded-full"
                                 style={{
                                   width: `${Math.min(100, Math.max(0, goal.measuredProgress ?? goal.progress))}%`,
                                 }}
@@ -1141,7 +1140,7 @@ export default function GoalsPage() {
                   onChange={(e) =>
                     handleUpdateStatus(e.target.value as GoalStatus)
                   }
-                  className="border border-border rounded-md px-2 py-1 bg-card font-semibold text-foreground text-xs focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                  className="border border-border rounded-md px-2 py-1 bg-card font-semibold text-foreground text-xs focus:outline-hidden focus:ring-1 focus:ring-codex-muted"
                 >
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="PLANNED">PLANNED</option>
@@ -1179,7 +1178,7 @@ export default function GoalsPage() {
                 onClick={() => setActiveTab("overview")}
                 className={`py-2.5 border-b-2 transition-colors ${
                   activeTab === "overview"
-                    ? "border-indigo-600 text-indigo-600"
+                    ? "border-codex-text text-foreground"
                     : "border-transparent hover:text-foreground"
                 }`}
               >
@@ -1190,7 +1189,7 @@ export default function GoalsPage() {
                 onClick={() => setActiveTab("metrics")}
                 className={`py-2.5 border-b-2 transition-colors ${
                   activeTab === "metrics"
-                    ? "border-indigo-600 text-indigo-600"
+                    ? "border-codex-text text-foreground"
                     : "border-transparent hover:text-foreground"
                 }`}
               >
@@ -1201,7 +1200,7 @@ export default function GoalsPage() {
                 onClick={() => setActiveTab("milestones")}
                 className={`py-2.5 border-b-2 transition-colors ${
                   activeTab === "milestones"
-                    ? "border-indigo-600 text-indigo-600"
+                    ? "border-codex-text text-foreground"
                     : "border-transparent hover:text-foreground"
                 }`}
               >
@@ -1212,7 +1211,7 @@ export default function GoalsPage() {
                 onClick={() => setActiveTab("work")}
                 className={`py-2.5 border-b-2 transition-colors ${
                   activeTab === "work"
-                    ? "border-indigo-600 text-indigo-600"
+                    ? "border-codex-text text-foreground"
                     : "border-transparent hover:text-foreground"
                 }`}
               >
@@ -1223,7 +1222,7 @@ export default function GoalsPage() {
                 onClick={() => setActiveTab("revisions")}
                 className={`py-2.5 border-b-2 transition-colors ${
                   activeTab === "revisions"
-                    ? "border-indigo-600 text-indigo-600"
+                    ? "border-codex-text text-foreground"
                     : "border-transparent hover:text-foreground"
                 }`}
               >
@@ -1239,7 +1238,7 @@ export default function GoalsPage() {
                   <div className="bg-muted/80 border border-border/90 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-1.5">
-                        <TrendingUp className="w-4 h-4 text-indigo-600" />
+                        <TrendingUp className="w-4 h-4 text-foreground" />
                         <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                           Measured Progress Breakdown
                         </h4>
@@ -1247,7 +1246,7 @@ export default function GoalsPage() {
                           <RefreshCw className="w-3 h-3 text-muted-foreground animate-spin" />
                         )}
                       </div>
-                      <span className="text-base font-extrabold text-indigo-600">
+                      <span className="text-base font-extrabold text-foreground">
                         {goalSummary?.measuredProgress ?? selectedGoal.progress}
                         %
                       </span>
@@ -1255,7 +1254,7 @@ export default function GoalsPage() {
 
                     <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden mb-4">
                       <div
-                        className="h-full bg-indigo-600 rounded-full transition-all duration-300"
+                        className="h-full bg-[var(--ws-text)] rounded-full transition-all duration-300"
                         style={{
                           width: `${Math.min(
                             100,
@@ -1382,7 +1381,7 @@ export default function GoalsPage() {
                       size="sm"
                       disabled={!canWriteGoal(selectedGoal)}
                       onClick={() => setAddMetricModalOpen(true)}
-                      className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-1 h-7"
+                      className="text-xs collection-action-primary font-medium py-1 h-7"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1" />
                       Add Metric
@@ -1480,7 +1479,7 @@ export default function GoalsPage() {
                                         metric.currentValue,
                                       );
                                     }}
-                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1 rounded bg-indigo-50 border border-indigo-100"
+                                    className="text-xs text-foreground hover:text-foreground font-medium px-2 py-1 rounded bg-muted border border-border"
                                   >
                                     Update
                                   </button>
@@ -1506,7 +1505,7 @@ export default function GoalsPage() {
                               </div>
                               <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-indigo-600 rounded-full"
+                                  className="h-full bg-[var(--ws-text)] rounded-full"
                                   style={{
                                     width: `${Math.min(100, Math.max(0, progressPct))}%`,
                                   }}
@@ -1545,7 +1544,7 @@ export default function GoalsPage() {
                             disabled={!canWriteGoal(selectedGoal)}
                             checked={m.completed}
                             onChange={() => {}} // handled by parent div click
-                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                            className="rounded border-slate-300 text-foreground focus:ring-codex-muted w-4 h-4"
                           />
                           <span
                             className={`text-xs font-medium flex-1 ${
@@ -1593,7 +1592,7 @@ export default function GoalsPage() {
                               </span>
                               <Link
                                 href={`/tasks?search=${encodeURIComponent(task.title)}`}
-                                className="font-medium text-foreground hover:text-indigo-600 hover:underline"
+                                className="font-medium text-foreground hover:text-foreground hover:underline"
                               >
                                 {task.title}
                               </Link>
@@ -1637,7 +1636,7 @@ export default function GoalsPage() {
                               </span>
                               <Link
                                 href={`/decisions?search=${encodeURIComponent(dec.title)}`}
-                                className="font-medium text-foreground hover:text-indigo-600 hover:underline"
+                                className="font-medium text-foreground hover:text-foreground hover:underline"
                               >
                                 {dec.title}
                               </Link>
@@ -1763,7 +1762,7 @@ export default function GoalsPage() {
                   value={formMotivation}
                   onChange={(e) => setFormMotivation(e.target.value)}
                   placeholder="Explain why this outcome matters and how it informs priority decisions."
-                  className="w-full text-xs border border-border rounded-lg p-2.5 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full bg-background text-foreground text-xs border border-border rounded-lg p-2.5 focus:outline-hidden focus:ring-2 focus:ring-codex-muted/20"
                   rows={2}
                 />
               </div>
@@ -1864,7 +1863,7 @@ export default function GoalsPage() {
                   value={formMilestones}
                   onChange={(e) => setFormMilestones(e.target.value)}
                   placeholder="Deploy beta to production&#10;Onboard first 5 design partners&#10;Reach 20 paying customers"
-                  className="w-full text-xs border border-border rounded-lg p-2.5"
+                  className="w-full bg-background text-foreground text-xs border border-border rounded-lg p-2.5"
                   rows={3}
                 />
               </div>
@@ -1878,7 +1877,7 @@ export default function GoalsPage() {
                   value={formInitiatives}
                   onChange={(e) => setFormInitiatives(e.target.value)}
                   placeholder="Setup Stripe billing portal&#10;Conduct weekly feedback calls"
-                  className="w-full text-xs border border-border rounded-lg p-2.5"
+                  className="w-full bg-background text-foreground text-xs border border-border rounded-lg p-2.5"
                   rows={2}
                 />
               </div>
@@ -1897,7 +1896,7 @@ export default function GoalsPage() {
                   type="submit"
                   size="sm"
                   disabled={isSubmitting}
-                  className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                  className="text-xs collection-action-primary font-medium"
                 >
                   {isSubmitting
                     ? "Saving…"
@@ -2021,7 +2020,7 @@ export default function GoalsPage() {
                 <Button
                   type="submit"
                   size="sm"
-                  className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                  className="text-xs collection-action-primary font-medium"
                 >
                   Save Metric
                 </Button>

@@ -5,6 +5,7 @@ import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
 import { KnowledgeNavigation } from "./knowledge-navigation";
+import { CollectionEmptyState } from "@/components/collection-empty-state";
 import { Modal } from "@/components/ui/modal";
 import { GoalSelect } from "@/components/goal-select";
 import { api } from "@/lib/api";
@@ -241,35 +242,29 @@ function MemoriesWorkspace() {
 
   return (
     <AppLayout>
-      <div className="max-w-7xl mx-auto space-y-6 pb-12">
+      <div className="collection-workspace space-y-6">
         <KnowledgeNavigation active="memories" />
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-border">
+        <div className="collection-header">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-violet-600/10 text-violet-600 dark:text-violet-400">
-                <Brain className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                  Memories
-                </h2>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Review what OSCAR remembers, inspect its sources, and correct
-                  outdated information.
-                </p>
-              </div>
-            </div>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">
+              Memories
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Review what OSCAR remembers, inspect its sources, and correct
+              outdated information.
+            </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="collection-actions">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setRetrievalOpen(!retrievalOpen)}
-              className="gap-2"
+              className="collection-action"
+              aria-expanded={retrievalOpen}
             >
-              <Sparkles className="w-4 h-4 text-violet-500" />
-              {retrievalOpen ? "Hide Context Tester" : "Test recall"}
+              <Sparkles className="w-4 h-4" />
+              {retrievalOpen ? "Close recall" : "Test recall"}
             </Button>
             <Button
               size="sm"
@@ -278,7 +273,7 @@ function MemoriesWorkspace() {
                 setProposeGoalId("");
                 setProposeModalOpen(true);
               }}
-              className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+              className="collection-action collection-action-primary"
             >
               <Plus className="w-4 h-4" />
               Add memory
@@ -288,10 +283,10 @@ function MemoriesWorkspace() {
 
         {/* Retrieval Tester Box */}
         {retrievalOpen && (
-          <div className="p-5 rounded-2xl bg-card border border-violet-500/30 shadow-sm space-y-4">
+          <div className="p-5 rounded-2xl bg-card border border-border shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-violet-500" />
+                <Sparkles className="w-4 h-4 text-muted-foreground" />
                 Test recall
               </h2>
               <span className="text-xs text-muted-foreground">
@@ -309,7 +304,7 @@ function MemoriesWorkspace() {
               <Button
                 onClick={handleExecuteRetrieval}
                 disabled={retrievalLoading || !retrievalQuery.trim()}
-                className="bg-violet-600 text-white"
+                className="collection-action-primary"
               >
                 {retrievalLoading ? "Retrieving..." : "Retrieve"}
               </Button>
@@ -317,23 +312,23 @@ function MemoriesWorkspace() {
             {retrievalResult && (
               <div className="mt-4 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-                  <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800">
-                    <div className="font-semibold text-emerald-800 dark:text-emerald-300">
+                  <div className="p-3 rounded-xl bg-background border border-border">
+                    <div className="font-semibold text-muted-foreground">
                       Approved Memories
                     </div>
-                    <div className="text-lg font-bold text-emerald-900 dark:text-emerald-200">
+                    <div className="text-lg font-bold text-foreground">
                       {retrievalResult.approvedMemories?.length || 0}
                     </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800">
-                    <div className="font-semibold text-blue-800 dark:text-blue-300">
+                  <div className="p-3 rounded-xl bg-background border border-border">
+                    <div className="font-semibold text-muted-foreground">
                       Historical Conversations
                     </div>
-                    <div className="text-lg font-bold text-blue-900 dark:text-blue-200">
+                    <div className="text-lg font-bold text-foreground">
                       {retrievalResult.historicalConversations?.length || 0}
                     </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-border">
+                  <div className="p-3 rounded-xl bg-background border border-border">
                     <div className="font-semibold text-foreground">
                       Project Sources
                     </div>
@@ -341,11 +336,11 @@ function MemoriesWorkspace() {
                       {retrievalResult.projectSources?.length || 0}
                     </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-                    <div className="font-semibold text-amber-800 dark:text-amber-300">
+                  <div className="p-3 rounded-xl bg-background border border-border">
+                    <div className="font-semibold text-muted-foreground">
                       Raw Execution Runs
                     </div>
-                    <div className="text-lg font-bold text-amber-900 dark:text-amber-200">
+                    <div className="text-lg font-bold text-foreground">
                       {retrievalResult.rawExecutionResults?.length || 0}
                     </div>
                   </div>
@@ -381,9 +376,13 @@ function MemoriesWorkspace() {
         )}
 
         {/* Filter Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-4">
           {/* Status Tabs */}
-          <div className="flex max-w-full items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border overflow-x-auto">
+          <div
+            className="collection-status-tabs"
+            role="group"
+            aria-label="Memory status"
+          >
             {[
               { id: "ALL", label: "All memories" },
               {
@@ -397,12 +396,9 @@ function MemoriesWorkspace() {
             ].map((tab) => (
               <button
                 key={tab.id}
+                type="button"
+                aria-pressed={statusFilter === tab.id}
                 onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
-                  statusFilter === tab.id
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
               >
                 {tab.label}
               </button>
@@ -410,14 +406,14 @@ function MemoriesWorkspace() {
           </div>
 
           {/* Secondary Filters & Search */}
-          <div className="flex w-full min-w-0 flex-wrap items-center gap-3 sm:w-auto sm:flex-1">
+          <div className="collection-toolbar">
             <select
               aria-label="Memory scope"
               value={scopeFilter}
               onChange={(e) => setScopeFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500"
+              className="collection-select"
             >
-              <option value="ALL">All Scopes</option>
+              <option value="ALL">All scopes</option>
               <option value="PERSONAL">Personal</option>
               <option value="PROJECT">Project</option>
               <option value="GOAL">Goal</option>
@@ -427,9 +423,9 @@ function MemoriesWorkspace() {
               aria-label="Memory type"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500"
+              className="collection-select"
             >
-              <option value="ALL">All Types</option>
+              <option value="ALL">All types</option>
               <option value="DECISION">Decision</option>
               <option value="PREFERENCE">Preference</option>
               <option value="FACT">Fact</option>
@@ -440,15 +436,14 @@ function MemoriesWorkspace() {
               <option value="PROCEDURAL">Procedural</option>
             </select>
 
-            <div className="relative w-full sm:min-w-[200px] sm:w-auto sm:flex-1">
+            <div className="collection-search">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 aria-label="Filter memories"
-                placeholder="Filter statements..."
+                placeholder="Search memories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-violet-500"
               />
             </div>
           </div>
@@ -457,20 +452,30 @@ function MemoriesWorkspace() {
         {/* Memory Items List */}
         {loading ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
-            Loading MAVIS memories...
+            Loading memories…
           </div>
         ) : memories.length === 0 ? (
-          <div className="py-16 text-center border-2 border-dashed border-border rounded-2xl">
-            <Brain className="w-10 h-10 mx-auto text-muted-foreground/60 mb-3" />
-            <h3 className="text-base font-semibold text-foreground">
-              No memories found
-            </h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
-              {statusFilter === "PROPOSED"
-                ? "There are no candidate memories awaiting human review."
-                : "No memory records match the selected scope, status, or search query."}
-            </p>
-          </div>
+          <CollectionEmptyState
+            icon={<Brain />}
+            title={
+              statusFilter === "ALL" &&
+              scopeFilter === "ALL" &&
+              typeFilter === "ALL" &&
+              !searchQuery
+                ? "No memories yet"
+                : "No matching memories"
+            }
+            description={
+              statusFilter === "PROPOSED"
+                ? "Memories waiting for your review will appear here."
+                : statusFilter !== "ALL" ||
+                    scopeFilter !== "ALL" ||
+                    typeFilter !== "ALL" ||
+                    searchQuery
+                  ? "Try another search or adjust your filters."
+                  : "Save preferences, facts, and lessons for OSCAR to remember."
+            }
+          />
         ) : (
           <div className="space-y-4">
             {memories.map((mem) => {
@@ -485,7 +490,7 @@ function MemoriesWorkspace() {
                     isCandidate
                       ? "bg-amber-50/40 dark:bg-amber-950/10 border-amber-300 dark:border-amber-800/60 shadow-sm"
                       : isApproved
-                        ? "bg-card border-border hover:border-violet-300 dark:hover:border-violet-800"
+                        ? "bg-card border-border hover:border-[var(--ws-soft)]"
                         : "bg-muted/30 border-border opacity-85"
                   }`}
                 >
@@ -500,7 +505,7 @@ function MemoriesWorkspace() {
                               : isApproved
                                 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-300"
                                 : isSuperseded
-                                  ? "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-300"
+                                  ? "bg-muted text-muted-foreground border border-border"
                                   : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 border border-rose-300"
                           }`}
                         >
@@ -594,7 +599,7 @@ function MemoriesWorkspace() {
                           variant="outline"
                           disabled={!canEdit(mem)}
                           onClick={() => handleOpenSupersede(mem)}
-                          className="text-xs h-8 gap-1.5 text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/20"
+                          className="text-xs h-8 gap-1.5 text-muted-foreground hover:bg-muted"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           Correct
@@ -629,7 +634,7 @@ function MemoriesWorkspace() {
             <div className="w-full max-w-lg p-6 bg-card rounded-2xl border border-border shadow-xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-border">
                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-violet-600" />
+                  <Brain className="w-5 h-5 text-muted-foreground" />
                   Add memory
                 </h3>
                 <button
@@ -653,7 +658,7 @@ function MemoriesWorkspace() {
                     aria-label="Memory statement"
                     value={proposeStatement}
                     onChange={(e) => setProposeStatement(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500"
+                    className="w-full p-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-codex-muted"
                   />
                 </div>
 
@@ -666,7 +671,7 @@ function MemoriesWorkspace() {
                       aria-label="Memory type"
                       value={proposeType}
                       onChange={(e) => setProposeType(e.target.value)}
-                      className="w-full p-2 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      className="w-full p-2 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-codex-muted"
                     >
                       <option value="DECISION">DECISION</option>
                       <option value="FACT">FACT</option>
@@ -690,7 +695,7 @@ function MemoriesWorkspace() {
                         setProposeScope(e.target.value as any);
                         setProposeGoalId("");
                       }}
-                      className="w-full p-2 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500"
+                      className="w-full p-2 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-codex-muted"
                     >
                       <option value="PROJECT" disabled={!canWriteProject}>
                         Project
@@ -725,7 +730,7 @@ function MemoriesWorkspace() {
                     aria-label="Memory rationale"
                     value={proposeRationale}
                     onChange={(e) => setProposeRationale(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500"
+                    className="w-full p-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-codex-muted"
                   />
                 </div>
 
@@ -742,7 +747,7 @@ function MemoriesWorkspace() {
                     type="submit"
                     size="sm"
                     disabled={proposeSubmitting || !proposeStatement.trim()}
-                    className="bg-violet-600 text-white"
+                    className="collection-action-primary"
                   >
                     {proposeSubmitting ? "Saving..." : "Save for review"}
                   </Button>
@@ -762,7 +767,7 @@ function MemoriesWorkspace() {
             <div className="w-full max-w-lg p-6 bg-card rounded-2xl border border-border shadow-xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-border">
                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <RefreshCw className="w-5 h-5 text-violet-600" />
+                  <RefreshCw className="w-5 h-5 text-muted-foreground" />
                   Correct memory
                 </h3>
                 <button
@@ -791,7 +796,7 @@ function MemoriesWorkspace() {
                   aria-label="Corrected memory statement"
                   value={supersedeStatement}
                   onChange={(e) => setSupersedeStatement(e.target.value)}
-                  className="w-full p-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500"
+                  className="w-full p-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-codex-muted"
                 />
                 <p className="text-[11px] text-muted-foreground">
                   OSCAR will use the corrected version in future conversations.
@@ -812,7 +817,7 @@ function MemoriesWorkspace() {
                   size="sm"
                   onClick={handleExecuteSupersede}
                   disabled={supersedeSubmitting || !supersedeStatement.trim()}
-                  className="bg-violet-600 text-white"
+                  className="collection-action-primary"
                 >
                   {supersedeSubmitting ? "Saving..." : "Save correction"}
                 </Button>
