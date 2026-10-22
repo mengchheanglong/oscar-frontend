@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { GoalSelect } from "@/components/goal-select";
@@ -28,12 +28,67 @@ export function PlatformConnections({
       : platformType === "t3"
         ? "T3 Code"
         : "Agent";
-  const { currentProject, projects } = useAuth();
+  const { user, currentProject, projects } = useAuth();
   const { showToast } = useToast();
   const [connections, setConnections] = useState<PlatformConnection[]>([]),
     [links, setLinks] = useState<ExternalLink[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
+  const healthScope = `${user?.id}:${currentProject?.id || "all"}:${platformType || "all"}`;
+  const scopeRef = useRef(healthScope);
+  const loadedScopeRef = useRef("");
+  scopeRef.current = healthScope;
+  const connectionIds =
+    loadedScopeRef.current === healthScope
+      ? connections.map((c) => c.id).join(",")
+      : "";
+  useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      if (document.visibilityState === "visible") {
+        const ids = connectionIds.split(",").filter(Boolean);
+        // Keep probes bounded and wait for a cycle before scheduling another.
+        for (let i = 0; i < ids.length && active; i += 3) {
+          const results = await Promise.allSettled(
+            ids.slice(i, i + 3).map((id) => platformsApi.test(id)),
+          );
+          if (!active || scopeRef.current !== healthScope) return;
+          setConnections((previous) =>
+            previous.map((connection) => {
+              const index = ids.slice(i, i + 3).indexOf(connection.id);
+              if (index < 0) return connection;
+              const result = results[index];
+              return result.status === "fulfilled"
+                ? result.value
+                : { ...connection, healthFresh: false };
+            }),
+          );
+        }
+      }
+      if (active) timer = setTimeout(poll, 30_000);
+    };
+    void poll();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible")
+        setConnections((previous) =>
+          previous.map((connection) => ({
+            ...connection,
+            healthFresh:
+              !!connection.lastHealthCheckAt &&
+              Date.now() - new Date(connection.lastHealthCheckAt).getTime() <
+                60_000 &&
+              connection.healthFresh,
+          })),
+        );
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [connectionIds, healthScope]);
   const [editing, setEditing] = useState<PlatformConnection | null>(null);
   const [t3Access, setT3Access] = useState("read");
   const [paperclipAccess, setPaperclipAccess] = useState("read");
@@ -65,6 +120,8 @@ export function PlatformConnections({
         platformsApi.list(currentProject?.id),
         platformsApi.links(currentProject?.id),
       ]);
+      if (scopeRef.current !== healthScope) return;
+      loadedScopeRef.current = healthScope;
       const visible = list.items.filter(
         (c) => !platformType || c.platformType === platformType,
       );
@@ -76,14 +133,21 @@ export function PlatformConnections({
         ),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Platforms could not load.");
+      if (scopeRef.current === healthScope)
+        setError(e instanceof Error ? e.message : "Platforms could not load.");
     } finally {
-      setLoading(false);
+      if (scopeRef.current === healthScope) setLoading(false);
     }
-  }, [currentProject?.id, platformType]);
+  }, [currentProject?.id, platformType, healthScope]);
   useEffect(() => {
     setOverview(null);
     setRecords({});
+    setConnections([]);
+    setLinks([]);
+    setAdding(false);
+    setEditing(null);
+    setSelected(null);
+    setToken("");
     void load();
   }, [load]);
   async function submit(e: React.FormEvent) {
@@ -406,7 +470,19 @@ export function PlatformConnections({
                   {connection.baseUrl}
                 </p>
                 <p className="mt-2 text-sm">
-                  {connection.status.toLowerCase().replaceAll("_", " ")}
+                  {connection.healthFresh &&
+                  connection.lastHealthCheckAt &&
+                  Date.now() -
+                    new Date(connection.lastHealthCheckAt).getTime() <
+                    60_000
+                    ? connection.status.toLowerCase().replaceAll("_", " ")
+                    : "Status needs checking"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {connection.lastHealthCheckAt
+                    ? `Last checked ${new Date(connection.lastHealthCheckAt).toLocaleString()}`
+                    : "Not checked yet"}{" "}
+                  · Checks automatically while this page is visible
                 </p>
                 {connection.healthError && (
                   <p className="mt-1 text-sm text-muted-foreground">

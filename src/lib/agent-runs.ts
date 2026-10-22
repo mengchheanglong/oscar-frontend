@@ -1,6 +1,7 @@
 import { apiRequest } from "./api";
 
 export interface AgentRun {
+  goalId?: string | null;
   id: string;
   projectId: string;
   conversationId: string | null;
@@ -39,10 +40,11 @@ export const agentRuns = {
     prompt: string,
     idempotencyKey: string,
     conversationId?: string,
+    goalId?: string,
   ) =>
     apiRequest<AgentRun>(`/projects/${projectId}/ai/runs`, {
       method: "POST",
-      body: JSON.stringify({ prompt, idempotencyKey, conversationId }),
+      body: JSON.stringify({ prompt, idempotencyKey, conversationId, goalId }),
     }),
   cancel: (projectId: string, id: string) =>
     apiRequest<AgentRun>(`/projects/${projectId}/ai/runs/${id}/cancel`, {

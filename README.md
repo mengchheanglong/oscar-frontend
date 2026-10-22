@@ -3,12 +3,13 @@
 ## OSCAR & MAVIS foundation
 
 The new product plan and Phase 0 baseline are documented in the sibling backend:
-[vision and architecture](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/OSCAR_MAVIS_Vision_and_Architecture.md)
-and [foundation](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/OSCAR_MAVIS_FOUNDATION.md).
+[vision and architecture](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/product/OSCAR_MAVIS_Vision_and_Architecture.md)
+and [foundation](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/product/OSCAR_MAVIS_FOUNDATION.md).
 In a new sibling checkout, these are under `../oscar-backend/docs/`; the existing
 local `../continuum-backend/docs/` path remains supported.
-Continuum remains the existing codebase; proposed goals and external integrations
-are not implemented by this setup.
+Continuum remains the engineering foundation. Goals, reviewed MAVIS memory and
+supervised Hermes/T3/Paperclip handoffs are implemented; their runtime readiness
+still depends on local services and current authorization.
 
 Use Node 24.14.0 and pnpm 10.32.1. Run `pnpm lint`, `pnpm typecheck`, `pnpm test`,
 and `pnpm build` here, or run `pnpm verify:foundation` from the sibling backend
@@ -47,6 +48,14 @@ Chat, Goals, Tasks, and Knowledge form the main workspace. Files and memories
 share Knowledge; project menus retain decisions; Settings → Integrations holds
 agent connections. Tasks includes recent delegated work. See [navigation and
 compatibility](docs/NAVIGATION.md).
+
+Goals includes **Briefing & spending**: current progress, blockers, agent outcomes,
+opt-in daily/weekly briefings and a monthly reporting threshold. **Tasks → Agent
+work → Review outcome** records a human check and optionally proposes a MAVIS
+lesson for separate approval. Spending is user-reported USD execution cost;
+unknown costs remain explicit and the threshold is not a hard spending cap.
+Schedules run while the backend is online. See the backend's
+[workflow guide](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/product/CHIEF_OF_STAFF_WORKFLOW.md).
 
 ## Features
 

@@ -1,5 +1,6 @@
 import { apiRequest } from "./api";
 export interface PlatformHandoff {
+  goalId?: string | null;
   platformType: "t3" | "paperclip";
   externalUrl: string | null;
   id: string;
@@ -46,6 +47,7 @@ export const platformHandoffs = {
   create: (
     projectId: string,
     body: {
+      goalId?: string;
       conversationId: string;
       connectionId: string;
       platformType?: "t3" | "paperclip";

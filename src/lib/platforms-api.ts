@@ -6,6 +6,8 @@ export interface PlatformConnection {
   baseUrl: string;
   status: string;
   healthError?: string | null;
+  lastHealthCheckAt?: string | null;
+  healthFresh?: boolean;
   projectId?: string | null;
   capabilities: string[];
   metadata?: Record<string, unknown>;

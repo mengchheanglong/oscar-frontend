@@ -8,6 +8,7 @@ import {
   type PlatformHandoff,
 } from "@/lib/platform-handoffs";
 import { agentRuns } from "@/lib/agent-runs";
+import { GoalSelect } from "@/components/goal-select";
 
 export type HandoffPlatform = "t3" | "paperclip" | "hermes";
 const field =
@@ -46,6 +47,10 @@ export function PlatformHandoffPanel({
     [],
   );
   const [target, setTarget] = useState("");
+  const [goalId, setGoalId] = useState("");
+  useEffect(() => {
+    setGoalId("");
+  }, [projectId, prompt]);
   const [models, setModels] = useState<
     Array<{ instanceId: string; model: string; label: string }>
   >([]);
@@ -214,6 +219,7 @@ export function PlatformHandoffPanel({
         target,
         modelKey,
         agentId,
+        goalId,
       ]);
       if (
         request.current?.signature !== signature ||
@@ -231,9 +237,11 @@ export function PlatformHandoffPanel({
           prompt,
           pending.key,
           pending.conversationId,
+          goalId || undefined,
         );
       else
         await platformHandoffs.create(projectId, {
+          goalId: goalId || undefined,
           conversationId: pending.conversationId,
           connectionId,
           platformType: platform,
@@ -357,6 +365,12 @@ export function PlatformHandoffPanel({
             <div className="max-h-40 overflow-auto whitespace-pre-wrap rounded-xl border border-border p-3 text-sm">
               {prompt}
             </div>
+            <GoalSelect
+              projectId={projectId}
+              value={goalId}
+              onChange={setGoalId}
+              disabled={busy}
+            />
             {platform !== "hermes" && (
               <>
                 <label className="block text-sm">
@@ -438,7 +452,10 @@ export function PlatformHandoffPanel({
                 {!connections.length && !loading && (
                   <p className="text-sm text-muted-foreground">
                     Enable {label} execution in{" "}
-                    <Link className="underline" href="/settings?section=integrations&app=platforms">
+                    <Link
+                      className="underline"
+                      href="/settings?section=integrations&app=platforms"
+                    >
                       Connections
                     </Link>
                     .

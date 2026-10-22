@@ -7,6 +7,7 @@ import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
 import { CollectionEmptyState } from "@/components/collection-empty-state";
+import { ChiefBriefingPanel } from "@/components/chief-briefing";
 import { api } from "@/lib/api";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -728,6 +729,7 @@ export default function GoalsPage() {
         </header>
 
         {/* Filter and Search Bar */}
+        <ChiefBriefingPanel />
         <div>
           <div className="collection-toolbar goals-toolbar">
             <div className="collection-filters">

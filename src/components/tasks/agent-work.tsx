@@ -13,6 +13,7 @@ import { TaskNavigation } from "./task-navigation";
 import { MarkdownContent } from "@/components/markdown-content";
 import { api } from "@/lib/api";
 import { ProposalReviewDialog } from "@/components/assistant/proposal-review-dialog";
+import { ExecutionReviewForm } from "./execution-review-form";
 
 const labels: Record<string, string> = {
   QUEUED: "Queued",
@@ -37,6 +38,10 @@ export function AgentWork() {
   } | null>(null);
   const [reviewError, setReviewError] = useState("");
   const [reviewBusy, setReviewBusy] = useState(false);
+  const [outcome, setOutcome] = useState<{
+    scope: string;
+    item: WorkItem;
+  } | null>(null);
   const scopes = useMemo(
     () =>
       currentProject
@@ -177,6 +182,16 @@ export function AgentWork() {
                   </details>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-3">
+                  {["SUCCEEDED", "FAILED", "CANCELLED"].includes(
+                    item.status,
+                  ) && (
+                    <button
+                      className="workspace-pill text-sm"
+                      onClick={() => setOutcome({ scope, item })}
+                    >
+                      Review outcome
+                    </button>
+                  )}
                   <time
                     dateTime={item.updatedAt}
                     className="text-xs text-muted-foreground"
@@ -278,6 +293,21 @@ export function AgentWork() {
             setReview(null);
             setRevision((r) => r + 1);
           }}
+        />
+      )}
+      {outcome && outcome.scope === scope && (
+        <ExecutionReviewForm
+          key={outcome.item.id}
+          platform={
+            outcome.item.agent === "Hermes"
+              ? "hermes"
+              : outcome.item.agent === "Paperclip"
+                ? "paperclip"
+                : "t3"
+          }
+          runId={outcome.item.id.split(":").at(-1)!}
+          status={outcome.item.status}
+          onClose={() => setOutcome(null)}
         />
       )}
     </AppLayout>
