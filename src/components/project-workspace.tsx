@@ -21,6 +21,7 @@ import {
   Ellipsis,
   Settings2,
   FileText,
+  Bookmark,
   Loader2,
 } from "lucide-react";
 import { api } from "@/lib/api";
@@ -656,6 +657,8 @@ export function ProjectActions({
 }) {
   const workspace = useProjectWorkspace(),
     button = useRef<HTMLButtonElement>(null);
+  const { setCurrentProject } = useAuth();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const manage = ["OWNER", "MANAGER"].includes(project.currentUserRole || "");
   const action = (run: () => void) => {
@@ -711,6 +714,19 @@ export function ProjectActions({
           >
             <Settings2 />
             Settings
+          </button>
+          <button
+            role="menuitem"
+            onClick={() =>
+              action(() => {
+                setCurrentProject(project);
+                workspace.closePanel();
+                router.push("/decisions");
+              })
+            }
+          >
+            <Bookmark />
+            Decisions
           </button>
           <div className="workspace-menu-divider" />
           <button
@@ -1083,7 +1099,7 @@ function ProjectFilesContent({ project }: { project: Project }) {
         onInitialFilesConsumed={consumeFolder}
       />
       <Link
-        href="/documents"
+        href="/knowledge?view=files"
         className="workspace-pill"
         onClick={() => {
           if (currentProject?.id !== project.id) setCurrentProject(project);

@@ -1,30 +1,20 @@
 "use client";
-
-import { AppLayout } from "@/components/app-layout";
-import { WorkspaceIcon } from "@/components/workspace-icons";
-
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import FileLibrary from "@/components/knowledge/file-library";
+import MemoryLibrary from "@/components/knowledge/memory-library";
+function KnowledgeView() {
+  const params = useSearchParams();
+  return params.get("view") === "memories" ? (
+    <MemoryLibrary />
+  ) : (
+    <FileLibrary />
+  );
+}
 export default function KnowledgePage() {
   return (
-    <AppLayout>
-      <div className="knowledge-workspace">
-        <header>
-          <h1>Knowledge Graph</h1>
-          <p>Explore how your workspace connects.</p>
-        </header>
-        <section
-          className="knowledge-preview"
-          aria-labelledby="knowledge-coming-soon"
-        >
-          <div className="knowledge-preview-icon" aria-hidden="true">
-            <WorkspaceIcon name="knowledge" />
-          </div>
-          <h2 id="knowledge-coming-soon">Coming soon</h2>
-          <p>
-            A visual map of your projects, files, decisions, tasks, and
-            ideas—with connections you can trace back to their sources.
-          </p>
-        </section>
-      </div>
-    </AppLayout>
+    <Suspense fallback={<div role="status">Loading knowledge…</div>}>
+      <KnowledgeView />
+    </Suspense>
   );
 }

@@ -936,7 +936,7 @@ export default function SettingsWorkspace({
                         Decisions
                       </Link>
                       <Link
-                        href="/documents"
+                        href="/knowledge?view=files"
                         className="rounded-lg border border-[var(--ws-border)] bg-[var(--ws-surface)] px-3 py-1.5 text-xs text-[var(--ws-text)] hover:bg-[var(--ws-hover)] transition-colors"
                       >
                         Files

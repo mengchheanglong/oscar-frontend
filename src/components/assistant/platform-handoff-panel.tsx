@@ -438,7 +438,7 @@ export function PlatformHandoffPanel({
                 {!connections.length && !loading && (
                   <p className="text-sm text-muted-foreground">
                     Enable {label} execution in{" "}
-                    <Link className="underline" href="/platforms">
+                    <Link className="underline" href="/settings?section=integrations&app=platforms">
                       Connections
                     </Link>
                     .

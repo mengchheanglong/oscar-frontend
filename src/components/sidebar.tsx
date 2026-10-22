@@ -16,6 +16,7 @@ import {
   FolderPlus,
   ChevronDown,
   ChevronRight,
+  Globe,
 } from "lucide-react";
 import {
   useProjectWorkspace,
@@ -69,20 +70,10 @@ export function Sidebar({
     label: string;
     href: string;
     icon: "goals" | "knowledge" | "decisions" | "tasks" | "files" | "platforms";
-    comingSoon?: boolean;
   }> = [
     { label: "Goals", href: "/goals", icon: "goals" },
-    { label: "Memories", href: "/memories", icon: "knowledge" },
-    { label: "Decisions", href: "/decisions", icon: "decisions" },
     { label: "Tasks", href: "/tasks", icon: "tasks" },
-    { label: "Files", href: "/documents", icon: "files" },
-    { label: "Platforms", href: "/platforms", icon: "platforms" },
-    {
-      label: "Knowledge graph",
-      href: "/knowledge",
-      icon: "knowledge",
-      comingSoon: true,
-    },
+    { label: "Knowledge", href: "/knowledge", icon: "knowledge" },
   ];
   const displayName =
     user?.displayName || user?.fullName || user?.email || "Your account";
@@ -172,6 +163,16 @@ export function Sidebar({
           </Link>
         )}
         <div className="flex items-center gap-1">
+          <Link
+            href="/search"
+            aria-label="Global search"
+            title="Global search — all project knowledge"
+            aria-current={pathname === "/search" ? "page" : undefined}
+            className="workspace-icon-button"
+            onClick={onCloseMobile}
+          >
+            <Globe size={20} aria-hidden="true" />
+          </Link>
           <button
             type="button"
             aria-label="Search chats"
@@ -229,20 +230,12 @@ export function Sidebar({
             {!compact && <span>Chat</span>}
           </Link>
         )}
-        <Link
-          href="/search"
-          title="Global search"
-          aria-label="Global search"
-          aria-current={pathname === "/search" ? "page" : undefined}
-          onClick={onCloseMobile}
-          className="workspace-nav-link"
-        >
-          <WorkspaceIcon name="search" />
-          {!compact && <span>Global search</span>}
-        </Link>
         {navLinks.map((link) => {
           const isActive =
-            pathname === link.href || pathname.startsWith(`${link.href}/`);
+            pathname === link.href ||
+            pathname.startsWith(`${link.href}/`) ||
+            (link.href === "/knowledge" &&
+              ["/documents", "/memories"].includes(pathname));
           return (
             <Link
               key={link.label}
@@ -254,9 +247,6 @@ export function Sidebar({
             >
               <WorkspaceIcon name={link.icon} />
               {!compact && <span>{link.label}</span>}
-              {!compact && link.comingSoon && (
-                <span className="knowledge-soon-badge">Coming soon</span>
-              )}
             </Link>
           );
         })}

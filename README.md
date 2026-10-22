@@ -41,6 +41,13 @@ local data. Repository branding changes do not migrate or reset that data.
 
 Next.js 14 App Router frontend for Continuum, connected to its NestJS API.
 
+## Navigation
+
+Chat, Goals, Tasks, and Knowledge form the main workspace. Files and memories
+share Knowledge; project menus retain decisions; Settings → Integrations holds
+agent connections. Tasks includes recent delegated work. See [navigation and
+compatibility](docs/NAVIGATION.md).
+
 ## Features
 
 - **Chat and citations**: Chat across the workspace or within a selected project, with grounded answers and source citations.

@@ -19,6 +19,8 @@ export interface PlatformHandoff {
   remoteStatus: string | null;
   notice: string | null;
   assistantMessageId: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 export const platformHandoffs = {
   paperclipTargets: (projectId: string, connectionId: string) =>
@@ -37,9 +39,9 @@ export const platformHandoffs = {
         label: string;
       }>
     >(`/projects/${projectId}/ai/handoffs/models?connectionId=${connectionId}`),
-  list: (projectId: string, conversationId: string) =>
+  list: (projectId: string, conversationId?: string) =>
     apiRequest<PlatformHandoff[]>(
-      `/projects/${projectId}/ai/handoffs?conversationId=${conversationId}`,
+      `/projects/${projectId}/ai/handoffs${conversationId ? `?conversationId=${encodeURIComponent(conversationId)}` : ""}`,
     ),
   create: (
     projectId: string,

@@ -286,7 +286,7 @@ export function AssistantComposer({
                     <WorkspaceIcon name="plus" className="h-5 w-5" />
                     Upload project files
                   </button>
-                  <Link href="/documents">
+                  <Link href="/knowledge?view=files">
                     <WorkspaceIcon name="files" className="h-5 w-5" />
                     Browse project files
                   </Link>

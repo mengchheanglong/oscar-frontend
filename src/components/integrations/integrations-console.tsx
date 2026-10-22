@@ -25,6 +25,7 @@ import { ConfirmModal } from "@/components/confirm-modal";
 import { GitHubWorkspace } from "@/components/integrations/github-workspace";
 import { HermesIntegration } from "@/components/integrations/hermes-integration";
 import { McpConsole } from "@/components/integrations/mcp-console";
+import { PlatformConnections } from "@/components/integrations/platform-connections";
 
 // ==========================================
 // BRAND ICONS
@@ -105,7 +106,7 @@ function AntigravityIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 // App Types
-type ActiveView = "directory" | "mcp" | "github" | "hermes";
+type ActiveView = "directory" | "mcp" | "github" | "hermes" | "platforms";
 type CategoryFilter = "all" | "ai" | "vcs";
 
 export function IntegrationsConsole() {
@@ -131,6 +132,7 @@ export function IntegrationsConsole() {
       if (app === "hermes") setActiveView("hermes");
       else if (app === "mcp") setActiveView("mcp");
       else if (app === "github") setActiveView("github");
+      else if (app === "platforms") setActiveView("platforms");
     }
   }, []);
 
@@ -759,7 +761,7 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
   const antigravityCommand = `agy mcp add oscar -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js" -e OSCAR_API_URL="${apiBaseUrl}" -e OSCAR_API_KEY="${activeTokenValue}" -e OSCAR_PROJECT_ID="${projectKey}"`;
 
   // App catalog data
-  const integrationCount = 3;
+  const integrationCount = 4;
 
   const searchQuery = directorySearch.trim().toLowerCase();
 
@@ -784,7 +786,14 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
         searchQuery,
       ));
 
-  const hasAnyResults = isMcpVisible || isGithubVisible || isHermesVisible;
+  const isPlatformsVisible =
+    (categoryFilter === "all" || categoryFilter === "ai") &&
+    (!searchQuery ||
+      "paperclip t3 code agent connections delegated work".includes(
+        searchQuery,
+      ));
+  const hasAnyResults =
+    isMcpVisible || isGithubVisible || isHermesVisible || isPlatformsVisible;
 
   return (
     <>
@@ -805,7 +814,7 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
                     </Badge>
                   </h1>
                   <p className="text-xs text-slate-500 mt-1">
-                    Connect Hermes, GitHub, and your coding tools.
+                    Connect agents, repositories, and your coding tools.
                   </p>
                 </div>
 
@@ -953,6 +962,28 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
                     </div>
                   )}
 
+                  {isPlatformsVisible && (
+                    <button
+                      type="button"
+                      onClick={() => navigateToView("platforms")}
+                      className="p-5 rounded-2xl bg-card border border-border text-left hover:bg-muted transition-colors flex flex-col gap-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Boxes
+                          className="h-5 w-5 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                        <h3 className="font-semibold">Paperclip & T3 Code</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Connect your agents, configure access, and enable
+                        reviewed handoffs from chat.
+                      </p>
+                      <span className="text-sm font-medium inline-flex items-center gap-1">
+                        Manage connections <ChevronRight size={14} />
+                      </span>
+                    </button>
+                  )}
                   {/* APP CARD 2: GitHub Integration */}
                   {isGithubVisible && (
                     <div
@@ -1040,6 +1071,19 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
             detail
             onBack={() => navigateToView("directory")}
           />
+        )}
+
+        {activeView === "platforms" && (
+          <div className="space-y-6">
+            <button
+              type="button"
+              onClick={() => navigateToView("directory")}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              ← Integrations
+            </button>
+            <PlatformConnections key={currentProject?.id || "ALL"} />
+          </div>
         )}
 
         {activeView === "mcp" && (
