@@ -11,12 +11,12 @@ Gemini and Grok:
 
 > Explain a knowledge graph in two short paragraphs, three bullet points, a small comparison table, and a short Python example.
 
-| Product | Actual access | Evidence usable for this study |
-| --- | --- | --- |
-| ChatGPT | Browser verification gate; scraper returned a guest shell/error | Official search documentation and its source-interaction examples |
-| Grok | Public composer; submitting the prompt led to a sign-up gate | Public shell, official research-synthesis documentation, and the user's supplied screenshots |
-| Claude | Browser verification gate; scraper returned sign-in | Official web-search and personalization documentation |
-| Gemini | Complete live guest response | Actual answer DOM, computed styles, citation controls, table, code block, and response actions |
+| Product | Actual access                                                   | Evidence usable for this study                                                                 |
+| ------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| ChatGPT | Browser verification gate; scraper returned a guest shell/error | Official search documentation and its source-interaction examples                              |
+| Grok    | Public composer; submitting the prompt led to a sign-up gate    | Public shell, official research-synthesis documentation, and the user's supplied screenshots   |
+| Claude  | Browser verification gate; scraper returned sign-in             | Official web-search and personalization documentation                                          |
+| Gemini  | Complete live guest response                                    | Actual answer DOM, computed styles, citation controls, table, code block, and response actions |
 
 Do not treat shell/login font measurements as answer typography. No authenticated
 answer DOM was obtained for ChatGPT, Grok, or Claude. Their exact current answer
@@ -64,15 +64,15 @@ Observed in a live guest response at [Gemini](https://gemini.google.com/app):
 
 Computed styles from this particular desktop response:
 
-| Element | Observed value |
-| --- | --- |
-| Prose font | Google Sans Flex / Google Sans / Helvetica Neue / sans-serif |
-| Paragraph text | 17px, weight 400, line-height 24px |
-| Paragraph separation | 16px before the following paragraph |
-| Section heading | 20px, weight 470, line-height 24px |
-| Section separation | 40px before the inspected h3 headings |
-| List item separation | 12px after the first item |
-| Prose/table width | 708px in the sampled desktop layout |
+| Element              | Observed value                                               |
+| -------------------- | ------------------------------------------------------------ |
+| Prose font           | Google Sans Flex / Google Sans / Helvetica Neue / sans-serif |
+| Paragraph text       | 17px, weight 400, line-height 24px                           |
+| Paragraph separation | 16px before the following paragraph                          |
+| Section heading      | 20px, weight 470, line-height 24px                           |
+| Section separation   | 40px before the inspected h3 headings                        |
+| List item separation | 12px after the first item                                    |
+| Prose/table width    | 708px in the sampled desktop layout                          |
 
 These are sample measurements, not universal Gemini specifications. Its
 [source documentation](https://support.google.com/gemini/answer/14143489?hl=en)
@@ -90,7 +90,7 @@ also confirms sources within/below responses and a side panel for details.
 - `src/app/assistant/page.tsx` already has Sources disclosure, individual source
   inspection/open actions, response copy, and Remember. Inline evidence pills
   currently render as spans, so they do not open the associated source.
-- Backend `src/modules/ai/context/context-assembler.ts` explicitly requests
+- Backend `src/modules/assistant/context/context-assembler.ts` explicitly requests
   bulleted lists with bold term prefixes. Several specialist modes also demand
   fixed report sections. CSS alone cannot change those generation habits.
 

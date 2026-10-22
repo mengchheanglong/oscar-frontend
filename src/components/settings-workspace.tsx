@@ -658,8 +658,8 @@ export default function SettingsWorkspace({
                       ))}
                     </select>
                     <p className="text-[11px] text-[var(--ws-muted)]">
-                      Informs AI Copilot to tune suggestions and reviews
-                      according to your discipline.
+                      Informs OSCAR to tune suggestions and reviews according to
+                      your discipline.
                     </p>
                   </div>
 
@@ -1265,20 +1265,19 @@ export default function SettingsWorkspace({
                     </p>
                   </div>
 
-                  {/* Private Copilot Memories */}
+                  {/* Saved personal memories */}
                   <div className="p-6 space-y-3">
                     <div className="flex items-center gap-2">
                       <Database className="h-4 w-4 text-purple-400" />
                       <h3 className="font-medium text-xs text-[var(--ws-text)]">
-                        Copilot Private Memory
+                        Saved personal memory
                       </h3>
                     </div>
                     <p className="text-xs text-[var(--ws-muted)] leading-relaxed">
-                      AI Copilot retains lightweight personal interaction
-                      memories (e.g. style preferences, preferred review
-                      workflows). Memories are isolated per user and do not
-                      grant project permissions or authoritative evidence
-                      status.
+                      OSCAR retains lightweight personal interaction memories
+                      (e.g. style preferences, preferred review workflows).
+                      Memories are isolated per user and do not grant project
+                      permissions or authoritative evidence status.
                     </p>
                     <div className="pt-1">
                       <button

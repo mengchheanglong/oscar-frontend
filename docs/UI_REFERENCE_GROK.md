@@ -226,7 +226,6 @@ conversation, and saving/reloading/removing a temporary private memory. The
 temporary entry was removed. No browser errors were reported.
 Production build passed after the final changes.
 
-
 ### 2026-10-17 — Sidebar scope and global search
 
 - Tasks and Decisions follow the selected sidebar project without duplicate project filters. All projects clears that selection and shows combined project items; individual items still belong to a project. Creation retains a project choice in the combined view.
@@ -234,19 +233,16 @@ Production build passed after the final changes.
 - Global search ignores sidebar scope. It reuses authenticated project search endpoints for every accessible active project, with four concurrent requests at most, source-project labels, summed facets, additional pages, request-race protection, and explicit partial-failure notices. Opening a result sets its owning project before navigation.
 - `pnpm test:global-search` verifies cross-project aggregation, bounded concurrency, source attribution, counts, pagination, deduplication, and partial failures. No backend schema/API changes are required.
 
-
 ### 2026-10-17 — Continuum infinity identity
 
 - Original monochrome infinity ribbon, tilted 26 degrees, with tapered tips and an open crossing. The reference contributes the minimal orbital feel; the geometry is Continuum's infinity symbol.
-- Shared vector geometry in `src/lib/continuum-brand.ts` supplies sidebar, guest, login, and reusable logo marks. App SVG and ICO use the same path, with an export at `public/brand/continuum-mark.svg`.
+- Shared vector geometry in `src/lib/oscar-brand.ts` supplies sidebar, guest, login, and reusable logo marks. App SVG and ICO use the same path, with an export at `public/brand/continuum-mark.svg`.
 - The logo inherits interface color for light/dark themes. Checked the large mark, sidebar size, and 64px app tile; TypeScript and lint pass.
-
 
 ### 2026-10-17 — Brand asset audit and cached icons
 
 - Audited sidebar, guest chat, login, invite, retained landing components, and static icon assets: all logo placements use the Continuum infinity geometry. Integration/vendor icons remain their own identities.
 - Versioned favicon, SVG icon, and Apple icon URLs to refresh previously cached browser branding. Added a 180px PNG Apple home-screen icon rather than advertising an SVG for that slot. Removed the remaining Grok name from user-facing appearance copy.
-
 
 ### 2026-10-17 — Project row alignment and standalone chat scope
 
@@ -255,13 +251,11 @@ Production build passed after the final changes.
 - Project folders contain project-scoped chats; the root Chats list contains standalone chats and pinned chats. Backend retrieval uses the saved all-project scope on subsequent turns, preserving actor authorization. Private storage/memory/history and Hermes remain project-scoped internally.
 - Verified TypeScript/lint, desktop layout, real authenticated create/read/reopen scope persistence and root history placement. Temporary QA conversation removed. Backend migration and regression verification are recorded in its implementation guide.
 
-
 ### 2026-10-17 — Knowledge Graph preview
 
 - Added Knowledge to the sidebar with a Coming soon badge and a consistent node-link icon. Opens `/knowledge` with a clearly labeled Coming soon page describing future source-backed connections.
 - Available without selecting a project. This is an announced placeholder; no graph data, agent introspection, graph APIs, or extraction behavior is claimed or implemented.
 - Verified desktop/mobile layout, TypeScript, lint, and direct authenticated page navigation.
-
 
 ### 2026-10-17 — Files workspace refinement
 

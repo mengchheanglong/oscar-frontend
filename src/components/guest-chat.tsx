@@ -50,7 +50,7 @@ export function GuestChat() {
   return (
     <div className="guest-chat">
       <header className="guest-chat-header">
-        <Link href="/" aria-label="Continuum" className="guest-chat-logo">
+        <Link href="/" aria-label="OSCAR" className="guest-chat-logo">
           <WorkspaceIcon name="mark" />
         </Link>
         <div className="guest-chat-account">
@@ -97,7 +97,7 @@ export function GuestChat() {
         >
           <textarea
             ref={textarea}
-            aria-label="Message Continuum"
+            aria-label="Message OSCAR"
             placeholder="Ask anything"
             value={draft}
             maxLength={20000}

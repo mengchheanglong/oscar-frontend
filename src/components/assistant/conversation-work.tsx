@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { agentRuns, AgentRun } from "@/lib/agent-runs";
 import { api } from "@/lib/api";
 import { ProposalReviewDialog } from "./proposal-review-dialog";
+import { MarkdownContent } from "@/components/markdown-content";
 
 export const runActive = (run: AgentRun) =>
   ["QUEUED", "RUNNING"].includes(run.status);
@@ -148,7 +149,10 @@ export function ConversationWorkStatus({
     setBusy(true);
     setError(null);
     try {
-      const result = await api.ai.getProposal(run.projectId, run.proposalId!);
+      const result = await api.assistant.getProposal(
+        run.projectId,
+        run.proposalId!,
+      );
       if (mounted.current) setProposal(result);
     } catch {
       if (mounted.current) setError("Could not load the proposed changes.");
@@ -159,24 +163,24 @@ export function ConversationWorkStatus({
   return (
     <section
       aria-label="Hermes work"
-      className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs"
+      className="mb-3 rounded-xl border border-border bg-card p-3 text-sm"
     >
       <div className="flex items-center justify-between gap-3">
-        <span role="status" className="font-medium text-slate-700">
+        <span role="status" className="font-medium text-foreground">
           Hermes · {run.status.toLowerCase()}
         </span>
         {runActive(run) && (
           <button
             disabled={busy}
             onClick={cancel}
-            className="rounded border bg-white px-2 py-1"
+            className="rounded border border-border bg-background px-2 py-1"
           >
             Cancel work
           </button>
         )}
       </div>
       {!!run.events.length && (
-        <details className="mt-2 text-slate-500" open={runActive(run)}>
+        <details className="mt-2 text-muted-foreground" open={runActive(run)}>
           <summary className="cursor-pointer">
             Work progress · {run.events.length} steps
           </summary>
@@ -202,7 +206,7 @@ export function ConversationWorkStatus({
         </button>
       )}
       {!!run.evidence.length && (
-        <details className="mt-2 text-slate-500">
+        <details className="mt-2 text-muted-foreground">
           <summary className="cursor-pointer">
             Sources used · {run.evidence.length}
           </summary>
@@ -214,6 +218,16 @@ export function ConversationWorkStatus({
               </li>
             ))}
           </ul>
+        </details>
+      )}
+      {run.artifact && (
+        <details className="mt-3 rounded-lg border border-border bg-background p-3 text-sm">
+          <summary className="cursor-pointer font-medium">
+            Full Hermes result
+          </summary>
+          <div className="mt-3">
+            <MarkdownContent content={run.artifact} />
+          </div>
         </details>
       )}
       {run.proposalId && (

@@ -42,7 +42,9 @@ export function ChatNavigationItem({
     setBusy(true);
     setError("");
     try {
-      onChanged(await api.ai.updateConversation(chat.projectId, chat.id, data));
+      onChanged(
+        await api.assistant.updateConversation(chat.projectId, chat.id, data),
+      );
       setRename(false);
     } catch (error) {
       setError(
@@ -65,7 +67,7 @@ export function ChatNavigationItem({
             button.current?.focus();
           }}
           onSave={async (title) => {
-            const saved = await api.ai.updateConversation(
+            const saved = await api.assistant.updateConversation(
               chat.projectId,
               chat.id,
               { title },

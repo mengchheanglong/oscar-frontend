@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useAuth, Project } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
-import { ProposalReviewDialog } from "@/components/ai/proposal-review-dialog";
+import { ProposalReviewDialog } from "@/components/assistant/proposal-review-dialog";
+import { GoalSelect } from "@/components/goal-select";
 import { api } from "@/lib/api";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 
 interface DecisionItem {
+  goalId?: string | null;
   id: string;
   projectId: string;
   projectName?: string;
@@ -166,6 +168,8 @@ function DecisionWorkspace() {
   // Create Form state
   const [createTitle, setCreateTitle] = useState("");
   const [createRationale, setCreateRationale] = useState("");
+  const [createGoalId, setCreateGoalId] = useState("");
+  const [editGoalId, setEditGoalId] = useState("");
   const [createProjectId, setCreateProjectId] = useState("");
   const [submittingCreate, setSubmittingCreate] = useState(false);
 
@@ -325,6 +329,7 @@ function DecisionWorkspace() {
   const openNewDecisionView = () => {
     setCreateTitle("");
     setCreateRationale("");
+    setCreateGoalId("");
     setCreateProjectId(
       selectedProjectId !== "ALL"
         ? selectedProjectId
@@ -340,6 +345,7 @@ function DecisionWorkspace() {
   const openEditView = (item: DecisionItem) => {
     setActiveDec(item);
     setEditTitle(item.title);
+    setEditGoalId(item.goalId || "");
     setEditRationale(item.rationale || "");
     setEditStatus(item.status || "PROPOSED");
     setViewState("edit");
@@ -374,6 +380,7 @@ function DecisionWorkspace() {
         title: createTitle.trim(),
         decisionText: createTitle.trim(),
         rationale: createRationale.trim() || undefined,
+        goalId: createGoalId || undefined,
       });
 
       showToast(
@@ -417,6 +424,7 @@ function DecisionWorkspace() {
         activeDec.id,
         {
           version: activeDec.version,
+          goalId: editGoalId || null,
           title: editTitle.trim(),
           decisionText: editTitle.trim(),
           rationale: editRationale.trim() || undefined,
@@ -467,7 +475,7 @@ function DecisionWorkspace() {
   const handleGenerateTaskProposal = async (dec: DecisionItem) => {
     setGeneratingProposalDecId(dec.id);
     try {
-      const res = await api.ai.generateDecisionTaskProposal(
+      const res = await api.assistant.generateDecisionTaskProposal(
         dec.projectId,
         dec.id,
       );
@@ -963,6 +971,11 @@ function DecisionWorkspace() {
             {/* Form Card matching Image 3 */}
             <div className="max-w-2xl bg-white border border-codex-border/80 rounded-2xl p-6 shadow-xs">
               <form onSubmit={handleCreateSubmit} className="space-y-5">
+                <GoalSelect
+                  projectId={createProjectId}
+                  value={createGoalId}
+                  onChange={setCreateGoalId}
+                />
                 {/* Decision title */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-800">
@@ -1001,7 +1014,10 @@ function DecisionWorkspace() {
                     </label>
                     <DropdownSelect
                       value={createProjectId}
-                      onChange={setCreateProjectId}
+                      onChange={(id) => {
+                        setCreateProjectId(id);
+                        setCreateGoalId("");
+                      }}
                       className="w-full"
                       triggerClassName="w-full h-10"
                       options={projects.map((p) => ({
@@ -1083,6 +1099,11 @@ function DecisionWorkspace() {
             {/* Form Card matching Image 4 */}
             <div className="max-w-2xl bg-white border border-codex-border/80 rounded-2xl p-6 shadow-xs">
               <form onSubmit={handleEditSubmit} className="space-y-5">
+                <GoalSelect
+                  projectId={activeDec.projectId}
+                  value={editGoalId}
+                  onChange={setEditGoalId}
+                />
                 {/* Decision title */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold text-slate-800">

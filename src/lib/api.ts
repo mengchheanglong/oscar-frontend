@@ -366,6 +366,7 @@ export const api = {
         decisionText: string;
         rationale?: string;
         supersedesDecisionId?: string;
+        goalId?: string | null;
       },
     ) =>
       apiRequest<any>(`/projects/${projectId}/decisions`, {
@@ -382,6 +383,7 @@ export const api = {
         rationale?: string;
         status?: string;
         supersedesDecisionId?: string;
+        goalId?: string | null;
       },
     ) =>
       apiRequest<any>(`/projects/${projectId}/decisions/${decisionId}`, {
@@ -436,6 +438,7 @@ export const api = {
         assigneeId?: string;
         blockedReason?: string;
         dueDate?: string;
+        goalId?: string | null;
       },
     ) =>
       apiRequest<any>(`/projects/${projectId}/tasks`, {
@@ -454,6 +457,7 @@ export const api = {
         assigneeId?: string | null;
         blockedReason?: string | null;
         dueDate?: string | null;
+        goalId?: string | null;
       },
     ) =>
       apiRequest<any>(`/projects/${projectId}/tasks/${taskId}`, {
@@ -562,7 +566,7 @@ export const api = {
       apiRequest<any[]>(`/projects/${projectId}/ingestion/jobs`),
   },
 
-  ai: {
+  assistant: {
     listConversations: async (projectId: string) =>
       apiRequest<any[]>(`/projects/${projectId}/ai/conversations`),
     createConversation: async (
@@ -624,6 +628,7 @@ export const api = {
         content: string;
         mode?: string;
         sourceType?: string;
+        goalId?: string;
         includeAllWorkspaces?: boolean;
       },
     ) =>
@@ -871,5 +876,210 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+  },
+  goals: {
+    listUserGoals: async (params?: {
+      projectId?: string;
+      status?: string;
+      category?: string;
+      q?: string;
+      page?: number;
+      limit?: number;
+    }) => {
+      const q = new URLSearchParams();
+      if (params?.projectId) q.append("projectId", params.projectId);
+      if (params?.status) q.append("status", params.status);
+      if (params?.category) q.append("category", params.category);
+      if (params?.q) q.append("q", params.q);
+      if (params?.page) q.append("page", String(params.page));
+      if (params?.limit) q.append("limit", String(params.limit));
+      const qs = q.toString() ? `?${q.toString()}` : "";
+      return apiEnvelopeRequest<any[]>(`/goals${qs}`);
+    },
+    listProjectGoals: async (
+      projectId: string,
+      params?: {
+        status?: string;
+        category?: string;
+        q?: string;
+        page?: number;
+        limit?: number;
+      },
+    ) => {
+      const q = new URLSearchParams();
+      if (params?.status) q.append("status", params.status);
+      if (params?.category) q.append("category", params.category);
+      if (params?.q) q.append("q", params.q);
+      if (params?.page) q.append("page", String(params.page));
+      if (params?.limit) q.append("limit", String(params.limit));
+      const qs = q.toString() ? `?${q.toString()}` : "";
+      return apiEnvelopeRequest<any[]>(`/projects/${projectId}/goals${qs}`);
+    },
+    get: async (goalId: string, projectId?: string) => {
+      const url = projectId
+        ? `/projects/${projectId}/goals/${goalId}`
+        : `/goals/${goalId}`;
+      return apiRequest<any>(url);
+    },
+    getSummary: async (goalId: string, projectId?: string) => {
+      const url = projectId
+        ? `/projects/${projectId}/goals/${goalId}/summary`
+        : `/goals/${goalId}/summary`;
+      return apiRequest<any>(url);
+    },
+    create: async (data: any, projectId?: string) => {
+      const url = projectId ? `/projects/${projectId}/goals` : `/goals`;
+      return apiRequest<any>(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    update: async (goalId: string, data: any, projectId?: string) => {
+      const url = projectId
+        ? `/projects/${projectId}/goals/${goalId}`
+        : `/goals/${goalId}`;
+      return apiRequest<any>(url, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
+    },
+    delete: async (goalId: string, projectId?: string) => {
+      const url = projectId
+        ? `/projects/${projectId}/goals/${goalId}`
+        : `/goals/${goalId}`;
+      return apiRequestRaw(url, {
+        method: "DELETE",
+      });
+    },
+    addMetric: async (goalId: string, data: any, projectId?: string) => {
+      const url = projectId
+        ? `/projects/${projectId}/goals/${goalId}/metrics`
+        : `/goals/${goalId}/metrics`;
+      return apiRequest<any>(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    updateMetric: async (
+      goalId: string,
+      metricId: string,
+      data: any,
+      projectId?: string,
+    ) => {
+      const url = projectId
+        ? `/projects/${projectId}/goals/${goalId}/metrics/${metricId}`
+        : `/goals/${goalId}/metrics/${metricId}`;
+      return apiRequest<any>(url, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
+    },
+    deleteMetric: async (
+      goalId: string,
+      metricId: string,
+      projectId?: string,
+    ) => {
+      const url = projectId
+        ? `/projects/${projectId}/goals/${goalId}/metrics/${metricId}`
+        : `/goals/${goalId}/metrics/${metricId}`;
+      return apiRequestRaw(url, {
+        method: "DELETE",
+      });
+    },
+    listRevisions: async (goalId: string, projectId?: string) => {
+      const url = projectId
+        ? `/projects/${projectId}/goals/${goalId}/revisions`
+        : `/goals/${goalId}/revisions`;
+      return apiRequest<any[]>(url);
+    },
+  },
+  mavis: {
+    listMemories: async (params?: {
+      projectId?: string;
+      goalId?: string;
+      status?: string;
+      type?: string;
+      scopeType?: string;
+      q?: string;
+      limit?: number;
+      page?: number;
+    }) => {
+      const q = new URLSearchParams();
+      if (params?.projectId) q.append("projectId", params.projectId);
+      if (params?.goalId) q.append("goalId", params.goalId);
+      if (params?.status) q.append("status", params.status);
+      if (params?.type) q.append("type", params.type);
+      if (params?.scopeType) q.append("scopeType", params.scopeType);
+      if (params?.q) q.append("q", params.q);
+      if (params?.limit) q.append("limit", String(params.limit));
+      if (params?.page) q.append("page", String(params.page));
+      const qs = q.toString() ? `?${q.toString()}` : "";
+      return apiRequest<{ items: any[]; total: number }>(
+        `/mavis/memories${qs}`,
+      );
+    },
+    getMemory: async (id: string) => {
+      return apiRequest<any>(`/mavis/memories/${id}`);
+    },
+    proposeCandidate: async (data: {
+      statement: string;
+      type: string;
+      scopeType: string;
+      projectId?: string;
+      goalId?: string;
+      rationale?: string;
+      sourcePlatform?: string;
+      sourceType?: string;
+      sourceId?: string;
+      validUntil?: string;
+    }) => {
+      return apiRequest<any>("/mavis/memories/candidate", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    approve: async (id: string, expectedVersion?: number) => {
+      return apiRequest<any>(`/mavis/memories/${id}/approve`, {
+        method: "POST",
+        body: JSON.stringify({ expectedVersion }),
+      });
+    },
+    reject: async (id: string, reason?: string, expectedVersion?: number) => {
+      return apiRequest<any>(`/mavis/memories/${id}/reject`, {
+        method: "POST",
+        body: JSON.stringify({ reason, expectedVersion }),
+      });
+    },
+    supersede: async (
+      id: string,
+      supersedingStatement: string,
+      expectedVersion?: number,
+    ) => {
+      return apiRequest<any>(`/mavis/memories/${id}/supersede`, {
+        method: "POST",
+        body: JSON.stringify({ supersedingStatement, expectedVersion }),
+      });
+    },
+    delete: async (id: string, expectedVersion?: number) => {
+      const qs = expectedVersion ? `?expectedVersion=${expectedVersion}` : "";
+      return apiRequestRaw(`/mavis/memories/${id}${qs}`, {
+        method: "DELETE",
+      });
+    },
+    retrieveContext: async (data: {
+      query: string;
+      projectId?: string;
+      goalId?: string;
+      includeApprovedMemories?: boolean;
+      includeHistoricalConversations?: boolean;
+      includeProjectSources?: boolean;
+      includeExecutionResults?: boolean;
+      limit?: number;
+    }) => {
+      return apiRequest<any>("/mavis/context/retrieve", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
   },
 };

@@ -22,6 +22,10 @@ interface ComposerProps {
   onSend: () => void;
   useTools: boolean;
   onUseToolsChange: (value: boolean) => void;
+  useT3?: boolean;
+  onUseT3Change?: (value: boolean) => void;
+  usePaperclip?: boolean;
+  onUsePaperclipChange?: (value: boolean) => void;
   toolsAvailable: boolean;
   toolsHint: string;
   source?: string;
@@ -36,7 +40,7 @@ interface ComposerProps {
   textareaRef: React.RefObject<HTMLTextAreaElement>;
 }
 
-export function CopilotComposer({
+export function AssistantComposer({
   projectId,
   projectName,
   onProjectFiles,
@@ -45,6 +49,10 @@ export function CopilotComposer({
   onSend,
   useTools,
   onUseToolsChange,
+  useT3,
+  onUseT3Change,
+  usePaperclip,
+  onUsePaperclipChange,
   toolsAvailable,
   toolsHint,
   source,
@@ -220,8 +228,8 @@ export function CopilotComposer({
           />
           <textarea
             ref={textareaRef}
-            aria-label="Message AI Copilot"
-            aria-describedby="copilot-composer-help"
+            aria-label="Message OSCAR"
+            aria-describedby="assistant-composer-help"
             value={value}
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={(event) => {
@@ -312,14 +320,44 @@ export function CopilotComposer({
             )}
             <div className="chat-composer-controls">
               <DropdownSelect
-                value={useTools ? "HERMES" : "ASSISTANT"}
-                onChange={(value) => onUseToolsChange(value === "HERMES")}
+                value={
+                  usePaperclip
+                    ? "PAPERCLIP"
+                    : useT3
+                      ? "T3"
+                      : useTools
+                        ? "HERMES"
+                        : "ASSISTANT"
+                }
+                onChange={(value) => {
+                  onUseToolsChange(value === "HERMES");
+                  onUseT3Change?.(value === "T3");
+                  onUsePaperclipChange?.(value === "PAPERCLIP");
+                }}
                 direction="up"
                 align="right"
                 disabled={sending}
                 triggerClassName="chat-mode-trigger"
                 menuWidth="w-72 max-w-[calc(100vw-2rem)]"
                 options={[
+                  ...(onUsePaperclipChange
+                    ? [
+                        {
+                          value: "PAPERCLIP",
+                          label: "Paperclip",
+                          desc: "Assign work to a Paperclip agent and follow its result",
+                        },
+                      ]
+                    : []),
+                  ...(onUseT3Change
+                    ? [
+                        {
+                          value: "T3",
+                          label: "T3",
+                          desc: "Send a task to T3 and bring its result back here",
+                        },
+                      ]
+                    : []),
                   {
                     value: "ASSISTANT",
                     label: "Assistant",

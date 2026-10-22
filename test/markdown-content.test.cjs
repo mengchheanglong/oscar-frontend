@@ -35,6 +35,21 @@ const render = (content, props = {}) =>
     }),
   );
 
+test("supports native T3 thread links without allowing arbitrary app protocol commands", () => {
+  const html = render(
+    "[T3](t3-thread://v1/12345678-1234-1234-1234-123456789abc) [bad](t3-thread://v1/../../execute)",
+  );
+  assert.match(
+    html,
+    /href="t3-thread:\/\/v1\/12345678-1234-1234-1234-123456789abc"/,
+  );
+  assert.doesNotMatch(html, /href="t3-thread:\/\/v1\/\.\./);
+  assert.match(
+    render("[T3](t3-thread://v1/mcp:12345678-1234-1234-1234-123456789abc)"),
+    /href="t3-thread:\/\/v1\/mcp:/,
+  );
+});
+
 test("renders joined paragraphs, nested lists and GFM tables semantically", () => {
   const html = render(
     "First line\ncontinues here.\n\n## Details\n\n1. Parent\n   - Child with **emphasis**\n2. Next\n\n| Name | Value |\n| --- | ---: |\n| A \\| B | 2 |\n\n- [x] Complete",

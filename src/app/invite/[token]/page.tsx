@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { api, setCsrfToken } from "@/lib/api";
-import { ContinuumLogo } from "@/components/continuum-logo";
+import { OscarLogo } from "@/components/oscar-logo";
 import {
   Sparkles,
   Eye,
@@ -60,7 +60,7 @@ export default function AcceptInvitePage() {
       } catch (err: any) {
         if (!isCancelled) {
           setLoadError(
-            err.message || "This invitation link is invalid or has expired."
+            err.message || "This invitation link is invalid or has expired.",
           );
         }
       } finally {
@@ -107,7 +107,9 @@ export default function AcceptInvitePage() {
       // Reload the assistant to initialize the authenticated workspace.
       window.location.href = "/assistant";
     } catch (err: any) {
-      setSubmitError(err.message || "Failed to accept invitation. Please try again.");
+      setSubmitError(
+        err.message || "Failed to accept invitation. Please try again.",
+      );
       setSubmitting(false);
     }
   };
@@ -135,7 +137,8 @@ export default function AcceptInvitePage() {
               Invitation Unavailable
             </h1>
             <p className="text-xs text-slate-400 leading-relaxed">
-              {loadError || "This invitation link has expired or has already been used."}
+              {loadError ||
+                "This invitation link has expired or has already been used."}
             </p>
           </div>
           <div className="pt-2">
@@ -162,7 +165,7 @@ export default function AcceptInvitePage() {
       <div className="w-full max-w-lg relative z-10 space-y-6">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <ContinuumLogo size="lg" />
+          <OscarLogo size="lg" />
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Workspace Invitation</span>
@@ -178,11 +181,23 @@ export default function AcceptInvitePage() {
             <p className="text-xs text-slate-400 leading-relaxed">
               {preview.inviterName ? (
                 <>
-                  <strong className="text-slate-200">{preview.inviterName}</strong> has invited you to join the team workspace as a{" "}
-                  <strong className="text-blue-400 capitalize">{preview.professionalRole.toLowerCase()}</strong>.
+                  <strong className="text-slate-200">
+                    {preview.inviterName}
+                  </strong>{" "}
+                  has invited you to join the team workspace as a{" "}
+                  <strong className="text-blue-400 capitalize">
+                    {preview.professionalRole.toLowerCase()}
+                  </strong>
+                  .
                 </>
               ) : (
-                <>You have been invited to join the team workspace as a <strong className="text-blue-400 capitalize">{preview.professionalRole.toLowerCase()}</strong>.</>
+                <>
+                  You have been invited to join the team workspace as a{" "}
+                  <strong className="text-blue-400 capitalize">
+                    {preview.professionalRole.toLowerCase()}
+                  </strong>
+                  .
+                </>
               )}
             </p>
           </div>
@@ -257,7 +272,11 @@ export default function AcceptInvitePage() {
                     className="text-slate-400 hover:text-white absolute right-3 top-1/2 -translate-y-1/2 p-1"
                     title={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-3.5 h-3.5" />
+                    ) : (
+                      <Eye className="w-3.5 h-3.5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -290,7 +309,11 @@ export default function AcceptInvitePage() {
                 className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold text-xs shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer"
               >
                 <UserCheck className="w-4 h-4" />
-                <span>{submitting ? "Joining Workspace..." : "Create Account & Join Workspace"}</span>
+                <span>
+                  {submitting
+                    ? "Joining Workspace..."
+                    : "Create Account & Join Workspace"}
+                </span>
               </button>
             </div>
           </form>
@@ -299,7 +322,10 @@ export default function AcceptInvitePage() {
           <div className="border-t border-white/[0.06] pt-4 text-center">
             <p className="text-[11px] text-slate-500">
               Already have an account?{" "}
-              <Link href="/login" className="text-blue-400 hover:underline font-medium">
+              <Link
+                href="/login"
+                className="text-blue-400 hover:underline font-medium"
+              >
                 Sign in here
               </Link>
             </p>

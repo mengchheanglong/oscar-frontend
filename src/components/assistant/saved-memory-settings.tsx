@@ -17,7 +17,7 @@ export interface MemoryDraft {
   sourceMessageId?: string;
 }
 
-export function CopilotMemorySettings({
+export function SavedMemorySettings({
   projectId,
   projectLabel,
   draft,

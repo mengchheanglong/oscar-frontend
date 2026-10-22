@@ -23,7 +23,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-LABEL org.opencontainers.image.title="Continuum Frontend"
+LABEL org.opencontainers.image.title="OSCAR Frontend"
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./

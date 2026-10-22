@@ -65,14 +65,22 @@ export function Sidebar({
   accountOpenRef.current = accountOpen;
   const accountTrigger = useRef<HTMLButtonElement>(null);
 
-  const navLinks = [
-    { label: "Decisions", href: "/decisions", icon: "decisions" as const },
-    { label: "Tasks", href: "/tasks", icon: "tasks" as const },
-    { label: "Files", href: "/documents", icon: "files" as const },
+  const navLinks: Array<{
+    label: string;
+    href: string;
+    icon: "goals" | "knowledge" | "decisions" | "tasks" | "files" | "platforms";
+    comingSoon?: boolean;
+  }> = [
+    { label: "Goals", href: "/goals", icon: "goals" },
+    { label: "Memories", href: "/memories", icon: "knowledge" },
+    { label: "Decisions", href: "/decisions", icon: "decisions" },
+    { label: "Tasks", href: "/tasks", icon: "tasks" },
+    { label: "Files", href: "/documents", icon: "files" },
+    { label: "Platforms", href: "/platforms", icon: "platforms" },
     {
-      label: "Knowledge",
+      label: "Knowledge graph",
       href: "/knowledge",
-      icon: "knowledge" as const,
+      icon: "knowledge",
       comingSoon: true,
     },
   ];
@@ -155,8 +163,8 @@ export function Sidebar({
         {!compact && (
           <Link
             href="/assistant"
-            aria-label="Continuum"
-            title="Continuum"
+            aria-label="OSCAR"
+            title="OSCAR"
             onClick={onCloseMobile}
             className="workspace-icon-button"
           >
@@ -316,6 +324,10 @@ export function Sidebar({
                         "/decisions",
                         "/search",
                         "/documents",
+                        "/goals",
+                        "/memories",
+                        "/platforms",
+                        "/knowledge",
                       ].includes(pathname)
                     )
                       router.push("/assistant");
@@ -371,6 +383,10 @@ export function Sidebar({
                                 "/decisions",
                                 "/search",
                                 "/documents",
+                                "/goals",
+                                "/memories",
+                                "/platforms",
+                                "/knowledge",
                               ].includes(pathname)
                             )
                               router.push("/assistant");

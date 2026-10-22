@@ -677,23 +677,23 @@ export function IntegrationsConsole() {
 
   const activeTokenValue = revealedToken || "<YOUR_PERSONAL_ACCESS_TOKEN>";
 
-  const universalAgentPrompt = `Configure and connect our Continuum MCP (Model Context Protocol) server for this project repository.
+  const universalAgentPrompt = `Configure and connect our OSCAR MCP (Model Context Protocol) server for this project repository.
 
 ### MCP Server Parameters:
 - Server Command: node <PATH_TO_BACKEND>/dist/mcp/cli.js
 - Environment Variables:
-  AI_WORKSPACE_API_URL: "${apiBaseUrl}"
-  AI_WORKSPACE_API_KEY: "${activeTokenValue}"
-  AI_WORKSPACE_PROJECT_ID: "${projectKey}"
+  OSCAR_API_URL: "${apiBaseUrl}"
+  OSCAR_API_KEY: "${activeTokenValue}"
+  OSCAR_PROJECT_ID: "${projectKey}"
 
 ### Instructions for Agent:
-1. Detect my coding environment (Cursor, Claude Code, Codex, or Google Antigravity) and configure the "continuum" MCP server:
+1. Detect my coding environment (Cursor, Claude Code, Codex, or Google Antigravity) and configure the "oscar" MCP server:
    - In Cursor: add to .cursor/mcp.json
-   - In Claude Code: run \`claude mcp add continuum -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"\`
-   - In Codex: add to .codex/config.toml or run \`codex mcp add continuum ...\`
+   - In Claude Code: run \`claude mcp add oscar -e OSCAR_API_URL="${apiBaseUrl}" -e OSCAR_API_KEY="${activeTokenValue}" -e OSCAR_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"\`
+   - In Codex: add to .codex/config.toml or run \`codex mcp add oscar ...\`
    - In Antigravity: add to ~/.gemini/config/mcp_config.json or .agents/mcp_config.json
 2. Test the connection by running MCP tool \`list_tasks\` for project "${projectKey}".
-3. Available Continuum MCP tools and resources:
+3. Available OSCAR MCP tools and resources:
    - Tasks & Kanban: list_tasks, get_task, create_task, update_task_status (real-time board sync)
    - Architecture ADRs: list_decisions, get_decision, propose_decision
    - Documents & RAG: list_documents, get_document, search_workspace (keyword, semantic, hybrid)
@@ -703,19 +703,19 @@ export function IntegrationsConsole() {
 4. Workflow Rules:
    - Consult accepted architecture decisions (\`list_decisions\`) before making design changes.
    - AI generation saves drafts only. Review/edit with get_ai_proposal and update_ai_proposal, then confirm only user-authorized selected items using the current version and a stable idempotency key. Reuse that key when retrying. Reject unwanted drafts.
-   - When any assigned task is completed and verified, automatically call \`update_task_status\` to set it to "DONE" on the Continuum project task board.`;
+   - When any assigned task is completed and verified, automatically call \`update_task_status\` to set it to "DONE" on the OSCAR project task board.`;
 
   // Pre-formatted MCP Configs
   const cursorConfigJson = JSON.stringify(
     {
       mcpServers: {
-        continuum: {
+        oscar: {
           command: "node",
           args: ["<PATH_TO_BACKEND>/dist/mcp/cli.js"],
           env: {
-            AI_WORKSPACE_API_URL: apiBaseUrl,
-            AI_WORKSPACE_API_KEY: activeTokenValue,
-            AI_WORKSPACE_PROJECT_ID: projectKey,
+            OSCAR_API_URL: apiBaseUrl,
+            OSCAR_API_KEY: activeTokenValue,
+            OSCAR_PROJECT_ID: projectKey,
           },
         },
       },
@@ -724,30 +724,30 @@ export function IntegrationsConsole() {
     2,
   );
 
-  const claudeCodeCommand = `claude mcp add continuum -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"`;
+  const claudeCodeCommand = `claude mcp add oscar -e OSCAR_API_URL="${apiBaseUrl}" -e OSCAR_API_KEY="${activeTokenValue}" -e OSCAR_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"`;
 
-  const codexConfigToml = `[mcp_servers.continuum]
+  const codexConfigToml = `[mcp_servers.oscar]
 command = "node"
 args = ["<PATH_TO_BACKEND>/dist/mcp/cli.js"]
-env_vars = ["AI_WORKSPACE_API_KEY"]
+env_vars = ["OSCAR_API_KEY"]
 tool_timeout_sec = 90
 
-[mcp_servers.continuum.env]
-AI_WORKSPACE_API_URL = ${JSON.stringify(apiBaseUrl)}
-AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
+[mcp_servers.oscar.env]
+OSCAR_API_URL = ${JSON.stringify(apiBaseUrl)}
+OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
 
-  const codexCommand = `codex mcp add continuum --env AI_WORKSPACE_API_URL="${apiBaseUrl}" --env AI_WORKSPACE_API_KEY="${activeTokenValue}" --env AI_WORKSPACE_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"`;
+  const codexCommand = `codex mcp add oscar --env OSCAR_API_URL="${apiBaseUrl}" --env OSCAR_API_KEY="${activeTokenValue}" --env OSCAR_PROJECT_ID="${projectKey}" -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js"`;
 
   const antigravityConfigJson = JSON.stringify(
     {
       mcpServers: {
-        continuum: {
+        oscar: {
           command: "node",
           args: ["<PATH_TO_BACKEND>/dist/mcp/cli.js"],
           env: {
-            AI_WORKSPACE_API_URL: apiBaseUrl,
-            AI_WORKSPACE_API_KEY: activeTokenValue,
-            AI_WORKSPACE_PROJECT_ID: projectKey,
+            OSCAR_API_URL: apiBaseUrl,
+            OSCAR_API_KEY: activeTokenValue,
+            OSCAR_PROJECT_ID: projectKey,
           },
         },
       },
@@ -756,7 +756,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
     2,
   );
 
-  const antigravityCommand = `agy mcp add continuum -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js" -e AI_WORKSPACE_API_URL="${apiBaseUrl}" -e AI_WORKSPACE_API_KEY="${activeTokenValue}" -e AI_WORKSPACE_PROJECT_ID="${projectKey}"`;
+  const antigravityCommand = `agy mcp add oscar -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js" -e OSCAR_API_URL="${apiBaseUrl}" -e OSCAR_API_KEY="${activeTokenValue}" -e OSCAR_PROJECT_ID="${projectKey}"`;
 
   // App catalog data
   const integrationCount = 3;
@@ -992,7 +992,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
                         <p className="text-xs text-slate-600 leading-relaxed mb-4">
                           Synchronize multiple repositories, pull requests,
                           issue discussions, and source code files directly into
-                          vector memory for AI Copilot context and evidence
+                          vector memory for OSCAR context and evidence
                           citations.
                         </p>
                       </div>
@@ -1046,7 +1046,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
           <McpConsole
             logo={<McpIcon className="h-6 w-6" />}
             projectKey={projectKey}
-            projectName={currentProject?.name || "Continuum"}
+            projectName={currentProject?.name || "OSCAR"}
             apiUrl={apiBaseUrl}
             prompt={universalAgentPrompt}
             tokens={apiKeys}
@@ -1108,7 +1108,7 @@ AI_WORKSPACE_PROJECT_ID = ${JSON.stringify(projectKey)}`;
                     id: "codex-toml",
                     title: ".codex/config.toml",
                     description:
-                      "Or use this config file. Set AI_WORKSPACE_API_KEY in your environment before starting Codex, and replace the backend path.",
+                      "Or use this config file. Set OSCAR_API_KEY in your environment before starting Codex, and replace the backend path.",
                     code: codexConfigToml,
                     copyLabel: "Copy TOML",
                   },

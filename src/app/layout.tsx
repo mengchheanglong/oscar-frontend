@@ -11,7 +11,7 @@ import { ToastProvider } from "@/context/toast-context";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Continuum",
+  title: "OSCAR",
   description: "Your projects, knowledge, and AI in one workspace.",
   icons: {
     icon: [

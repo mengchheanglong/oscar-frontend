@@ -135,6 +135,7 @@ export function MarkdownContent({
         urlTransform={(url) => {
           // Model output cannot load local resources or executable URL schemes.
           if (/^#continuum-evidence-\d+$/.test(url)) return url;
+          if (/^t3-thread:\/\/v1\/[a-zA-Z0-9:_-]{1,255}$/.test(url)) return url;
           try {
             return ["https:", "http:"].includes(new URL(url).protocol)
               ? url

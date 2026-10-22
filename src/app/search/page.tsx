@@ -501,7 +501,7 @@ export default function SearchPage() {
                             variant="ghost"
                             size="sm"
                             className="h-7 text-xs gap-1 text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 px-2 shadow-2xs"
-                            title="Ask AI Copilot about this record"
+                            title="Ask OSCAR about this record"
                           >
                             <Sparkles className="w-3 h-3 text-codex-accent" />
                             <span className="hidden sm:inline">Ask AI</span>

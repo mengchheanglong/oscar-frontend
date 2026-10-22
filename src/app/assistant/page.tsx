@@ -14,7 +14,7 @@ import { WorkspaceIcon } from "@/components/workspace-icons";
 import {
   ChatNavigationItem,
   type NavigationChat,
-} from "@/components/ai/chat-navigation";
+} from "@/components/assistant/chat-navigation";
 import { useProjectWorkspace } from "@/components/project-workspace";
 import type { Project } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
@@ -39,12 +39,12 @@ import {
 import { formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
-import { CopilotComposer } from "@/components/ai/copilot-composer";
+import { AssistantComposer } from "@/components/assistant/assistant-composer";
+import { PlatformHandoffPanel } from "@/components/assistant/platform-handoff-panel";
 import {
   useConversationWork,
   ConversationWorkStatus,
-} from "@/components/ai/conversation-work";
-import { agentRuns } from "@/lib/agent-runs";
+} from "@/components/assistant/conversation-work";
 
 const getSourceLink = (
   sourceType: string,
@@ -122,35 +122,58 @@ function LinkedConversation({
   conversations,
   onOpen,
   onNew,
+  onPrefill,
 }: {
   conversations: Conversation[];
   onOpen: (conversation: Conversation) => void;
   onNew: () => void;
+  onPrefill?: (prompt: string, mode?: string, goalId?: string) => void;
 }) {
   const params = useSearchParams(),
     handled = useRef<string | null>(null);
   const id = params.get("conversation"),
-    fresh = params.get("new");
+    fresh = params.get("new"),
+    mode = params.get("mode"),
+    prompt = params.get("prompt"),
+    selectedGoalId = params.get("goalId");
   useEffect(() => {
-    const key = fresh ? "new" : id;
+    const key = fresh ? "new" : id || (prompt ? `prompt:${prompt}` : null);
     if (!key) {
       handled.current = null;
       return;
     }
     if (handled.current === key) return;
     const conversation = conversations.find((item) => item.id === id);
-    if (!fresh && !conversation) return;
+    if (!fresh && !prompt && !conversation) return;
     const frame = window.requestAnimationFrame(() => {
       handled.current = key;
-      if (fresh) onNew();
-      else onOpen(conversation!);
+      if (prompt && onPrefill) {
+        onPrefill(prompt, mode || undefined, selectedGoalId || undefined);
+      } else if (fresh) {
+        onNew();
+      } else if (conversation) {
+        onOpen(conversation);
+      }
       const url = new URL(window.location.href);
       url.searchParams.delete("conversation");
       url.searchParams.delete("new");
+      url.searchParams.delete("mode");
+      url.searchParams.delete("prompt");
+      url.searchParams.delete("goalId");
       window.history.replaceState(null, "", url.toString());
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [id, fresh, conversations, onOpen, onNew]);
+  }, [
+    id,
+    fresh,
+    mode,
+    prompt,
+    selectedGoalId,
+    conversations,
+    onOpen,
+    onNew,
+    onPrefill,
+  ]);
   return null;
 }
 
@@ -161,6 +184,13 @@ const MODES = [
     icon: Bot,
     color: "text-indigo-600",
     desc: "Research, analysis, and project work",
+  },
+  {
+    key: "STRATEGY",
+    label: "Strategic Review",
+    icon: Sparkles,
+    color: "text-amber-500",
+    desc: "Strategic goal alignment, measured progress evaluation, and challenging low-value tasks",
   },
 ];
 
@@ -204,13 +234,14 @@ export default function AssistantPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const selectedMode = "WORKSPACE";
+  const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
   const [useTools, setUseTools] = useState(false);
-  const workRequest = useRef<{
-    conversationId: string;
-    prompt: string;
-    key: string;
-  } | null>(null);
+  const [useT3, setUseT3] = useState(false);
+  const [handoffPrompt, setHandoffPrompt] = useState<string | null>(null);
+  const [handoffPlatform, setHandoffPlatform] = useState<
+    "t3" | "paperclip" | "hermes"
+  >("t3");
+  const [usePaperclip, setUsePaperclip] = useState(false);
   const memoryProjectId = activeConv?.projectId || currentProject?.id;
   useEffect(() => {
     setUseTools(false);
@@ -225,6 +256,7 @@ export default function AssistantPage() {
     projectId: currentProject?.id,
     userId: user?.id,
   };
+  const reviewGoalId = useRef<string | undefined>(undefined);
   const [inputContent, setInputContent] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -389,7 +421,7 @@ export default function AssistantPage() {
     try {
       const results = await Promise.allSettled(
         projects.map(async (project) => {
-          const list = await api.ai.listConversations(project.id);
+          const list = await api.assistant.listConversations(project.id);
           return Promise.all(
             (Array.isArray(list) ? list : []).map(async (conversation) => {
               // Upgrade browser-tagged legacy chats to durable server-side scope.
@@ -397,7 +429,7 @@ export default function AssistantPage() {
                 !conversation.includeAllWorkspaces &&
                 legacyWorkspaceChatIds.has(conversation.id)
               ) {
-                conversation = await api.ai.updateConversation(
+                conversation = await api.assistant.updateConversation(
                   project.id,
                   conversation.id,
                   { includeAllWorkspaces: true },
@@ -453,7 +485,7 @@ export default function AssistantPage() {
       setIsLoadingMessages(true);
       setMessagesError(null);
       try {
-        const res = await api.ai.listMessages(targetProjId, convId);
+        const res = await api.assistant.listMessages(targetProjId, convId);
         if (request !== messageLoadRef.current) return;
         const fetched = Array.isArray(res) ? res : [];
         setMessages((prev) => {
@@ -546,6 +578,7 @@ export default function AssistantPage() {
   }, [activeConv, loadMessages, invalidateMessageLoads]);
 
   const handleResetChat = () => {
+    reviewGoalId.current = undefined;
     if (sendInFlightRef.current) return;
     draftsRef.current[draftKey] = inputContent;
     messageLoadRef.current++;
@@ -585,7 +618,7 @@ export default function AssistantPage() {
     if (!targetProjectId) return;
     setIsDeleting(true);
     try {
-      await api.ai.deleteConversation(targetProjectId, deleteTargetId);
+      await api.assistant.deleteConversation(targetProjectId, deleteTargetId);
       const updated = conversations.filter((c) => c.id !== deleteTargetId);
       setConversations(updated);
       if (activeConv?.id === deleteTargetId) {
@@ -620,7 +653,7 @@ export default function AssistantPage() {
     const request = messageLoadRef.current;
     setIsExcluding(true);
     try {
-      await api.ai.excludeMessageContext(
+      await api.assistant.excludeMessageContext(
         target.projectId,
         target.conversationId,
         target.messageId,
@@ -637,7 +670,7 @@ export default function AssistantPage() {
         );
       }
       try {
-        const refreshed = await api.ai.listMessages(
+        const refreshed = await api.assistant.listMessages(
           target.projectId,
           target.conversationId,
         );
@@ -676,10 +709,29 @@ export default function AssistantPage() {
         !targetProjectId
       )
         return;
-      if (useTools && (!currentProject || text.length > 4000)) {
-        setSendError(
-          "Choose a project and keep tool requests under 4,000 characters.",
-        );
+      const requestedPlatform = /\buse\s+paperclip\b/i.test(text)
+        ? "paperclip"
+        : /\buse\s+hermes\b/i.test(text)
+          ? "hermes"
+          : /\buse\s+t3\b/i.test(text)
+            ? "t3"
+            : usePaperclip
+              ? "paperclip"
+              : useT3
+                ? "t3"
+                : useTools
+                  ? "hermes"
+                  : null;
+      if (requestedPlatform) {
+        const limit = requestedPlatform === "hermes" ? 4000 : 12000;
+        if (!currentProject || text.length > limit) {
+          setSendError(
+            `Choose a project and keep this task under ${limit.toLocaleString()} characters.`,
+          );
+          return;
+        }
+        setHandoffPlatform(requestedPlatform);
+        setHandoffPrompt(text);
         return;
       }
       const origin = { ...currentView.current };
@@ -715,11 +767,14 @@ export default function AssistantPage() {
       let conv = activeConv;
       if (!conv) {
         try {
-          const rawConv = await api.ai.createConversation(targetProjectId, {
-            title: text.length > 45 ? text.slice(0, 42) + "..." : text,
-            defaultMode: selectedMode,
-            includeAllWorkspaces: !currentProject,
-          });
+          const rawConv = await api.assistant.createConversation(
+            targetProjectId,
+            {
+              title: text.length > 45 ? text.slice(0, 42) + "..." : text,
+              defaultMode: selectedMode,
+              includeAllWorkspaces: !currentProject,
+            },
+          );
           if (!rawConv)
             throw new Error("Conversation creation returned empty response");
           if (!inView()) {
@@ -766,29 +821,6 @@ export default function AssistantPage() {
 
       try {
         const postProjId = conv.projectId || targetProjectId;
-        if (useTools) {
-          if (
-            !workRequest.current ||
-            workRequest.current.conversationId !== conv.id ||
-            workRequest.current.prompt !== text
-          )
-            workRequest.current = {
-              conversationId: conv.id,
-              prompt: text,
-              key: crypto.randomUUID(),
-            };
-          const run = await agentRuns.create(
-            postProjId,
-            text,
-            workRequest.current.key,
-            conv.id,
-          );
-          work.record(run);
-          const latest = await api.ai.listMessages(postProjId, conv.id);
-          if (inView(conv.id)) setMessages(latest);
-          workRequest.current = null;
-          return;
-        }
         const signature = JSON.stringify([
           user?.id,
           postProjId,
@@ -805,9 +837,10 @@ export default function AssistantPage() {
               crypto.randomUUID(),
           };
         }
-        const res = await api.ai.postMessage(postProjId, conv.id, {
+        const res = await api.assistant.postMessage(postProjId, conv.id, {
           clientRequestId: chatRequest.current.key,
           content: text,
+          goalId: reviewGoalId.current,
           mode: selectedMode,
           includeAllWorkspaces:
             conv.includeAllWorkspaces === true || !currentProject,
@@ -864,6 +897,8 @@ export default function AssistantPage() {
       isLoadingMessages,
       selectedMode,
       useTools,
+      useT3,
+      usePaperclip,
       work,
       messages,
       user?.id,
@@ -978,11 +1013,17 @@ export default function AssistantPage() {
           conversations={conversations}
           onOpen={selectConversation}
           onNew={handleResetChat}
+          onPrefill={(prompt, mode, goalId) => {
+            handleResetChat();
+            reviewGoalId.current = goalId;
+            setInputContent(prompt);
+            if (mode) setSelectedMode(mode);
+          }}
         />
       </Suspense>
       <div className="relative flex h-full min-h-0 w-full overflow-hidden chat-canvas">
         <section
-          aria-label="Copilot conversation"
+          aria-label="Assistant conversation"
           className="flex min-w-0 flex-1 flex-col overflow-hidden chat-canvas"
         >
           <header className="chat-header">
@@ -997,6 +1038,12 @@ export default function AssistantPage() {
                 <WorkspaceIcon name="panel" />
               </button>
               <div className="chat-header-title">{activeConv?.title || ""}</div>
+              {selectedMode === "STRATEGY" && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  Strategic Review
+                </span>
+              )}
             </div>
           </header>
 
@@ -1071,8 +1118,7 @@ export default function AssistantPage() {
                     No Project Workspaces Found
                   </h2>
                   <p className="mt-2 text-xs leading-relaxed text-slate-500">
-                    Create your first project workspace to start using AI
-                    Copilot.
+                    Create your first project workspace to start using AI OSCAR.
                   </p>
                   <div className="mt-6 flex justify-center">
                     <button
@@ -1139,7 +1185,7 @@ export default function AssistantPage() {
                         >
                           <span className="font-semibold text-slate-700">
                             {isAssistant
-                              ? "AI Copilot"
+                              ? "OSCAR"
                               : (user?.displayName ?? "You")}
                           </span>
                           {isAssistant && (
@@ -1419,7 +1465,42 @@ export default function AssistantPage() {
             )}
           </div>
 
-          <CopilotComposer
+          <PlatformHandoffPanel
+            key={`${user?.id}:${currentProject?.id}`}
+            projectId={activeConv?.projectId || currentProject?.id}
+            conversationId={activeConv?.id}
+            prompt={handoffPrompt}
+            platform={handoffPlatform}
+            hermesAvailable={work.available && !!currentProject}
+            onClose={() => setHandoffPrompt(null)}
+            getConversation={async (prompt) => {
+              if (activeConv) return activeConv.id;
+              if (!currentProject) throw new Error("Choose a project first.");
+              const conv = await api.assistant.createConversation(
+                currentProject.id,
+                { title: prompt.slice(0, 45), defaultMode: selectedMode },
+              );
+              currentView.current.conversationId = conv.id;
+              skipLoadMessagesRef.current = conv.id;
+              setActiveConv(conv);
+              setConversations((previous) => [conv, ...previous]);
+              return conv.id;
+            }}
+            onStarted={(conversationId) => {
+              work.refresh();
+              setInputContent("");
+              delete draftsRef.current[draftKey];
+              void loadMessages(
+                conversationId,
+                activeConv?.projectId || currentProject?.id,
+              );
+            }}
+            onResult={() => {
+              if (activeConv)
+                void loadMessages(activeConv.id, activeConv.projectId);
+            }}
+          />
+          <AssistantComposer
             projectId={currentProject?.id}
             projectName={currentProject?.name}
             onProjectFiles={() =>
@@ -1438,6 +1519,10 @@ export default function AssistantPage() {
             }}
             onSend={() => void handleSendMessage()}
             useTools={useTools}
+            useT3={useT3}
+            onUseT3Change={setUseT3}
+            usePaperclip={usePaperclip}
+            onUsePaperclipChange={setUsePaperclip}
             onUseToolsChange={setUseTools}
             toolsAvailable={work.available && !!currentProject}
             toolsHint={

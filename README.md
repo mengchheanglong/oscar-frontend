@@ -1,6 +1,21 @@
-# Continuum — Frontend
+# OSCAR — Frontend
 
-The sibling backend repository owns Compose. From `../continuum-backend`, use
+## OSCAR & MAVIS foundation
+
+The new product plan and Phase 0 baseline are documented in the sibling backend:
+[vision and architecture](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/OSCAR_MAVIS_Vision_and_Architecture.md)
+and [foundation](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/OSCAR_MAVIS_FOUNDATION.md).
+In a new sibling checkout, these are under `../oscar-backend/docs/`; the existing
+local `../continuum-backend/docs/` path remains supported.
+Continuum remains the existing codebase; proposed goals and external integrations
+are not implemented by this setup.
+
+Use Node 24.14.0 and pnpm 10.32.1. Run `pnpm lint`, `pnpm typecheck`, `pnpm test`,
+and `pnpm build` here, or run `pnpm verify:foundation` from the sibling backend
+to verify both repositories together. Frontend CI runs the same four checks.
+
+The sibling backend repository owns Compose. From `../oscar-backend` (or the
+existing local `../continuum-backend` folder), use
 `pnpm stack:up` for the full Docker app on port 3002 with API port 3001. See its
 `docs/DOCKER_LOCAL.md` for migrations, existing-data mounts, and Hermes limitations.
 The frontend Docker build accepts `BACKEND_INTERNAL_URL` (default `http://api:3001`)
@@ -11,15 +26,15 @@ project files, tasks, decisions, and AI-assisted work. This is an independent
 repository derived from AI Workspace's develop branch, with its Git history
 preserved. The original AI Workspace repositories remain separate.
 
-- Frontend: https://github.com/mengchheanglong/continuum-frontend
-- Backend: https://github.com/mengchheanglong/continuum-backend
-- Working and default branch: `develop`.
+- Frontend: https://github.com/mengchheanglong/oscar-frontend
+- Backend: https://github.com/mengchheanglong/oscar-backend
+- Working branch: `develop`; GitHub default branch: `main`.
 - Local frontend: `http://localhost:3002`; local API: `http://127.0.0.1:3001`.
 - Environment files, access tokens, uploaded content, and machine MCP settings
   stay local and are not part of this repository.
 
 The inherited implementation guide and verification notes describe the original
-foundation. Continuum's current direction is the personal workspace above.
+foundation. The OSCAR & MAVIS blueprint defines the new product direction.
 Legacy `aiw_*` storage keys, API environment names, database migration identifiers,
 and the existing isolated development database remain compatible with current
 local data. Repository branding changes do not migrate or reset that data.

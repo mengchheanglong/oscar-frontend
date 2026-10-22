@@ -3,7 +3,7 @@ services:
   # Continuum Frontend (Next.js 14)
   # ==============================================================================
   - type: web
-    name: continuum-frontend
+    name: oscar-frontend
     runtime: node
     plan: free
     region: singapore
@@ -15,6 +15,6 @@ services:
       - key: HOSTNAME
         value: 0.0.0.0
       - key: BACKEND_INTERNAL_URL
-        sync: false # Set to http://continuum-backend:10000 or your backend URL
+        sync: false # Set to http://oscar-backend:10000 or your backend URL
       - key: NEXT_PUBLIC_API_URL
         value: /api/v1

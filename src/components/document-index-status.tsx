@@ -40,7 +40,7 @@ const STATUS_DETAILS = {
   INDEXED: {
     label: "Indexed",
     description:
-      "This document's current revision is indexed and available to AI Copilot for search and citations.",
+      "This document's current revision is indexed and available to OSCAR for search and citations.",
     tone: "bg-emerald-50 text-emerald-700 border-emerald-100",
   },
   FAILED: {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useProjectWorkspace } from "@/components/project-workspace";
-import { CopilotMemorySettings } from "@/components/ai/copilot-memory-settings";
+import { SavedMemorySettings } from "@/components/assistant/saved-memory-settings";
 
 export function PersonalizationSettings() {
   const { user, currentProject, projects, setCurrentProject } = useAuth();
@@ -45,7 +45,7 @@ export function PersonalizationSettings() {
       <div>
         <h2>Saved memory</h2>
         {currentProject ? (
-          <CopilotMemorySettings
+          <SavedMemorySettings
             key={`${user?.id}:${currentProject.id}`}
             projectId={currentProject.id}
             projectLabel={currentProject.name}

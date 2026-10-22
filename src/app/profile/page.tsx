@@ -7,7 +7,10 @@ import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
 import { Input } from "@/components/ui/input";
-import { CustomDropdown, type CustomDropdownOption } from "@/components/ui/custom-dropdown";
+import {
+  CustomDropdown,
+  type CustomDropdownOption,
+} from "@/components/ui/custom-dropdown";
 import {
   User,
   Folder,
@@ -92,7 +95,9 @@ export default function ProfilePage() {
   const { user, projects, updateUser, logout } = useAuth();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<"general" | "security" | "workspaces">("general");
+  const [activeTab, setActiveTab] = useState<
+    "general" | "security" | "workspaces"
+  >("general");
 
   // Profile edit state
   const [displayName, setDisplayName] = useState("");
@@ -166,7 +171,10 @@ export default function ProfilePage() {
       return;
     }
     if (newPassword === currentPassword) {
-      showToast("New password must be different from current password", "error");
+      showToast(
+        "New password must be different from current password",
+        "error",
+      );
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -201,7 +209,10 @@ export default function ProfilePage() {
       <div className="space-y-6 max-w-6xl mx-auto pb-12">
         {/* Breadcrumb matching Team and Projects pages */}
         <div className="flex items-center gap-1.5 text-xs text-slate-500">
-          <Link href="/assistant" className="text-[#2563eb] hover:underline font-medium">
+          <Link
+            href="/assistant"
+            className="text-[#2563eb] hover:underline font-medium"
+          >
             Chat
           </Link>
           <span>/</span>
@@ -267,7 +278,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3.5">
                 <div
                   className={`w-12 h-12 rounded-xl ${getMemberAvatarBg(
-                    professionalRole
+                    professionalRole,
                   )} text-white flex items-center justify-center text-sm font-bold shadow-xs shrink-0`}
                 >
                   {initials}
@@ -279,7 +290,7 @@ export default function ProfilePage() {
                     </h2>
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getProfRoleBadgeStyle(
-                        professionalRole
+                        professionalRole,
                       )}`}
                     >
                       {getProfRoleLabel(professionalRole)}
@@ -326,7 +337,8 @@ export default function ProfilePage() {
                   className="h-10 text-xs rounded-xl border border-slate-200 focus-visible:ring-blue-500"
                 />
                 <p className="text-[11px] text-slate-400">
-                  Visible to team members across project boards, activities, and task assignments.
+                  Visible to team members across project boards, activities, and
+                  task assignments.
                 </p>
               </div>
 
@@ -366,7 +378,8 @@ export default function ProfilePage() {
                   className="w-full"
                 />
                 <p className="text-[11px] text-slate-400">
-                  Used by AI Copilot for relevant contextual recommendations and task alignment.
+                  Used by OSCAR for relevant contextual recommendations and task
+                  alignment.
                 </p>
               </div>
 
@@ -404,12 +417,16 @@ export default function ProfilePage() {
                     Change Password
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Update your password. Other active sessions will be terminated automatically.
+                    Update your password. Other active sessions will be
+                    terminated automatically.
                   </p>
                 </div>
               </div>
 
-              <form onSubmit={handleChangePassword} className="space-y-4 max-w-xl">
+              <form
+                onSubmit={handleChangePassword}
+                className="space-y-4 max-w-xl"
+              >
                 {/* Current Password */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-700 block">
@@ -429,7 +446,11 @@ export default function ProfilePage() {
                       className="p-1.5 text-slate-400 hover:text-slate-600 absolute right-2.5 top-1/2 -translate-y-1/2 rounded transition-colors"
                       aria-label="Toggle password visibility"
                     >
-                      {showCurrentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showCurrentPassword ? (
+                        <EyeOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -453,18 +474,24 @@ export default function ProfilePage() {
                       className="p-1.5 text-slate-400 hover:text-slate-600 absolute right-2.5 top-1/2 -translate-y-1/2 rounded transition-colors"
                       aria-label="Toggle password visibility"
                     >
-                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showNewPassword ? (
+                        <EyeOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Must be at least 8 characters long and different from current password.
+                    Must be at least 8 characters long and different from
+                    current password.
                   </p>
                 </div>
 
                 {/* Confirm Password */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-700 block">
-                    Confirm New Password <span className="text-rose-500">*</span>
+                    Confirm New Password{" "}
+                    <span className="text-rose-500">*</span>
                   </label>
                   <Input
                     type={showNewPassword ? "text" : "password"}
@@ -479,7 +506,12 @@ export default function ProfilePage() {
                 <div className="pt-2 flex items-center justify-start">
                   <button
                     type="submit"
-                    disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
+                    disabled={
+                      savingPassword ||
+                      !currentPassword ||
+                      !newPassword ||
+                      !confirmPassword
+                    }
                     className="h-10 px-5 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                   >
                     {savingPassword ? (
@@ -498,9 +530,14 @@ export default function ProfilePage() {
             {/* Active Session Card */}
             <section className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-sm font-bold font-serif text-slate-900">Current Session</h3>
+                <h3 className="text-sm font-bold font-serif text-slate-900">
+                  Current Session
+                </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Signed in on this device as <span className="font-medium text-slate-800">{user?.email}</span>
+                  Signed in on this device as{" "}
+                  <span className="font-medium text-slate-800">
+                    {user?.email}
+                  </span>
                 </p>
               </div>
 
@@ -525,7 +562,8 @@ export default function ProfilePage() {
                   Workspace Memberships ({projects.length})
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Projects you are a member of with access to decisions, tasks, and files.
+                  Projects you are a member of with access to decisions, tasks,
+                  and files.
                 </p>
               </div>
 
@@ -562,13 +600,16 @@ export default function ProfilePage() {
                       </h3>
 
                       <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                        {proj.description || "No description provided for this workspace."}
+                        {proj.description ||
+                          "No description provided for this workspace."}
                       </p>
                     </div>
 
                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#E8F5E9] text-[#2D8A60]">
-                        {proj.status === "ACTIVE" ? "Active" : proj.status.toLowerCase()}
+                        {proj.status === "ACTIVE"
+                          ? "Active"
+                          : proj.status.toLowerCase()}
                       </span>
 
                       <Link href={`/projects/${proj.id}`}>
@@ -589,7 +630,9 @@ export default function ProfilePage() {
                 <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
                   <Folder className="w-6 h-6" />
                 </div>
-                <h3 className="text-sm font-bold font-serif text-slate-900">No workspaces assigned</h3>
+                <h3 className="text-sm font-bold font-serif text-slate-900">
+                  No workspaces assigned
+                </h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   You are not currently assigned to any workspace projects.
                 </p>

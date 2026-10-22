@@ -74,7 +74,7 @@ export function CommandPalette({
     setChats([]);
     setError("");
     Promise.allSettled(
-      projects.map((project) => api.ai.listConversations(project.id)),
+      projects.map((project) => api.assistant.listConversations(project.id)),
     ).then((results) => {
       if (!active) return;
       setChats(

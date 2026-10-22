@@ -130,10 +130,14 @@ export function ProposalReviewDialog({
       let currentVersion = savedDraft.current?.version ?? proposal.version;
       const isDirty = JSON.stringify(draft) !== savedDraft.current?.json;
       if (isDirty) {
-        const updated = await api.ai.updateProposal(projectId, proposal.id, {
-          version: currentVersion,
-          draftJson: draft,
-        });
+        const updated = await api.assistant.updateProposal(
+          projectId,
+          proposal.id,
+          {
+            version: currentVersion,
+            draftJson: draft,
+          },
+        );
         currentVersion = updated.version;
         savedDraft.current = {
           version: updated.version,
@@ -150,7 +154,7 @@ export function ProposalReviewDialog({
       if (confirmation.current?.payload !== encoded) {
         confirmation.current = { payload: encoded, key: crypto.randomUUID() };
       }
-      const res = await api.ai.confirmProposal(
+      const res = await api.assistant.confirmProposal(
         projectId,
         proposal.id,
         payload,
@@ -175,7 +179,7 @@ export function ProposalReviewDialog({
     setSubmitting(true);
     setErrorMsg(null);
     try {
-      await api.ai.rejectProposal(projectId, proposal.id);
+      await api.assistant.rejectProposal(projectId, proposal.id);
       showToast("Proposal rejected. No changes were made.", "info");
       if (onRejected) onRejected();
       onClose();

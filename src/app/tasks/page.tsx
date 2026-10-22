@@ -1,8 +1,15 @@
 "use client";
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
+import { GoalSelect } from "@/components/goal-select";
 import { api } from "@/lib/api";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { Button } from "@/components/ui/button";
@@ -20,7 +27,12 @@ import {
   Trash2,
   GripVertical,
 } from "lucide-react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd";
 
 interface ProjectInfo {
   id: string;
@@ -35,6 +47,7 @@ interface AssigneeInfo {
 }
 
 interface TaskItem {
+  goalId?: string | null;
   id: string;
   projectId: string;
   number: number;
@@ -244,6 +257,8 @@ function TaskWorkspace() {
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
 
   // Create Form State
+  const [createGoalId, setCreateGoalId] = useState("");
+  const [editGoalId, setEditGoalId] = useState("");
   const [createProjectId, setCreateProjectId] = useState("");
   const [createTitle, setCreateTitle] = useState("");
   const [createDescription, setCreateDescription] = useState("");
@@ -581,6 +596,7 @@ function TaskWorkspace() {
     setCreatePriority("MEDIUM");
     setCreateDueDate("");
     setCreateAssigneeId("");
+    setCreateGoalId("");
     setCreateBlockedReason("");
     setCreateModalOpen(true);
   };
@@ -600,6 +616,7 @@ function TaskWorkspace() {
         priority: createPriority,
         dueDate: createDueDate || undefined,
         assigneeId: createAssigneeId || undefined,
+        goalId: createGoalId || undefined,
         blockedReason:
           createStatus === "BLOCKED" ? createBlockedReason.trim() : undefined,
       });
@@ -677,6 +694,7 @@ function TaskWorkspace() {
 
   const openEditModal = (task: TaskItem) => {
     setEditingTask(task);
+    setEditGoalId(task.goalId || "");
     setEditTitle(task.title);
     setEditDescription(task.description || "");
     setEditStatus(task.status);
@@ -720,6 +738,7 @@ function TaskWorkspace() {
     try {
       await api.tasks.update(editingTask.projectId, editingTask.id, {
         version: editingTask.version,
+        goalId: editGoalId || null,
         title: editTitle.trim(),
         description: editDescription.trim() || null,
         status: editStatus,
@@ -1398,6 +1417,13 @@ function TaskWorkspace() {
             </div>
 
             <form onSubmit={handleCreateTask}>
+              <div className="px-6 pt-4">
+                <GoalSelect
+                  projectId={createProjectId}
+                  value={createGoalId}
+                  onChange={setCreateGoalId}
+                />
+              </div>
               {memberError && (
                 <p className="px-6 pt-4 text-xs text-amber-700" role="status">
                   Project members could not be loaded. You can save this task
@@ -1416,7 +1442,9 @@ function TaskWorkspace() {
                     value={createProjectId}
                     onChange={(e) => {
                       setCreateProjectId(e.target.value);
+                      setCreateGoalId("");
                       setCreateAssigneeId("");
+                      setCreateGoalId("");
                     }}
                     className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
@@ -1610,6 +1638,13 @@ function TaskWorkspace() {
             </div>
 
             <form onSubmit={handleUpdateTask}>
+              <div className="px-6 pt-4">
+                <GoalSelect
+                  projectId={editingTask.projectId}
+                  value={editGoalId}
+                  onChange={setEditGoalId}
+                />
+              </div>
               {memberError && (
                 <p className="px-6 pt-4 text-xs text-amber-700" role="status">
                   Project members could not be loaded. The current assignee is

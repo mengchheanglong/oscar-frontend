@@ -762,8 +762,8 @@ export function GitHubWorkspace(p: Props) {
                                     {!row.folder && (
                                       <Link
                                         href={codePrompt(row.file!)}
-                                        title={`Ask Copilot about ${row.path}`}
-                                        aria-label={`Ask Copilot about ${row.path}`}
+                                        title={`Ask OSCAR about ${row.path}`}
+                                        aria-label={`Ask OSCAR about ${row.path}`}
                                         className={`rounded p-1 text-[#656d76] hover:bg-[#ddf4ff] hover:text-[#0969da] ${focus}`}
                                       >
                                         <Bot size={16} />
@@ -909,7 +909,7 @@ export function GitHubWorkspace(p: Props) {
                                     </div>
                                     <Link
                                       href={`/assistant?prompt=${encodeURIComponent(`Analyze GitHub issue #${issue.issueNumber}: ${issue.title}. ${issue.body ?? ""}`)}&mode=DEVELOPER`}
-                                      aria-label={`Ask Copilot about issue ${issue.issueNumber}`}
+                                      aria-label={`Ask OSCAR about issue ${issue.issueNumber}`}
                                       className={`${focus} rounded p-1 text-[#656d76] hover:text-[#0969da]`}
                                     >
                                       <Bot size={16} />
@@ -973,7 +973,7 @@ export function GitHubWorkspace(p: Props) {
                                 </div>
                                 <Link
                                   href={`/assistant?prompt=${encodeURIComponent(`Review pull request #${pr.prNumber}: ${pr.title}. ${pr.body ?? ""}`)}&mode=DEVELOPER`}
-                                  aria-label={`Ask Copilot to review pull request ${pr.prNumber}`}
+                                  aria-label={`Ask OSCAR to review pull request ${pr.prNumber}`}
                                   className={`${focus} rounded p-1 text-[#656d76] hover:text-[#0969da]`}
                                 >
                                   <Bot size={16} />
@@ -1002,7 +1002,7 @@ export function GitHubWorkspace(p: Props) {
                       About this connection
                     </h2>
                     <p className={`text-sm leading-6 ${muted}`}>
-                      Repository content connected to your Continuum project.
+                      Repository content connected to your OSCAR project.
                     </p>
                     <a
                       href={repoUrl}

@@ -312,7 +312,7 @@ export default function LoginPage() {
       <header className="workspace-auth-header">
         <a
           href="/assistant"
-          aria-label="Continuum"
+          aria-label="OSCAR"
           className="workspace-icon-button"
         >
           <WorkspaceIcon name="mark" className="!h-7 !w-7" />
@@ -327,7 +327,7 @@ export default function LoginPage() {
               {/* Header */}
               <div className="space-y-1">
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-serif">
-                  Sign in to Continuum
+                  Sign in to OSCAR
                 </h2>
                 <p className="text-xs text-slate-500">
                   Already have an account? Log in to your workspace account.
@@ -444,7 +444,7 @@ export default function LoginPage() {
 
               {/* Bottom Switch to Register */}
               <div className="text-center text-[11.5px] text-slate-500 pt-1.5">
-                New to Continuum?{" "}
+                New to OSCAR?{" "}
                 <button
                   type="button"
                   onClick={() => switchMode("register")}
@@ -462,7 +462,7 @@ export default function LoginPage() {
               {/* Header */}
               <div className="space-y-1">
                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 font-serif">
-                  Create your Continuum account
+                  Create your OSCAR account
                 </h2>
                 <p className="text-xs text-slate-500">
                   New here? Create your very own workspace account.

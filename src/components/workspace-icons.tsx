@@ -1,5 +1,5 @@
 import type { SVGProps } from "react";
-import { CONTINUUM_MARK_PATH } from "@/lib/continuum-brand";
+import { OSCAR_MARK_PATH } from "@/lib/oscar-brand";
 
 // Common glyphs measured from Grok's public UI; workspace glyphs follow its 24px grid.
 const filledPaths = {
@@ -22,6 +22,8 @@ type IconName =
   | "folder"
   | "files"
   | "tasks"
+  | "platforms"
+  | "goals"
   | "chevron"
   | "close"
   | "mark";
@@ -50,7 +52,7 @@ export function WorkspaceIcon({
         aria-hidden="true"
         {...props}
       >
-        <path d={CONTINUUM_MARK_PATH} />
+        <path d={OSCAR_MARK_PATH} />
       </svg>
     );
   const paths: Record<string, React.ReactNode> = {
@@ -66,6 +68,13 @@ export function WorkspaceIcon({
         <rect x="14" y="3" width="7" height="5" rx="1.5" />
         <rect x="14" y="12" width="7" height="9" rx="1.5" />
         <rect x="3" y="16" width="7" height="5" rx="1.5" />
+      </>
+    ),
+    platforms: (
+      <>
+        <rect x="3" y="3" width="6" height="6" rx="1.5" />
+        <rect x="15" y="15" width="6" height="6" rx="1.5" />
+        <path d="M9 6h6a3 3 0 0 1 3 3v6M6 9v6a3 3 0 0 0 3 3h6" />
       </>
     ),
     decisions: <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />,
@@ -93,6 +102,13 @@ export function WorkspaceIcon({
       <>
         <rect x="3" y="3" width="18" height="18" rx="4" />
         <path d="m7 12 3 3 7-7" />
+      </>
+    ),
+    goals: (
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="6" />
+        <circle cx="12" cy="12" r="2" />
       </>
     ),
     knowledge: (

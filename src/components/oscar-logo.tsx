@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
-import { CONTINUUM_MARK_PATH } from "@/lib/continuum-brand";
+import { OSCAR_MARK_PATH } from "@/lib/oscar-brand";
 
-interface ContinuumMarkProps {
+interface OscarMarkProps {
   className?: string;
   size?: number | string;
 }
 
 /** Monochrome infinity ribbon shared with the sidebar and app icon. */
-export const ContinuumMark: React.FC<ContinuumMarkProps> = ({
+export const OscarMark: React.FC<OscarMarkProps> = ({
   className = "w-7 h-7",
   size,
 }) => (
@@ -22,11 +22,11 @@ export const ContinuumMark: React.FC<ContinuumMarkProps> = ({
     height={size}
     aria-hidden="true"
   >
-    <path d={CONTINUUM_MARK_PATH} />
+    <path d={OSCAR_MARK_PATH} />
   </svg>
 );
 
-interface ContinuumIconProps {
+interface OscarIconProps {
   className?: string;
   size?: "sm" | "md" | "lg" | "xl";
   variant?: "glyph" | "card";
@@ -37,7 +37,7 @@ interface ContinuumIconProps {
  * - 'glyph': Standalone scalable emblem mark
  * - 'card': Emblem nested inside a premium dark rounded squircle tile (#161927)
  */
-export const ContinuumIcon: React.FC<ContinuumIconProps> = ({
+export const OscarIcon: React.FC<OscarIconProps> = ({
   className = "",
   size = "md",
   variant = "card",
@@ -56,7 +56,7 @@ export const ContinuumIcon: React.FC<ContinuumIconProps> = ({
       <div
         className={`inline-flex items-center justify-center shrink-0 ${className}`}
       >
-        <ContinuumMark className={mark} />
+        <OscarMark className={mark} />
       </div>
     );
   }
@@ -65,14 +65,14 @@ export const ContinuumIcon: React.FC<ContinuumIconProps> = ({
     <div
       className={`inline-flex items-center justify-center bg-[#161927] border border-white/10 shadow-md shrink-0 transition-transform ${box} ${className}`}
       role="img"
-      aria-label="Continuum Icon"
+      aria-label="OSCAR Icon"
     >
-      <ContinuumMark className={mark} />
+      <OscarMark className={mark} />
     </div>
   );
 };
 
-interface ContinuumLogoProps {
+interface OscarLogoProps {
   className?: string;
   showText?: boolean;
   textClassName?: string;
@@ -80,10 +80,10 @@ interface ContinuumLogoProps {
 }
 
 /**
- * Full Continuum Brand Logo:
- * Renders the infinity emblem paired with the crisp bold "Continuum" wordmark.
+ * Full OSCAR Brand Logo:
+ * Renders the infinity emblem paired with the crisp bold "OSCAR" wordmark.
  */
-export const ContinuumLogo: React.FC<ContinuumLogoProps> = ({
+export const OscarLogo: React.FC<OscarLogoProps> = ({
   className = "",
   showText = true,
   textClassName = "",
@@ -101,19 +101,19 @@ export const ContinuumLogo: React.FC<ContinuumLogoProps> = ({
     <div
       className={`inline-flex items-center gap-2 select-none ${className}`}
       role="img"
-      aria-label="Continuum"
+      aria-label="OSCAR"
     >
-      <ContinuumMark className={mark} />
+      <OscarMark className={mark} />
       {showText && (
         <span
           className={`text-current font-sans ${text} ${textClassName}`}
           style={{ letterSpacing: "-0.03em" }}
         >
-          Continuum
+          OSCAR
         </span>
       )}
     </div>
   );
 };
 
-export default ContinuumLogo;
+export default OscarLogo;

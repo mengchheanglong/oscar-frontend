@@ -1475,7 +1475,7 @@ function FilesWorkspace() {
             deleteConfirmDoc?.originalFilename || deleteConfirmDoc?.title
           }
           itemType="document"
-          warningText="This action cannot be undone. If it is already indexed, the AI Copilot will no longer be able to reference it."
+          warningText="This action cannot be undone. If it is already indexed, the OSCAR will no longer be able to reference it."
           confirmText="Delete document"
           loading={deleting}
         />
