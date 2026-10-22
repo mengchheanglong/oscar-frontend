@@ -106,7 +106,8 @@ function AntigravityIcon({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 // App Types
-type ActiveView = "directory" | "mcp" | "github" | "hermes" | "platforms";
+type ActiveView =
+  "directory" | "mcp" | "github" | "hermes" | "platforms" | "paperclip" | "t3";
 type CategoryFilter = "all" | "ai" | "vcs";
 
 export function IntegrationsConsole() {
@@ -132,6 +133,7 @@ export function IntegrationsConsole() {
       if (app === "hermes") setActiveView("hermes");
       else if (app === "mcp") setActiveView("mcp");
       else if (app === "github") setActiveView("github");
+      else if (app === "paperclip" || app === "t3") setActiveView(app);
       else if (app === "platforms") setActiveView("platforms");
     }
   }, []);
@@ -761,7 +763,7 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
   const antigravityCommand = `agy mcp add oscar -- node "<PATH_TO_BACKEND>/dist/mcp/cli.js" -e OSCAR_API_URL="${apiBaseUrl}" -e OSCAR_API_KEY="${activeTokenValue}" -e OSCAR_PROJECT_ID="${projectKey}"`;
 
   // App catalog data
-  const integrationCount = 4;
+  const integrationCount = 5;
 
   const searchQuery = directorySearch.trim().toLowerCase();
 
@@ -962,28 +964,42 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
                     </div>
                   )}
 
-                  {isPlatformsVisible && (
-                    <button
-                      type="button"
-                      onClick={() => navigateToView("platforms")}
-                      className="p-5 rounded-2xl bg-card border border-border text-left hover:bg-muted transition-colors flex flex-col gap-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Boxes
-                          className="h-5 w-5 text-muted-foreground"
-                          aria-hidden="true"
-                        />
-                        <h3 className="font-semibold">Paperclip & T3 Code</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Connect your agents, configure access, and enable
-                        reviewed handoffs from chat.
-                      </p>
-                      <span className="text-sm font-medium inline-flex items-center gap-1">
-                        Manage connections <ChevronRight size={14} />
-                      </span>
-                    </button>
-                  )}
+                  {(["paperclip", "t3"] as const)
+                    .filter(
+                      (platform) =>
+                        isPlatformsVisible &&
+                        (!searchQuery ||
+                          (platform === "paperclip"
+                            ? "paperclip agent orchestration"
+                            : "t3 code coding agent"
+                          ).includes(searchQuery)),
+                    )
+                    .map((platform) => (
+                      <button
+                        type="button"
+                        key={platform}
+                        onClick={() => navigateToView(platform)}
+                        className="p-5 rounded-2xl bg-card border border-border text-left hover:bg-muted transition-colors flex flex-col gap-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Boxes
+                            className="h-5 w-5 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                          <h3 className="font-semibold">
+                            {platform === "paperclip" ? "Paperclip" : "T3 Code"}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {platform === "paperclip"
+                            ? "Connect Paperclip to assign work to your agents and review their results in OSCAR."
+                            : "Connect T3 Code for supervised coding tasks and return results to your OSCAR chat."}
+                        </p>
+                        <span className="text-sm font-medium inline-flex items-center gap-1">
+                          Manage connections <ChevronRight size={14} />
+                        </span>
+                      </button>
+                    ))}
                   {/* APP CARD 2: GitHub Integration */}
                   {isGithubVisible && (
                     <div
@@ -1073,7 +1089,7 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
           />
         )}
 
-        {activeView === "platforms" && (
+        {["platforms", "paperclip", "t3"].includes(activeView) && (
           <div className="space-y-6">
             <button
               type="button"
@@ -1082,7 +1098,14 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
             >
               ← Integrations
             </button>
-            <PlatformConnections key={currentProject?.id || "ALL"} />
+            <PlatformConnections
+              key={`${currentProject?.id || "ALL"}:${activeView}`}
+              platformType={
+                activeView === "paperclip" || activeView === "t3"
+                  ? activeView
+                  : undefined
+              }
+            />
           </div>
         )}
 

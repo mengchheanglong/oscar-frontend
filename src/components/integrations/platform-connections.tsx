@@ -17,7 +17,17 @@ import {
   Trash2,
 } from "lucide-react";
 
-export function PlatformConnections() {
+export function PlatformConnections({
+  platformType,
+}: {
+  platformType?: "paperclip" | "t3";
+}) {
+  const platformName =
+    platformType === "paperclip"
+      ? "Paperclip"
+      : platformType === "t3"
+        ? "T3 Code"
+        : "Agent";
   const { currentProject, projects } = useAuth();
   const { showToast } = useToast();
   const [connections, setConnections] = useState<PlatformConnection[]>([]),
@@ -30,7 +40,7 @@ export function PlatformConnections() {
   const [adding, setAdding] = useState(false),
     [busy, setBusy] = useState(false),
     [name, setName] = useState(""),
-    [type, setType] = useState("paperclip"),
+    [type, setType] = useState<string>(platformType || "paperclip"),
     [url, setUrl] = useState(""),
     [token, setToken] = useState(""),
     [company, setCompany] = useState("");
@@ -55,14 +65,22 @@ export function PlatformConnections() {
         platformsApi.list(currentProject?.id),
         platformsApi.links(currentProject?.id),
       ]);
-      setConnections(list.items);
-      setLinks(mappings.items);
+      const visible = list.items.filter(
+        (c) => !platformType || c.platformType === platformType,
+      );
+      setConnections(visible);
+      setLinks(
+        mappings.items.filter(
+          (link) =>
+            !platformType || visible.some((c) => c.id === link.connectionId),
+        ),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Platforms could not load.");
     } finally {
       setLoading(false);
     }
-  }, [currentProject?.id]);
+  }, [currentProject?.id, platformType]);
   useEffect(() => {
     setOverview(null);
     setRecords({});
@@ -116,7 +134,11 @@ export function PlatformConnections() {
   async function refresh() {
     setBusy(true);
     try {
-      setOverview(await platformsApi.overview(currentProject?.id));
+      if (platformType)
+        await Promise.all(
+          connections.map((connection) => platformsApi.test(connection.id)),
+        );
+      else setOverview(await platformsApi.overview(currentProject?.id));
       await load();
     } catch (e) {
       report(e);
@@ -166,11 +188,11 @@ export function PlatformConnections() {
     >
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Agent connections</h1>
+          <h1 className="text-2xl font-semibold">{platformName} connections</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Connect Paperclip and T3 to OSCAR. Review delegated work in Tasks.
-            Connections use read-only access by default. Enable chat handoffs on
-            a connection to send work.
+            Connect {platformType ? platformName : "Paperclip and T3"} to OSCAR.
+            Review delegated work in Tasks. Connections use read-only access by
+            default. Enable chat handoffs on a connection to send work.
           </p>
         </div>
         <div className="flex gap-2">
@@ -186,6 +208,7 @@ export function PlatformConnections() {
             className={button}
             onClick={() => {
               setEditing(null);
+              setType(platformType || "paperclip");
               setName("");
               setUrl("");
               setToken("");
@@ -222,7 +245,7 @@ export function PlatformConnections() {
             <label className="space-y-2 text-sm">
               Platform
               <select
-                disabled={!!editing}
+                disabled={!!editing || !!platformType}
                 className={field}
                 value={type}
                 onChange={(e) => {
@@ -361,10 +384,12 @@ export function PlatformConnections() {
         </p>
       ) : !connections.length ? (
         <section className="rounded-2xl border border-border p-8 text-center">
-          <h2 className="font-medium">No platforms connected</h2>
+          <h2 className="font-medium">
+            No {platformType ? platformName : "platforms"} connected
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Add your Paperclip or T3 installation to see its accessible activity
-            here.
+            Add your {platformType ? platformName : "Paperclip or T3"}{" "}
+            installation to see its accessible activity here.
           </p>
         </section>
       ) : (
