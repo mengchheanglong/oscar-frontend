@@ -107,7 +107,7 @@ export function AppLayout({
             className={
               isFullBleed
                 ? "flex-1 min-w-0 h-full w-full overflow-hidden flex flex-col min-h-0"
-                : "flex-1 px-4 sm:px-8 py-6 overflow-y-auto max-w-7xl w-full mx-auto min-h-0 [scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,0.15)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-400"
+                : "flex-1 min-w-0 px-4 sm:px-8 py-6 overflow-y-auto w-full min-h-0 [scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,0.15)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-400"
             }
           >
             {children}

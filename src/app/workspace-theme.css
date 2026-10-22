@@ -2170,7 +2170,7 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
 }
 
 .workspace-sidebar.is-collapsed .workspace-sidebar-header {
-  height: 80px;
+  height: auto;
 }
 .workspace-sidebar.is-collapsed .workspace-sidebar-header > div {
   flex-direction: column;
