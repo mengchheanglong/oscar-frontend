@@ -1181,13 +1181,6 @@ export default function AssistantPage() {
                     (r) => r.assistantMessageId === msg.id,
                   );
                   const isFailed = msg.status === "FAILED";
-                  const isInsufficient =
-                    msg.content
-                      .toLowerCase()
-                      .includes("insufficient evidence") ||
-                    msg.content
-                      .toLowerCase()
-                      .includes("no relevant project evidence");
 
                   return (
                     <div
@@ -1279,22 +1272,6 @@ export default function AssistantPage() {
                               }}
                             />
                           )}
-                          {isAssistant && isInsufficient && (
-                            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs">
-                              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                              <div>
-                                <p className="font-bold text-amber-800">
-                                  Evidence limitation
-                                </p>
-                                <p className="text-[11px] text-amber-700 mt-0.5">
-                                  The retrieved evidence may not fully answer
-                                  this question. Review the response and
-                                  available sources.
-                                </p>
-                              </div>
-                            </div>
-                          )}
-
                           {isAssistant ? (
                             <div className="text-sm leading-7 text-slate-800">
                               <MarkdownContent
