@@ -48,24 +48,21 @@ export function CustomizeSidebar() {
     app = params.get("app");
   return (
     <aside className="customize-sidebar" aria-label="Customize">
-      <Link href="/customize" className="customize-title">
-        Customize
-      </Link>
       <nav aria-label="Customization sections">
         <Link
-          className="customize-link"
+          className="workspace-nav-link customize-link"
           href="/customize?section=plugins"
           aria-current={section === "plugins" && !app ? "page" : undefined}
         >
-          <Blocks size={18} />
+          <Blocks size={16} />
           Plugins
         </Link>
         <Link
-          className="customize-link"
+          className="workspace-nav-link customize-link"
           href="/customize?section=skills"
           aria-current={section === "skills" ? "page" : undefined}
         >
-          <Box size={18} />
+          <Box size={16} />
           Skills
         </Link>
       </nav>
@@ -73,14 +70,14 @@ export function CustomizeSidebar() {
       <nav aria-label="Available workspace plugins">
         {plugins.map((p) => (
           <Link
-            className="customize-link"
+            className="workspace-nav-link customize-link"
             key={p.id}
             href={`/customize?section=plugins&app=${p.id}`}
             aria-current={
               section === "plugins" && app === p.id ? "page" : undefined
             }
           >
-            <p.icon size={17} />
+            <p.icon size={16} />
             <span>{p.name}</span>
           </Link>
         ))}

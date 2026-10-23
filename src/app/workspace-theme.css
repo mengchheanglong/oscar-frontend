@@ -2861,25 +2861,8 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
   border-right: 1px solid var(--ws-border);
   color: var(--ws-text);
 }
-.customize-title {
-  display: block;
-  margin: 0 12px 22px;
-  font-size: 21px;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-}
 .customize-link {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 10px 12px;
-  min-height: 40px;
-  border-radius: 10px;
-  font-size: 14px;
   color: var(--ws-muted);
-}
-.customize-link svg {
-  flex-shrink: 0;
 }
 .customize-link:hover,
 .customize-link[aria-current="page"] {
@@ -3229,10 +3212,6 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
     padding: 12px 16px;
     border-right: 0;
     border-bottom: 1px solid var(--ws-border);
-  }
-  .customize-title {
-    font-size: 18px;
-    margin: 0 0 10px;
   }
   .customize-sidebar nav:first-of-type {
     display: flex;
