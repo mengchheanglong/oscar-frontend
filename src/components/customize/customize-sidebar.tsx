@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { WorkspaceIcon } from "@/components/workspace-icons";
 import { useSearchParams } from "next/navigation";
 import {
   Blocks,
@@ -48,7 +49,17 @@ export function CustomizeSidebar() {
     app = params.get("app");
   return (
     <aside className="customize-sidebar" aria-label="Customize">
-      <nav aria-label="Customization sections">
+      <div className="workspace-sidebar-header customize-sidebar-header">
+        <Link
+          href="/customize"
+          aria-label="Customize"
+          title="Customize"
+          className="workspace-icon-button"
+        >
+          <WorkspaceIcon name="platforms" className="workspace-brand-icon" />
+        </Link>
+      </div>
+      <nav className="customize-sections" aria-label="Customization sections">
         <Link
           className="workspace-nav-link customize-link"
           href="/customize?section=plugins"
