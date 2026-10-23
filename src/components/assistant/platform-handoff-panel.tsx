@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { platformsApi, type PlatformConnection } from "@/lib/platforms-api";
 import {
@@ -41,6 +42,7 @@ export function PlatformHandoffPanel({
 }) {
   const label = names[platform];
   const [runs, setRuns] = useState<PlatformHandoff[]>([]);
+  const [expandedRuns, setExpandedRuns] = useState<Record<string, boolean>>({});
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
   const [connectionId, setConnectionId] = useState("");
   const [projects, setProjects] = useState<Array<{ id: string; name: string }>>(
@@ -282,22 +284,37 @@ export function PlatformHandoffPanel({
     <>
       {runs.length > 0 && (
         <div
-          className="mx-auto mb-3 max-h-48 w-full max-w-3xl space-y-2 overflow-y-auto px-4"
+          className="mx-auto mb-2 max-h-48 w-full max-w-3xl space-y-1 overflow-y-auto px-4"
           aria-label="Delegated work"
         >
           {runs.map((run) => (
             <section
               key={run.id}
-              className="rounded-xl border border-border bg-card p-3 text-sm"
+              className="rounded-lg px-1 text-xs text-muted-foreground"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <button
+                  type="button"
+                  className="flex min-h-8 items-center gap-1.5 rounded-md px-1 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                  aria-expanded={!!expandedRuns[run.id]}
+                  aria-controls={`handoff-details-${run.id}`}
+                  onClick={() =>
+                    setExpandedRuns((current) => ({
+                      ...current,
+                      [run.id]: !current[run.id],
+                    }))
+                  }
+                >
+                  <ChevronRight
+                    aria-hidden="true"
+                    className={`h-3.5 w-3.5 transition-transform ${expandedRuns[run.id] ? "rotate-90" : ""}`}
+                  />
                   {names[run.platformType || "t3"]} · {run.status.toLowerCase()}
-                </span>
-                <div className="flex gap-3">
+                </button>
+                <div className="flex min-h-8 items-center gap-3 pr-1">
                   {run.threadId && run.externalUrl && (
                     <a
-                      className="underline"
+                      className="rounded-sm hover:text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
                       href={run.externalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -313,12 +330,14 @@ export function PlatformHandoffPanel({
                   {!terminal(run) && (
                     <>
                       <button
+                        className="rounded-sm hover:text-foreground disabled:opacity-50"
                         disabled={busy}
                         onClick={() => void action(run, "refresh")}
                       >
                         Refresh
                       </button>
                       <button
+                        className="rounded-sm hover:text-foreground disabled:opacity-50"
                         disabled={busy || run.status === "UNCERTAIN"}
                         onClick={() => void action(run, "cancel")}
                       >
@@ -328,11 +347,18 @@ export function PlatformHandoffPanel({
                   )}
                 </div>
               </div>
-              <p className="mt-1 truncate text-muted-foreground">
-                {run.prompt}
-              </p>
-              {run.notice && (
-                <p className="mt-2 text-muted-foreground" role="status">
+              <div
+                id={`handoff-details-${run.id}`}
+                hidden={!expandedRuns[run.id]}
+                className="pb-2 pl-6 pr-1 leading-relaxed"
+              >
+                <p className="break-words">{run.prompt}</p>
+                {run.notice && terminal(run) && run.status !== "FAILED" && (
+                  <p className="mt-1">{run.notice}</p>
+                )}
+              </div>
+              {run.notice && (!terminal(run) || run.status === "FAILED") && (
+                <p className="pb-2 pl-6 pr-1 leading-relaxed" role="status">
                   {run.notice}
                 </p>
               )}
