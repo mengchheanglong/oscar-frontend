@@ -295,13 +295,16 @@ export function PlatformHandoffPanel({
                   {names[run.platformType || "t3"]} · {run.status.toLowerCase()}
                 </span>
                 <div className="flex gap-3">
-                  {run.threadId && (
+                  {run.threadId && run.externalUrl && (
                     <a
                       className="underline"
-                      href={
-                        run.platformType === "paperclip"
-                          ? run.externalUrl || undefined
-                          : `t3-thread://v1/${run.threadId}`
+                      href={run.externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={
+                        run.platformType === "t3"
+                          ? "Open this thread in the connected T3 server"
+                          : undefined
                       }
                     >
                       Open {names[run.platformType || "t3"]}
