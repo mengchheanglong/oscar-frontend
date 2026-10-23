@@ -13,7 +13,10 @@ import { WorkspaceIcon } from "@/components/workspace-icons";
 import { AlertCircle, Filter, Loader2, X } from "lucide-react";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
 
+import { ChatSkills } from "./chat-skills";
+
 interface ComposerProps {
+  conversationId?: string;
   projectId?: string;
   projectName?: string;
   onProjectFiles?: () => void;
@@ -41,6 +44,7 @@ interface ComposerProps {
 }
 
 export function AssistantComposer({
+  conversationId,
   projectId,
   projectName,
   onProjectFiles,
@@ -164,6 +168,17 @@ export function AssistantComposer({
   return (
     <footer className="chat-composer">
       <div className="chat-composer-inner space-y-3">
+        <ChatSkills
+          key={`${projectId}:${conversationId}`}
+          projectId={projectId}
+          conversationId={conversationId}
+          value={value}
+          onChange={(value) => {
+            onChange(value);
+            requestAnimationFrame(() => textareaRef.current?.focus());
+          }}
+          busy={sending || loading}
+        />
         {workNotice && (
           <div role="status" className="chat-work-notice">
             <AlertCircle aria-hidden="true" />
@@ -233,6 +248,18 @@ export function AssistantComposer({
             value={value}
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={(event) => {
+              if (event.key === "ArrowDown" && /^\/[a-z0-9_-]*$/.test(value)) {
+                const choice = event.currentTarget
+                  .closest("footer")
+                  ?.querySelector<HTMLButtonElement>(
+                    ".chat-skill-picker button",
+                  );
+                if (choice) {
+                  event.preventDefault();
+                  choice.focus();
+                  return;
+                }
+              }
               if (
                 event.key === "Enter" &&
                 !event.shiftKey &&

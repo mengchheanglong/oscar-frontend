@@ -1501,7 +1501,8 @@ export default function AssistantPage() {
             }}
           />
           <AssistantComposer
-            projectId={currentProject?.id}
+            conversationId={activeConv?.id}
+            projectId={activeConv?.projectId || currentProject?.id}
             projectName={currentProject?.name}
             onProjectFiles={() =>
               currentProject &&

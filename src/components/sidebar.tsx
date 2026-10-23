@@ -66,6 +66,8 @@ export function Sidebar({
   accountOpenRef.current = accountOpen;
   const accountTrigger = useRef<HTMLButtonElement>(null);
 
+  const customizeOpen = pathname.startsWith("/customize");
+  const effectiveCollapsed = collapsed || customizeOpen;
   const navLinks: Array<{
     label: string;
     href: string;
@@ -74,6 +76,7 @@ export function Sidebar({
     { label: "Goals", href: "/goals", icon: "goals" },
     { label: "Tasks", href: "/tasks", icon: "tasks" },
     { label: "Knowledge", href: "/knowledge", icon: "knowledge" },
+    { label: "Customize", href: "/customize", icon: "platforms" },
   ];
   const displayName =
     user?.displayName || user?.fullName || user?.email || "Your account";
@@ -187,13 +190,21 @@ export function Sidebar({
           </button>
           <button
             type="button"
-            onClick={mobileOpen ? onCloseMobile : toggleCollapsed}
+            onClick={
+              mobileOpen
+                ? onCloseMobile
+                : customizeOpen
+                  ? () => router.push("/assistant")
+                  : toggleCollapsed
+            }
             aria-label={
               mobileOpen
                 ? "Close navigation"
-                : compact
-                  ? "Expand sidebar"
-                  : "Collapse sidebar"
+                : customizeOpen
+                  ? "Back to workspace"
+                  : compact
+                    ? "Expand sidebar"
+                    : "Collapse sidebar"
             }
             aria-expanded={!compact}
             className="workspace-icon-button"
@@ -516,9 +527,9 @@ export function Sidebar({
   return (
     <>
       <aside
-        className={`workspace-sidebar hidden md:flex flex-col shrink-0 h-screen sticky top-0 z-30 ${collapsed ? "is-collapsed" : ""}`}
+        className={`workspace-sidebar hidden md:flex flex-col shrink-0 h-screen sticky top-0 z-30 ${effectiveCollapsed ? "is-collapsed" : ""}`}
       >
-        {navigation(collapsed)}
+        {navigation(effectiveCollapsed)}
       </aside>
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">

@@ -110,7 +110,13 @@ type ActiveView =
   "directory" | "mcp" | "github" | "hermes" | "platforms" | "paperclip" | "t3";
 type CategoryFilter = "all" | "ai" | "vcs";
 
-export function IntegrationsConsole() {
+export function IntegrationsConsole({
+  initialView,
+  onViewChange,
+}: {
+  initialView?: ActiveView;
+  onViewChange?: (view: ActiveView) => void;
+} = {}) {
   const { currentProject } = useAuth();
   const syncRequest = useRef<AbortController | null>(null);
   const connectionRequestId = useRef(0);
@@ -121,7 +127,9 @@ export function IntegrationsConsole() {
   const { showToast } = useToast();
 
   // Navigation state: "directory" | "mcp" | "github" | "hermes"
-  const [activeView, setActiveView] = useState<ActiveView>("directory");
+  const [activeView, setActiveView] = useState<ActiveView>(
+    initialView || "directory",
+  );
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [directorySearch, setDirectorySearch] = useState("");
 
@@ -139,6 +147,10 @@ export function IntegrationsConsole() {
   }, []);
 
   const navigateToView = (view: ActiveView) => {
+    if (onViewChange) {
+      onViewChange(view);
+      return;
+    }
     setActiveView(view);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
@@ -1225,7 +1237,7 @@ OSCAR_PROJECT_ID = ${JSON.stringify(projectKey)}`;
               setIssueSearchQuery("");
               setPrSearchQuery("");
             }}
-            onBack={() => setActiveView("directory")}
+            onBack={() => navigateToView("directory")}
             showConnectForm={showConnectForm}
             onToggleConnect={() => setShowConnectForm((v) => !v)}
             connecting={connecting}

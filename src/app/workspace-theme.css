@@ -2850,3 +2850,411 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
   min-width: 32px;
   border-radius: 7px;
 }
+/* Customize keeps the main navigation as a rail and gives tools their own library. */
+.customize-sidebar {
+  width: 248px;
+  flex: 0 0 248px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 26px 12px 20px;
+  background: var(--ws-sidebar);
+  border-right: 1px solid var(--ws-border);
+  color: var(--ws-text);
+}
+.customize-title {
+  display: block;
+  margin: 0 12px 22px;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+.customize-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  min-height: 40px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--ws-muted);
+}
+.customize-link svg {
+  flex-shrink: 0;
+}
+.customize-link:hover,
+.customize-link[aria-current="page"] {
+  background: var(--ws-hover);
+  color: var(--ws-text);
+}
+.customize-group-label {
+  margin: 28px 12px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ws-muted);
+}
+.customize-sidebar-note {
+  margin: 32px 12px 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ws-soft);
+}
+.customize-content {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 48px 48px 64px;
+  color: var(--ws-text);
+}
+.customize-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.customize-page-header h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.8px;
+}
+.customize-page-header p {
+  font-size: 14px;
+  color: var(--ws-muted);
+  line-height: 1.6;
+}
+.customize-primary,
+.customize-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 10px 15px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.customize-primary {
+  background: var(--ws-primary);
+  color: var(--ws-on-primary);
+}
+.customize-secondary {
+  border: 1px solid var(--ws-border);
+  background: var(--ws-surface);
+  color: var(--ws-text);
+}
+.customize-primary:disabled,
+.customize-secondary:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.customize-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 380px;
+  border: 1px solid var(--ws-border);
+  border-radius: 24px;
+  padding: 10px 14px;
+  color: var(--ws-muted);
+  margin-bottom: 38px;
+}
+.customize-search input {
+  background: transparent;
+  color: var(--ws-text);
+  font-size: 13px;
+  min-width: 0;
+  width: 100%;
+  outline: none;
+}
+.customize-search:focus-within {
+  outline: 2px solid var(--ws-muted);
+  outline-offset: 2px;
+}
+.customize-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ws-border);
+  padding-bottom: 15px;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.customize-section-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.customize-section-heading > span {
+  font-size: 12px;
+  color: var(--ws-muted);
+}
+.customize-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 28px;
+}
+.customize-plugin,
+.customize-skill {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 19px 10px;
+  border-radius: 12px;
+  min-width: 0;
+}
+.customize-plugin:hover,
+.customize-skill:hover {
+  background: var(--ws-surface);
+}
+.customize-plugin > span:nth-child(2),
+.customize-skill-main > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.customize-plugin strong,
+.customize-skill strong {
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+}
+.customize-plugin small,
+.customize-skill small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ws-muted);
+  margin-top: 5px;
+}
+.customize-plugin > svg {
+  color: var(--ws-soft);
+  flex-shrink: 0;
+}
+.customize-tool-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--ws-border);
+  background: var(--ws-surface);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.customize-skill-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+.customize-skill code {
+  display: block;
+  font-size: 11px;
+  color: var(--ws-soft);
+  margin-top: 6px;
+}
+.customize-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 65px 24px;
+}
+.customize-empty > svg {
+  color: var(--ws-muted);
+}
+.customize-empty h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+.customize-empty p {
+  max-width: 440px;
+  font-size: 14px;
+  color: var(--ws-muted);
+  line-height: 1.7;
+}
+.customize-explainer {
+  border-top: 1px solid var(--ws-border);
+  padding-top: 20px;
+  margin-top: 36px;
+  font-size: 12px;
+  color: var(--ws-muted);
+  line-height: 1.8;
+}
+.customize-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ws-muted);
+  margin-bottom: 32px;
+  font-size: 13px;
+}
+.customize-breadcrumb > span {
+  color: var(--ws-text);
+}
+.customize-editor {
+  background: var(--ws-surface);
+  color: var(--ws-text);
+  padding: 24px;
+}
+.customize-editor header,
+.customize-editor footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.customize-editor h2 {
+  font-size: 19px;
+  font-weight: 600;
+}
+.customize-editor label {
+  display: block;
+  font-size: 13px;
+  margin-top: 18px;
+}
+.customize-editor input,
+.customize-editor textarea {
+  display: block;
+  width: 100%;
+  background: var(--ws-bg);
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  color: var(--ws-text);
+  font-size: 14px;
+}
+.customize-editor small,
+.customize-editor p {
+  color: var(--ws-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+.customize-editor footer {
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+.chat-skills:empty {
+  display: none;
+}
+.chat-skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chat-skill-chips > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  font-size: 12px;
+  border: 1px solid var(--ws-border);
+  border-radius: 20px;
+  color: var(--ws-muted);
+}
+.chat-skill-chips button {
+  display: flex;
+  padding: 2px;
+  border-radius: 50%;
+}
+.chat-skill-chips button:hover {
+  background: var(--ws-hover);
+  color: var(--ws-text);
+}
+.chat-skill-picker {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--ws-border);
+  background: var(--ws-surface);
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+.chat-skill-picker-heading {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ws-muted);
+  padding: 4px 8px 10px;
+}
+.chat-skill-picker button {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  padding: 10px 8px;
+  width: 100%;
+  border-radius: 8px;
+}
+.chat-skill-picker button:hover {
+  background: var(--ws-hover);
+}
+.chat-skill-picker strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.chat-skill-picker small {
+  display: block;
+  font-size: 12px;
+  color: var(--ws-muted);
+}
+.chat-skill-picker p {
+  font-size: 13px;
+  padding: 10px 8px;
+  color: var(--ws-muted);
+}
+@media (max-width: 1100px) {
+  .customize-content {
+    padding: 32px 24px;
+  }
+  .customize-sidebar {
+    width: 212px;
+    flex-basis: 212px;
+  }
+  .customize-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .workspace-content-row:has(.customize-sidebar) {
+    flex-direction: column;
+  }
+  .customize-sidebar {
+    width: 100%;
+    flex: none;
+    padding: 12px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--ws-border);
+  }
+  .customize-title {
+    font-size: 18px;
+    margin: 0 0 10px;
+  }
+  .customize-sidebar nav:first-of-type {
+    display: flex;
+    gap: 8px;
+  }
+  .customize-group-label,
+  .customize-sidebar nav:nth-of-type(2),
+  .customize-sidebar-note {
+    display: none;
+  }
+  .customize-content {
+    padding: 24px 20px;
+  }
+  .customize-page-header {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .customize-page-header h1 {
+    font-size: 25px;
+  }
+  .customize-search {
+    max-width: 100%;
+    margin-bottom: 24px;
+  }
+}

@@ -44,10 +44,18 @@ Next.js 14 App Router frontend for Continuum, connected to its NestJS API.
 
 ## Navigation
 
-Chat, Goals, Tasks, and Knowledge form the main workspace. Files and memories
-share Knowledge; project menus retain decisions; Settings → Integrations holds
-agent connections. Tasks includes recent delegated work. See [navigation and
+Chat, Goals, Tasks, Knowledge, and Customize form the main workspace. Files and
+memories share Knowledge; project menus retain decisions. Customize opens a
+secondary sidebar for Plugins and Skills, while Settings → Integrations retains
+its existing connection controls. Tasks includes recent delegated work. See [navigation and
 compatibility](docs/NAVIGATION.md).
+
+**Customize → Skills** manages your private central library. Start a chat message
+with `/skill-name` to attach guidance to that conversation; later turns and
+Hermes/T3/Paperclip handoffs inherit it. Typing `/` offers matching commands. The
+empty library offers an optional Clear plan example. Connected workspaces can
+read skills through OSCAR MCP. See the sibling backend’s
+`docs/product/SHARED_SKILLS.md` for versioning and execution boundaries.
 
 Goals includes **Briefing & spending**: current progress, blockers, agent outcomes,
 opt-in daily/weekly briefings and a monthly reporting threshold. **Tasks → Agent

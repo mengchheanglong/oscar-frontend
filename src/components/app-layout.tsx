@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/context/auth-context";
 import { WorkspaceIcon } from "@/components/workspace-icons";
 import { ProjectSidePanel } from "@/components/project-workspace";
+import { Suspense } from "react";
+import { CustomizeSidebar } from "@/components/customize/customize-sidebar";
 import { Sidebar } from "@/components/sidebar";
 
 import { usePathname, useRouter } from "next/navigation";
@@ -67,6 +69,7 @@ export function AppLayout({
     return null;
   }
 
+  const isCustomize = pathname.startsWith("/customize");
   const isFullBleed = pathname === "/assistant";
 
   return (
@@ -84,7 +87,7 @@ export function AppLayout({
 
       {/* Main column with independent page scrolling */}
       <div className="flex-1 flex flex-col h-screen max-h-screen min-w-0 overflow-hidden">
-        {!isFullBleed && (
+        {(!isFullBleed || isCustomize) && (
           <button
             type="button"
             aria-label="Open navigation"
@@ -103,16 +106,23 @@ export function AppLayout({
 
         {/* Main Scrollable Canvas - has its own independent scrollbar */}
         <div className="workspace-content-row">
+          {isCustomize && (
+            <Suspense>
+              <CustomizeSidebar />
+            </Suspense>
+          )}
           <main
             className={
-              isFullBleed
-                ? "flex-1 min-w-0 h-full w-full overflow-hidden flex flex-col min-h-0"
-                : "flex-1 min-w-0 px-4 sm:px-8 py-6 overflow-y-auto w-full min-h-0 [scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,0.15)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-400"
+              isCustomize
+                ? "flex-1 min-w-0 overflow-y-auto"
+                : isFullBleed
+                  ? "flex-1 min-w-0 h-full w-full overflow-hidden flex flex-col min-h-0"
+                  : "flex-1 min-w-0 px-4 sm:px-8 py-6 overflow-y-auto w-full min-h-0 [scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,0.15)_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-slate-400"
             }
           >
             {children}
           </main>
-          <ProjectSidePanel />
+          {!isCustomize && <ProjectSidePanel />}
         </div>
       </div>
     </div>
