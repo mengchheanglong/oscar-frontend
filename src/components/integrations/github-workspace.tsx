@@ -120,13 +120,13 @@ interface Props {
   onSyncTokenChange: (v: string) => void;
 }
 
-const muted = "text-[#656d76]";
+const muted = "text-[var(--ws-muted)]";
 const outline =
-  "h-8 rounded-md border-[#d0d7de] bg-[#f6f8fa] text-[#24292f] shadow-none hover:bg-[#eef1f4] text-xs";
-const green =
-  "h-8 rounded-md bg-[#1f883d] hover:bg-[#1a7f37] text-white shadow-none text-xs";
+  "h-8 rounded-md border-[var(--ws-border)] bg-[var(--ws-surface)] text-[var(--ws-text)] shadow-none hover:bg-[var(--ws-hover)] text-xs";
+const primary =
+  "h-8 rounded-lg bg-[var(--ws-primary)] hover:opacity-90 text-[var(--ws-on-primary)] shadow-none text-xs";
 const focus =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0969da] focus-visible:ring-offset-2";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ws-blue)] focus-visible:ring-offset-2";
 
 export function GitHubWorkspace(p: Props) {
   const [tab, setTab] = useState<"code" | "issues" | "pulls" | "settings">(
@@ -138,6 +138,7 @@ export function GitHubWorkspace(p: Props) {
   const loadError = tab === "settings" ? undefined : p.loadErrors[tab];
   const connected = !!connection && connection.status !== "DISCONNECTED";
   const syncPending = connection?.status === "SYNCING";
+  const hasIndexedCode = (connection?.fileCount ?? p.totalFiles) > 0;
   const busy = p.syncing || p.syncingCode || p.disconnecting;
   const repoUrl = connection
     ? `https://github.com/${connection.repositoryOwner}/${connection.repositoryName}`
@@ -204,11 +205,11 @@ export function GitHubWorkspace(p: Props) {
     `/assistant?prompt=${encodeURIComponent(`Explain the file "${file.path}" from repository ${connection?.repositoryOwner}/${connection?.repositoryName}. What does it do and how is it used in the architecture?`)}&mode=DEVELOPER`;
 
   return (
-    <section className="text-[#24292f]">
+    <section data-github-workspace className="text-[var(--ws-text)]">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <button
           onClick={p.onBack}
-          className={`flex items-center gap-1.5 text-xs ${muted} hover:text-[#0969da] ${focus}`}
+          className={`flex items-center gap-1.5 text-xs ${muted} hover:text-[var(--ws-blue)] ${focus}`}
         >
           <ArrowLeft size={14} /> Integrations
         </button>
@@ -256,11 +257,11 @@ export function GitHubWorkspace(p: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3 pb-5">
         <div className="grid min-w-0 grid-cols-[20px_minmax(0,1fr)] items-start gap-2 text-base sm:flex sm:flex-wrap sm:items-center sm:text-lg">
           <BookOpen size={20} className={muted} />
-          <h1 className="min-w-0 break-words font-sans font-normal leading-7 text-[#0969da]">
+          <h1 className="min-w-0 break-words font-sans font-normal leading-7 text-[var(--ws-blue)]">
             {connection ? (
               <>
                 <span>{connection.repositoryOwner}</span>
-                <span className="mx-2 text-[#656d76]">/</span>
+                <span className="mx-2 text-[var(--ws-muted)]">/</span>
                 <span className="block font-semibold sm:inline">
                   {connection.repositoryName}
                 </span>
@@ -270,13 +271,15 @@ export function GitHubWorkspace(p: Props) {
             )}
           </h1>
           {connected && (
-            <span className="col-start-2 inline-flex w-fit items-center gap-1 rounded-full border border-[#d0d7de] px-2 py-0.5 text-[11px] text-[#656d76]">
+            <span className="col-start-2 inline-flex w-fit items-center gap-1 rounded-full border border-[var(--ws-border)] px-2 py-0.5 text-[11px] text-[var(--ws-muted)]">
               <CheckCircle2 size={12} className="text-[#1a7f37]" />{" "}
               {connection?.status === "ERROR"
                 ? "Sync interrupted"
                 : syncPending
                   ? "Sync incomplete"
-                  : "Connected"}
+                  : hasIndexedCode
+                    ? "Connected"
+                    : "Connected · code not indexed"}
             </span>
           )}
         </div>
@@ -286,6 +289,7 @@ export function GitHubWorkspace(p: Props) {
               variant="outline"
               disabled={busy}
               onClick={p.onSync}
+              title="Sync issues and pull requests; source code is indexed separately"
               className={outline}
             >
               <RefreshCw
@@ -311,7 +315,7 @@ export function GitHubWorkspace(p: Props) {
       {!p.projectId ? (
         <div
           role="status"
-          className="mx-auto max-w-xl rounded-md border border-[#d0d7de] bg-white p-6"
+          className="mx-auto max-w-xl rounded-md border border-[var(--ws-border)] bg-[var(--ws-bg)] p-6"
         >
           <h2 className="mb-1 text-base font-semibold">Select a project</h2>
           <p className={`mb-5 text-sm ${muted}`}>
@@ -320,7 +324,7 @@ export function GitHubWorkspace(p: Props) {
           </p>
           <Link
             href="/settings?section=projects"
-            className={`${green} inline-flex items-center justify-center rounded-md px-3 ${focus}`}
+            className={`${primary} inline-flex items-center justify-center rounded-md px-3 ${focus}`}
           >
             Choose a project
           </Link>
@@ -356,7 +360,7 @@ export function GitHubWorkspace(p: Props) {
           </Button>
         </div>
       ) : p.showConnectForm || !p.connections.length ? (
-        <div className="mx-auto max-w-xl rounded-md border border-[#d0d7de] bg-white p-6">
+        <div className="mx-auto max-w-xl rounded-md border border-[var(--ws-border)] bg-[var(--ws-bg)] p-6">
           <h2 className="mb-1 text-base font-semibold">Connect a repository</h2>
           <p className={`mb-5 text-sm ${muted}`}>
             Bring your issues, pull requests and source code into this
@@ -390,7 +394,7 @@ export function GitHubWorkspace(p: Props) {
                 <p
                   id="github-repository-url-error"
                   role="alert"
-                  className="mt-2 text-xs text-[#cf222e]"
+                  className="mt-2 text-xs text-red-500"
                 >
                   {p.connectForm.error}
                 </p>
@@ -438,7 +442,7 @@ export function GitHubWorkspace(p: Props) {
                   Cancel
                 </Button>
               )}
-              <Button type="submit" disabled={p.connecting} className={green}>
+              <Button type="submit" disabled={p.connecting} className={primary}>
                 {p.connecting ? "Connecting..." : "Connect repository"}
               </Button>
             </div>
@@ -449,7 +453,7 @@ export function GitHubWorkspace(p: Props) {
           <>
             <nav
               aria-label="Repository views"
-              className="mb-6 flex gap-1 overflow-x-auto border-b border-[#d0d7de]"
+              className="mb-6 flex gap-1 overflow-x-auto border-b border-[var(--ws-border)]"
             >
               {(
                 [
@@ -478,17 +482,17 @@ export function GitHubWorkspace(p: Props) {
                   key={t.id}
                   aria-current={tab === t.id ? "page" : undefined}
                   onClick={() => setTab(t.id)}
-                  className={`${focus} relative flex h-11 shrink-0 items-center gap-2 px-3 text-sm ${tab === t.id ? "font-semibold" : "hover:bg-[#f6f8fa]"}`}
+                  className={`${focus} relative flex h-11 shrink-0 items-center gap-2 px-3 text-sm ${tab === t.id ? "font-semibold" : "hover:bg-[var(--ws-surface)]"}`}
                 >
                   <t.icon size={16} className={muted} />
                   {t.label}
                   {"count" in t && (
-                    <span className="rounded-full bg-[#afb8c133] px-1.5 py-0.5 text-xs font-normal">
+                    <span className="rounded-full bg-[var(--ws-hover)] px-1.5 py-0.5 text-xs font-normal">
                       {t.count}
                     </span>
                   )}
                   {tab === t.id && (
-                    <span className="absolute inset-x-2 bottom-0 h-0.5 rounded bg-[#fd8c73]" />
+                    <span className="absolute inset-x-2 bottom-0 h-0.5 rounded bg-[var(--ws-primary)]" />
                   )}
                 </button>
               ))}
@@ -498,7 +502,7 @@ export function GitHubWorkspace(p: Props) {
               <div
                 role="status"
                 aria-live="polite"
-                className="mb-4 rounded-md border border-[#54aeff66] bg-[#ddf4ff] p-3 text-xs"
+                className="mb-4 rounded-md border border-[var(--ws-border)] bg-[var(--ws-hover)] p-3 text-xs"
               >
                 <div className="mb-2 flex items-center gap-2">
                   <Loader2 size={14} className="animate-spin" />
@@ -520,7 +524,7 @@ export function GitHubWorkspace(p: Props) {
             {loadError && tab !== "settings" ? (
               <div
                 role="alert"
-                className="rounded-md border border-[#ff818266] bg-white p-5"
+                className="rounded-md border border-[#ff818266] bg-[var(--ws-bg)] p-5"
               >
                 <h2 className="text-sm font-semibold">
                   Could not load{" "}
@@ -530,7 +534,9 @@ export function GitHubWorkspace(p: Props) {
                       ? "issues"
                       : "pull requests"}
                 </h2>
-                <p className="mt-2 text-sm text-[#656d76]">{loadError}</p>
+                <p className="mt-2 text-sm text-[var(--ws-muted)]">
+                  {loadError}
+                </p>
                 <Button
                   variant="outline"
                   className={`${outline} mt-3`}
@@ -541,7 +547,7 @@ export function GitHubWorkspace(p: Props) {
               </div>
             ) : tab === "settings" ? (
               <div className="max-w-3xl space-y-6">
-                <section className="rounded-md border border-[#d0d7de] bg-white p-5">
+                <section className="rounded-md border border-[var(--ws-border)] bg-[var(--ws-bg)] p-5">
                   <h2 className="mb-1 text-base font-semibold">
                     Synchronization access
                   </h2>
@@ -583,7 +589,7 @@ export function GitHubWorkspace(p: Props) {
                     excluded.
                   </p>
                 </section>
-                <section className="rounded-md border border-[#ff818266] bg-white p-5">
+                <section className="rounded-md border border-[#ff818266] bg-[var(--ws-bg)] p-5">
                   <h2 className="mb-2 text-base font-semibold">
                     Disconnect repository
                   </h2>
@@ -595,7 +601,7 @@ export function GitHubWorkspace(p: Props) {
                       variant="outline"
                       disabled={busy}
                       onClick={p.onDisconnect}
-                      className={`${outline} text-[#cf222e] hover:bg-[#fff1f1]`}
+                      className={`${outline} text-red-500 hover:bg-[var(--ws-surface)]`}
                     >
                       <Unlink size={14} className="mr-1.5" />
                       Disconnect
@@ -611,7 +617,7 @@ export function GitHubWorkspace(p: Props) {
                       <div className="mb-3 flex flex-wrap items-center gap-2">
                         <span
                           title="Indexing follows the repository's default branch"
-                          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 text-xs"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--ws-border)] bg-[var(--ws-surface)] px-3 text-xs"
                         >
                           <GitBranch size={14} />
                           Default branch
@@ -619,7 +625,7 @@ export function GitHubWorkspace(p: Props) {
                         <div className="relative min-w-36 flex-1">
                           <Search
                             size={14}
-                            className="absolute left-2.5 top-2.5 text-[#656d76]"
+                            className="absolute left-2.5 top-2.5 text-[var(--ws-muted)]"
                           />
                           <input
                             aria-label="Find an indexed file"
@@ -628,13 +634,13 @@ export function GitHubWorkspace(p: Props) {
                               p.onFileQueryChange(e.target.value)
                             }
                             placeholder="Go to file"
-                            className="h-8 w-full rounded-md border border-[#d0d7de] bg-white pl-8 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-[#0969da]"
+                            className="h-8 w-full rounded-md border border-[var(--ws-border)] bg-[var(--ws-bg)] pl-8 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--ws-blue)]"
                           />
                         </div>
                         <Button
                           disabled={busy || p.loadingFiles}
                           onClick={p.onIndex}
-                          className={green}
+                          className={primary}
                         >
                           <RefreshCw
                             size={14}
@@ -650,7 +656,7 @@ export function GitHubWorkspace(p: Props) {
                         >
                           <button
                             onClick={() => goTo("")}
-                            className={`font-medium text-[#0969da] hover:underline ${focus}`}
+                            className={`font-medium text-[var(--ws-blue)] hover:underline ${focus}`}
                           >
                             {connection.repositoryName}
                           </button>
@@ -663,7 +669,7 @@ export function GitHubWorkspace(p: Props) {
                                     ? "page"
                                     : undefined
                                 }
-                                className={`text-[#0969da] hover:underline ${focus}`}
+                                className={`text-[var(--ws-blue)] hover:underline ${focus}`}
                                 onClick={() =>
                                   goTo(
                                     directory
@@ -679,8 +685,8 @@ export function GitHubWorkspace(p: Props) {
                           ))}
                         </nav>
                       )}
-                      <div className="overflow-hidden rounded-md border border-[#d0d7de] bg-white">
-                        <div className="flex items-center justify-between gap-2 border-b border-[#d0d7de] bg-[#f6f8fa] px-4 py-3 text-xs">
+                      <div className="overflow-hidden rounded-md border border-[var(--ws-border)] bg-[var(--ws-bg)]">
+                        <div className="flex items-center justify-between gap-2 border-b border-[var(--ws-border)] bg-[var(--ws-surface)] px-4 py-3 text-xs">
                           <span className="flex items-center gap-2 font-medium">
                             <Code2 size={16} className={muted} />
                             {p.fileQuery
@@ -708,18 +714,18 @@ export function GitHubWorkspace(p: Props) {
                                     directory.split("/").slice(0, -1).join("/"),
                                   )
                                 }
-                                className={`flex w-full items-center gap-3 border-b border-[#d0d7de] px-4 py-2.5 text-sm text-[#0969da] hover:bg-[#f6f8fa] ${focus}`}
+                                className={`flex w-full items-center gap-3 border-b border-[var(--ws-border)] px-4 py-2.5 text-sm text-[var(--ws-blue)] hover:bg-[var(--ws-surface)] ${focus}`}
                               >
                                 <ArrowLeft size={16} />
                                 ..
                               </button>
                             )}
                             {!!rows.length ? (
-                              <ul className="divide-y divide-[#d0d7de]">
+                              <ul className="divide-y divide-[var(--ws-border)]">
                                 {rows.map((row) => (
                                   <li
                                     key={row.path}
-                                    className="group flex min-w-0 items-center gap-3 px-4 py-2.5 hover:bg-[#f6f8fa]"
+                                    className="group flex min-w-0 items-center gap-3 px-4 py-2.5 hover:bg-[var(--ws-surface)]"
                                   >
                                     {row.folder ? (
                                       <Folder
@@ -737,7 +743,7 @@ export function GitHubWorkspace(p: Props) {
                                     {row.folder ? (
                                       <button
                                         onClick={() => goTo(row.path)}
-                                        className={`min-w-0 flex-1 truncate text-left text-sm hover:text-[#0969da] hover:underline ${focus}`}
+                                        className={`min-w-0 flex-1 truncate text-left text-sm hover:text-[var(--ws-blue)] hover:underline ${focus}`}
                                       >
                                         {row.name}
                                       </button>
@@ -746,7 +752,7 @@ export function GitHubWorkspace(p: Props) {
                                         href={row.file!.htmlUrl}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className={`min-w-0 flex-1 truncate text-sm hover:text-[#0969da] hover:underline ${focus}`}
+                                        className={`min-w-0 flex-1 truncate text-sm hover:text-[var(--ws-blue)] hover:underline ${focus}`}
                                         title={`Open ${row.path} on GitHub`}
                                       >
                                         {row.name}
@@ -764,7 +770,7 @@ export function GitHubWorkspace(p: Props) {
                                         href={codePrompt(row.file!)}
                                         title={`Ask OSCAR about ${row.path}`}
                                         aria-label={`Ask OSCAR about ${row.path}`}
-                                        className={`rounded p-1 text-[#656d76] hover:bg-[#ddf4ff] hover:text-[#0969da] ${focus}`}
+                                        className={`rounded p-1 text-[var(--ws-muted)] hover:bg-[var(--ws-hover)] hover:text-[var(--ws-blue)] ${focus}`}
                                       >
                                         <Bot size={16} />
                                       </Link>
@@ -783,7 +789,7 @@ export function GitHubWorkspace(p: Props) {
                                 description={
                                   p.fileQuery
                                     ? "Try another file name or path."
-                                    : "Index this repository to make its source code available to Copilot and MCP."
+                                    : "The repository is connected. Select Index Codebase above to make eligible source files searchable by OSCAR and MCP. Sync from GitHub updates issues and pull requests separately."
                                 }
                               />
                             )}
@@ -793,7 +799,7 @@ export function GitHubWorkspace(p: Props) {
                       <p className={`mt-3 text-xs ${muted}`}>
                         Files open on GitHub. Use{" "}
                         <Bot size={12} className="inline align-text-bottom" />{" "}
-                        to ask Copilot about a file.
+                        to ask OSCAR about a file.
                       </p>
                     </>
                   ) : (
@@ -802,7 +808,7 @@ export function GitHubWorkspace(p: Props) {
                         <div className="relative min-w-40 flex-1">
                           <Search
                             size={14}
-                            className="absolute left-3 top-2.5 text-[#656d76]"
+                            className="absolute left-3 top-2.5 text-[var(--ws-muted)]"
                           />
                           <input
                             aria-label={
@@ -821,7 +827,7 @@ export function GitHubWorkspace(p: Props) {
                                 ? "Search issues"
                                 : "Search pull requests"
                             }
-                            className="h-9 w-full rounded-md border border-[#d0d7de] bg-white pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0969da]"
+                            className="h-9 w-full rounded-md border border-[var(--ws-border)] bg-[var(--ws-bg)] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ws-blue)]"
                           />
                         </div>
                         <select
@@ -832,15 +838,15 @@ export function GitHubWorkspace(p: Props) {
                               ? p.onIssueStateChange(e.target.value)
                               : p.onPrStateChange(e.target.value)
                           }
-                          className="h-9 rounded-md border border-[#d0d7de] bg-[#f6f8fa] px-3 text-xs"
+                          className="h-9 rounded-md border border-[var(--ws-border)] bg-[var(--ws-surface)] px-3 text-xs"
                         >
                           <option value="all">All states</option>
                           <option value="open">Open</option>
                           <option value="closed">Closed</option>
                         </select>
                       </div>
-                      <div className="overflow-hidden rounded-md border border-[#d0d7de] bg-white">
-                        <div className="border-b border-[#d0d7de] bg-[#f6f8fa] px-4 py-3 text-sm font-medium">
+                      <div className="overflow-hidden rounded-md border border-[var(--ws-border)] bg-[var(--ws-bg)]">
+                        <div className="border-b border-[var(--ws-border)] bg-[var(--ws-surface)] px-4 py-3 text-sm font-medium">
                           {tab === "issues"
                             ? `${p.totalIssues} issues`
                             : `${p.totalPrs} pull requests`}
@@ -854,11 +860,11 @@ export function GitHubWorkspace(p: Props) {
                           </div>
                         ) : tab === "issues" ? (
                           p.issues.length ? (
-                            <ul className="divide-y divide-[#d0d7de]">
+                            <ul className="divide-y divide-[var(--ws-border)]">
                               {p.issues.map((issue) => (
                                 <li
                                   key={issue.id}
-                                  className="px-4 py-4 hover:bg-[#f6f8fa]"
+                                  className="px-4 py-4 hover:bg-[var(--ws-surface)]"
                                 >
                                   <div className="flex items-start gap-3">
                                     <CircleDot
@@ -870,7 +876,7 @@ export function GitHubWorkspace(p: Props) {
                                         href={issue.htmlUrl}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className={`text-sm font-semibold hover:text-[#0969da] ${focus}`}
+                                        className={`text-sm font-semibold hover:text-[var(--ws-blue)] ${focus}`}
                                       >
                                         {issue.title}
                                       </a>
@@ -894,7 +900,7 @@ export function GitHubWorkspace(p: Props) {
                                                 : issue.id,
                                             )
                                           }
-                                          className={`mt-2 text-xs text-[#0969da] hover:underline ${focus}`}
+                                          className={`mt-2 text-xs text-[var(--ws-blue)] hover:underline ${focus}`}
                                         >
                                           {expandedIssue === issue.id
                                             ? "Hide description"
@@ -910,7 +916,7 @@ export function GitHubWorkspace(p: Props) {
                                     <Link
                                       href={`/assistant?prompt=${encodeURIComponent(`Analyze GitHub issue #${issue.issueNumber}: ${issue.title}. ${issue.body ?? ""}`)}&mode=DEVELOPER`}
                                       aria-label={`Ask OSCAR about issue ${issue.issueNumber}`}
-                                      className={`${focus} rounded p-1 text-[#656d76] hover:text-[#0969da]`}
+                                      className={`${focus} rounded p-1 text-[var(--ws-muted)] hover:text-[var(--ws-blue)]`}
                                     >
                                       <Bot size={16} />
                                     </Link>
@@ -930,22 +936,22 @@ export function GitHubWorkspace(p: Props) {
                             />
                           )
                         ) : p.pullRequests.length ? (
-                          <ul className="divide-y divide-[#d0d7de]">
+                          <ul className="divide-y divide-[var(--ws-border)]">
                             {p.pullRequests.map((pr) => (
                               <li
                                 key={pr.id}
-                                className="flex items-start gap-3 px-4 py-4 hover:bg-[#f6f8fa]"
+                                className="flex items-start gap-3 px-4 py-4 hover:bg-[var(--ws-surface)]"
                               >
                                 <GitPullRequest
                                   size={18}
-                                  className={`mt-0.5 shrink-0 ${pr.isMerged ? "text-[#8250df]" : pr.state === "open" ? "text-[#1a7f37]" : "text-[#cf222e]"}`}
+                                  className={`mt-0.5 shrink-0 ${pr.isMerged ? "text-[#8250df]" : pr.state === "open" ? "text-[#1a7f37]" : "text-red-500"}`}
                                 />
                                 <div className="min-w-0 flex-1">
                                   <a
                                     href={pr.htmlUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className={`text-sm font-semibold hover:text-[#0969da] ${focus}`}
+                                    className={`text-sm font-semibold hover:text-[var(--ws-blue)] ${focus}`}
                                   >
                                     {pr.title}
                                   </a>
@@ -960,11 +966,11 @@ export function GitHubWorkspace(p: Props) {
                                       className={`mt-2 flex flex-wrap items-center gap-1.5 text-xs ${muted}`}
                                     >
                                       <GitBranch size={12} />
-                                      <code className="rounded bg-[#eff1f3] px-1">
+                                      <code className="rounded bg-[var(--ws-hover)] px-1">
                                         {pr.headBranch}
                                       </code>
                                       →
-                                      <code className="rounded bg-[#eff1f3] px-1">
+                                      <code className="rounded bg-[var(--ws-hover)] px-1">
                                         {pr.baseBranch}
                                       </code>
                                     </p>
@@ -974,7 +980,7 @@ export function GitHubWorkspace(p: Props) {
                                 <Link
                                   href={`/assistant?prompt=${encodeURIComponent(`Review pull request #${pr.prNumber}: ${pr.title}. ${pr.body ?? ""}`)}&mode=DEVELOPER`}
                                   aria-label={`Ask OSCAR to review pull request ${pr.prNumber}`}
-                                  className={`${focus} rounded p-1 text-[#656d76] hover:text-[#0969da]`}
+                                  className={`${focus} rounded p-1 text-[var(--ws-muted)] hover:text-[var(--ws-blue)]`}
                                 >
                                   <Bot size={16} />
                                 </Link>
@@ -996,7 +1002,7 @@ export function GitHubWorkspace(p: Props) {
                     </>
                   )}
                 </div>
-                <aside className="space-y-5 border-t border-[#d0d7de] pt-5 xl:border-t-0 xl:pt-0">
+                <aside className="space-y-5 border-t border-[var(--ws-border)] pt-5 xl:border-t-0 xl:pt-0">
                   <section>
                     <h2 className="mb-2 text-sm font-semibold">
                       About this connection
@@ -1008,7 +1014,7 @@ export function GitHubWorkspace(p: Props) {
                       href={repoUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className={`mt-3 inline-flex max-w-full items-center gap-1.5 text-xs text-[#0969da] hover:underline ${focus}`}
+                      className={`mt-3 inline-flex max-w-full items-center gap-1.5 text-xs text-[var(--ws-blue)] hover:underline ${focus}`}
                     >
                       <ExternalLink size={13} className="shrink-0" />
                       <span className="truncate">
@@ -1016,36 +1022,37 @@ export function GitHubWorkspace(p: Props) {
                       </span>
                     </a>
                   </section>
-                  <section className="border-t border-[#d0d7de] pt-4">
+                  <section className="border-t border-[var(--ws-border)] pt-4">
                     <h2 className="mb-3 text-sm font-semibold">
                       Workspace index
                     </h2>
                     <dl className={`space-y-2.5 text-xs ${muted}`}>
                       <div className="flex justify-between">
                         <dt>Code files</dt>
-                        <dd className="font-medium text-[#24292f]">
+                        <dd className="font-medium text-[var(--ws-text)]">
                           {connection.fileCount ?? p.totalFiles}
                         </dd>
                       </div>
                       <div className="flex justify-between">
                         <dt>Issues</dt>
-                        <dd className="font-medium text-[#24292f]">
+                        <dd className="font-medium text-[var(--ws-text)]">
                           {connection.issueCount ?? p.totalIssues}
                         </dd>
                       </div>
                       <div className="flex justify-between">
                         <dt>Pull requests</dt>
-                        <dd className="font-medium text-[#24292f]">
+                        <dd className="font-medium text-[var(--ws-text)]">
                           {connection.pullRequestCount ?? p.totalPrs}
                         </dd>
                       </div>
                     </dl>
                     <p className={`mt-4 text-xs leading-5 ${muted}`}>
-                      Available to Copilot and agents through MCP. Source files
-                      follow the GitHub default branch.
+                      {hasIndexedCode
+                        ? "Indexed source files are available to OSCAR and agents through MCP. They follow the GitHub default branch."
+                        : "Source code is not searchable yet. Use Index Codebase to add eligible files from the GitHub default branch. Issues and pull requests sync separately."}
                     </p>
                   </section>
-                  <section className="border-t border-[#d0d7de] pt-4">
+                  <section className="border-t border-[var(--ws-border)] pt-4">
                     <h2 className="mb-2 text-sm font-semibold">
                       Last GitHub sync
                     </h2>
@@ -1056,7 +1063,7 @@ export function GitHubWorkspace(p: Props) {
                     </p>
                     <button
                       onClick={() => setTab("settings")}
-                      className={`mt-3 text-xs text-[#0969da] hover:underline ${focus}`}
+                      className={`mt-3 text-xs text-[var(--ws-blue)] hover:underline ${focus}`}
                     >
                       Manage connection
                     </button>
@@ -1082,9 +1089,9 @@ function EmptyState({
 }) {
   return (
     <div className="px-5 py-14 text-center">
-      <Icon size={28} className="mx-auto mb-3 text-[#656d76]" />
+      <Icon size={28} className="mx-auto mb-3 text-[var(--ws-muted)]" />
       <h3 className="mb-1 text-base font-semibold">{title}</h3>
-      <p className="mx-auto max-w-sm text-sm leading-6 text-[#656d76]">
+      <p className="mx-auto max-w-sm text-sm leading-6 text-[var(--ws-muted)]">
         {description}
       </p>
     </div>
@@ -1096,7 +1103,7 @@ function Labels({ labels }: { labels?: string[] }) {
       {labels.map((label) => (
         <span
           key={label}
-          className="rounded-full border border-[#d0d7de] px-2 py-0.5 text-[11px] text-[#656d76]"
+          className="rounded-full border border-[var(--ws-border)] px-2 py-0.5 text-[11px] text-[var(--ws-muted)]"
         >
           {label}
         </span>
