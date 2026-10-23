@@ -241,13 +241,13 @@ export function SkillsLibrary() {
               <textarea
                 required
                 rows={8}
-                maxLength={4000}
+                maxLength={12000}
                 value={draft.instructions}
                 onChange={(e) =>
                   setDraft({ ...draft, instructions: e.target.value })
                 }
               />
-              <small>{draft.instructions.length}/4,000 characters</small>
+              <small>{draft.instructions.length}/12,000 characters</small>
             </label>
             <p>
               Changes apply to new attachments. Use the command again to update
