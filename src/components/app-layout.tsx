@@ -18,6 +18,8 @@ export function AppLayout({
   onNewChat,
   projectChats,
   onNewProjectChat,
+  projectSelectionActive,
+  onSelectProject,
   navigationOpen,
   onCloseNavigation,
 }: {
@@ -27,6 +29,10 @@ export function AppLayout({
   projectChats?: Record<string, React.ReactNode>;
   onNewProjectChat?: (
     project: import("@/context/auth-context").Project,
+  ) => void;
+  projectSelectionActive?: boolean;
+  onSelectProject?: (
+    project: import("@/context/auth-context").Project | null,
   ) => void;
   navigationOpen?: boolean;
   onCloseNavigation?: () => void;
@@ -82,6 +88,8 @@ export function AppLayout({
         onNewChat={onNewChat}
         projectChats={projectChats}
         onNewProjectChat={onNewProjectChat}
+        projectSelectionActive={projectSelectionActive}
+        onSelectProject={onSelectProject}
         onOpenSearch={() => setCommandPaletteOpen(true)}
       />
 

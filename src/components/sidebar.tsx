@@ -33,6 +33,8 @@ interface SidebarProps {
   onNewChat?: () => void;
   projectChats?: Record<string, ReactNode>;
   onNewProjectChat?: (project: Project) => void;
+  projectSelectionActive?: boolean;
+  onSelectProject?: (project: Project | null) => void;
   onOpenSearch?: () => void;
 }
 export function Sidebar({
@@ -42,6 +44,8 @@ export function Sidebar({
   onNewChat,
   projectChats,
   onNewProjectChat,
+  projectSelectionActive = true,
+  onSelectProject,
   onOpenSearch,
 }: SidebarProps) {
   const { user, logout, projects, currentProject, setCurrentProject } =
@@ -315,10 +319,11 @@ export function Sidebar({
                 <button
                   type="button"
                   className="workspace-nav-link workspace-project"
-                  aria-pressed={!currentProject}
+                  aria-pressed={projectSelectionActive && !currentProject}
                   title="All projects"
                   onClick={() => {
-                    setCurrentProject(null);
+                    if (onSelectProject) onSelectProject(null);
+                    else setCurrentProject(null);
                     if (
                       ![
                         "/tasks",
@@ -364,12 +369,16 @@ export function Sidebar({
                         <button
                           type="button"
                           className="workspace-nav-link workspace-project"
-                          aria-pressed={currentProject?.id === project.id}
+                          aria-pressed={
+                            projectSelectionActive &&
+                            currentProject?.id === project.id
+                          }
                           aria-expanded={expandedProjects.has(project.id)}
                           onClick={() => {
                             setExpandedProjects((previous) => {
                               const next = new Set(previous);
                               if (
+                                projectSelectionActive &&
                                 currentProject?.id === project.id &&
                                 next.has(project.id)
                               )
@@ -377,7 +386,8 @@ export function Sidebar({
                               else next.add(project.id);
                               return next;
                             });
-                            setCurrentProject(project);
+                            if (onSelectProject) onSelectProject(project);
+                            else setCurrentProject(project);
                             if (
                               ![
                                 "/tasks",

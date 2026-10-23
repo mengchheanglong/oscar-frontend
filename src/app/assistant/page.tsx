@@ -235,6 +235,9 @@ export default function AssistantPage() {
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
+  const [sidebarTarget, setSidebarTarget] = useState<"project" | "chat">(
+    "project",
+  );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
   const [useTools, setUseTools] = useState(false);
@@ -596,9 +599,10 @@ export default function AssistantPage() {
     return invalidateMessageLoads;
   }, [activeConv, loadMessages, invalidateMessageLoads]);
 
-  const handleResetChat = () => {
+  const handleResetChat = (focusComposer = true) => {
     reviewGoalId.current = undefined;
     if (sendInFlightRef.current) return;
+    setSidebarTarget("chat");
     draftsRef.current[draftKey] = inputContent;
     messageLoadRef.current++;
     setActiveConv(null);
@@ -610,11 +614,12 @@ export default function AssistantPage() {
     setFailedRequest(null);
     setMessagesError(null);
     if (window.innerWidth < 1024) setSidebarOpen(false);
-    textareaRef.current?.focus();
+    if (focusComposer) textareaRef.current?.focus();
   };
 
   const selectConversation = (conversation: Conversation) => {
     if (sendInFlightRef.current) return;
+    setSidebarTarget("chat");
     draftsRef.current[draftKey] = inputContent;
     setInputContent(draftsRef.current[conversation.id] || "");
     setSendError(null);
@@ -728,6 +733,7 @@ export default function AssistantPage() {
         !targetProjectId
       )
         return;
+      setSidebarTarget("chat");
       const requestedPlatform = /\buse\s+paperclip\b/i.test(text)
         ? "paperclip"
         : /\buse\s+hermes\b/i.test(text)
@@ -950,16 +956,18 @@ export default function AssistantPage() {
   for (const project of projects) {
     projectChats[project.id] = (
       <>
-        {currentProject?.id === project.id && !activeConv && (
-          <button
-            type="button"
-            className="project-draft-chat"
-            aria-current="page"
-            onClick={handleResetChat}
-          >
-            New Chat
-          </button>
-        )}
+        {currentProject?.id === project.id &&
+          !activeConv &&
+          sidebarTarget === "chat" && (
+            <button
+              type="button"
+              className="project-draft-chat"
+              aria-current="page"
+              onClick={() => handleResetChat()}
+            >
+              New Chat
+            </button>
+          )}
         {conversations
           .filter(
             (chat) =>
@@ -1004,6 +1012,7 @@ export default function AssistantPage() {
   );
   const newProjectChat = (project: Project) => {
     if (sendInFlightRef.current || work.active) return;
+    setSidebarTarget("chat");
     if (currentProject?.id !== project.id) setCurrentProject(project);
     else handleResetChat();
   };
@@ -1019,9 +1028,17 @@ export default function AssistantPage() {
     <AppLayout
       projectChats={projectChats}
       onNewProjectChat={newProjectChat}
+      projectSelectionActive={!activeConv && sidebarTarget === "project"}
+      onSelectProject={(project) => {
+        if (sendInFlightRef.current || work.active) return;
+        if (currentProject?.id !== project?.id) setCurrentProject(project);
+        else handleResetChat(false);
+        setSidebarTarget("project");
+      }}
       chatHistory={chatHistory}
       onNewChat={() => {
         if (sendInFlightRef.current || work.active) return;
+        setSidebarTarget("chat");
         if (currentProject) setCurrentProject(null);
         else handleResetChat();
       }}
@@ -1526,6 +1543,7 @@ export default function AssistantPage() {
             }
             value={inputContent}
             onChange={(value) => {
+              setSidebarTarget("chat");
               draftsRef.current[draftKey] = value;
               if (projects.length === 0) {
                 try {
