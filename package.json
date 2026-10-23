@@ -8,9 +8,9 @@
     "pnpm": "10.32.1"
   },
   "scripts": {
-    "dev": "next dev -p 3002",
+    "dev": "next dev -p 43100",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 43100",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "node --test",

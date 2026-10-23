@@ -17,9 +17,9 @@ to verify both repositories together. Frontend CI runs the same four checks.
 
 The sibling backend repository owns Compose. From `../oscar-backend` (or the
 existing local `../continuum-backend` folder), use
-`pnpm stack:up` for the full Docker app on port 3002 with API port 3001. See its
+`pnpm stack:up` for the full Docker app on port 43100 with API port 43101. See its
 `docs/DOCKER_LOCAL.md` for migrations, existing-data mounts, and Hermes limitations.
-The frontend Docker build accepts `BACKEND_INTERNAL_URL` (default `http://api:3001`)
+The frontend Docker build accepts `BACKEND_INTERNAL_URL` (default `http://api:43101`)
 and uses `/api/v1` in the browser. Local environment files stay outside the image.
 
 Continuum is a personal, chat-first workspace for business, finance, research,
@@ -30,7 +30,7 @@ preserved. The original AI Workspace repositories remain separate.
 - Frontend: https://github.com/mengchheanglong/oscar-frontend
 - Backend: https://github.com/mengchheanglong/oscar-backend
 - Working branch: `develop`; GitHub default branch: `main`.
-- Local frontend: `http://localhost:3002`; local API: `http://127.0.0.1:3001`.
+- Local frontend: `http://localhost:43100`; local API: `http://127.0.0.1:43101`.
 - Environment files, access tokens, uploaded content, and machine MCP settings
   stay local and are not part of this repository.
 
@@ -92,7 +92,7 @@ pnpm install
 cp .env.example .env.local
 ```
 
-The default local backend endpoint is `http://127.0.0.1:3001/api/v1`.
+The default local backend endpoint is `http://127.0.0.1:43101/api/v1`.
 
 ### 3. Run Development Server
 
@@ -100,7 +100,7 @@ The default local backend endpoint is `http://127.0.0.1:3001/api/v1`.
 pnpm dev
 ```
 
-Opens on [http://127.0.0.1:3002](http://127.0.0.1:3002).
+Opens on [http://127.0.0.1:43100](http://127.0.0.1:43100).
 
 ### 4. Build for Production
 
@@ -154,8 +154,8 @@ These are copies, without background synchronization. Deleting a copy removes
 its stored originals and index without changing the computer's source folder.
 Cross-device access needs a reachable authenticated backend with persistent
 storage. No hosting or cloud service is provisioned. Local testing uses
-[Continuum](http://localhost:3002/documents) with
-`NEXT_PUBLIC_API_URL=/api/v1` and `BACKEND_INTERNAL_URL=http://127.0.0.1:3001`.
+[Continuum](http://localhost:43100/documents) with
+`NEXT_PUBLIC_API_URL=/api/v1` and `BACKEND_INTERNAL_URL=http://127.0.0.1:43101`.
 The frontend proxies API requests to the isolated local backend. Login cookies
 stay on the frontend's origin, so both localhost and 127.0.0.1 work. The explicit
 IPv4 backend address avoids another app's localhost IPv6 listener.

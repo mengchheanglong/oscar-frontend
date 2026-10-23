@@ -331,7 +331,7 @@ export function PlatformConnections({
               onChange={(e) => setUrl(e.target.value)}
               placeholder={
                 type === "paperclip"
-                  ? "http://localhost:3100"
+                  ? "http://localhost:43103"
                   : "https://your-t3-host"
               }
               required

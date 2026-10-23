@@ -121,7 +121,7 @@ test("folder results open the original private folder path instead of treating t
       relativePath: "finance/a & b.md",
     },
   });
-  const target = new URL(href, "http://localhost:3002");
+  const target = new URL(href, "http://localhost:43100");
   assert.equal(target.pathname, "/documents");
   assert.equal(target.searchParams.get("folderId"), "folder-id");
   assert.equal(target.searchParams.get("path"), "finance/a & b.md");

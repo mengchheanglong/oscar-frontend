@@ -689,7 +689,7 @@ export function IntegrationsConsole({
   const apiBaseUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/api/v1`
-      : "http://localhost:3001/api/v1";
+      : "http://localhost:43101/api/v1";
 
   const activeTokenValue = revealedToken || "<YOUR_PERSONAL_ACCESS_TOKEN>";
 

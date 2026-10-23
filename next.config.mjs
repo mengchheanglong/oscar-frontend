@@ -11,7 +11,7 @@ const nextConfig = {
       (process.env.NEXT_PUBLIC_API_URL?.startsWith("http")
         ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/v1\/?$/, "")
         : undefined) ||
-      "http://127.0.0.1:3001";
+      "http://127.0.0.1:43101";
     return [
       {
         source: "/api/v1/:path*",
