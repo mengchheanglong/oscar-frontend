@@ -40,7 +40,7 @@ import { formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { ChatContextRail } from "@/components/assistant/chat-context-rail";
-import { PanelRight } from "lucide-react";
+import { ListTree } from "lucide-react";
 import { AssistantComposer } from "@/components/assistant/assistant-composer";
 import { PlatformHandoffPanel } from "@/components/assistant/platform-handoff-panel";
 import {
@@ -1072,7 +1072,7 @@ export default function AssistantPage() {
               aria-label={
                 contextVisible ? "Hide chat context" : "Show chat context"
               }
-              title="Skills, plugins, and files"
+              title="Chat context: skills, plugins, and files"
               aria-expanded={contextVisible}
               aria-controls="chat-context-rail"
               onClick={() => {
@@ -1082,7 +1082,7 @@ export default function AssistantPage() {
                 } else setContextOpen((open) => !open);
               }}
             >
-              <PanelRight size={18} />
+              <ListTree size={18} />
             </button>
           </header>
 

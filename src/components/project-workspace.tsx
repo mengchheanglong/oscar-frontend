@@ -23,6 +23,7 @@ import {
   FileText,
   Bookmark,
   Loader2,
+  X,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth, type Project } from "@/context/auth-context";
@@ -844,9 +845,10 @@ export function ProjectSidePanel() {
             type="button"
             onClick={closePanel}
             aria-label="Close project panel"
+            title="Close project panel"
             className="workspace-icon-button"
           >
-            <WorkspaceIcon name="panel" />
+            <X size={18} />
           </button>
         </div>
       </div>
