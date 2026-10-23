@@ -39,6 +39,8 @@ import {
 import { formatDateTime } from "@/lib/utils";
 import { MarkdownContent } from "@/components/markdown-content";
 import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
+import { ChatContextRail } from "@/components/assistant/chat-context-rail";
+import { PanelRight } from "lucide-react";
 import { AssistantComposer } from "@/components/assistant/assistant-composer";
 import { PlatformHandoffPanel } from "@/components/assistant/platform-handoff-panel";
 import {
@@ -401,6 +403,23 @@ export default function AssistantPage() {
     };
   }, [inspectingCitation, activeConv?.projectId, currentProject?.id, projects]);
 
+  const [contextOpen, setContextOpen] = useState(false);
+  const [contextWide, setContextWide] = useState(false);
+  const contextTrigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1200px)");
+    const update = () => {
+      setContextWide(media.matches);
+      setContextOpen(media.matches);
+    };
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  const closeContext = () => {
+    setContextOpen(false);
+    contextTrigger.current?.focus();
+  };
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageScrollRef = useRef<HTMLDivElement>(null);
   const stickToBottomRef = useRef(true);
@@ -988,6 +1007,7 @@ export default function AssistantPage() {
     if (currentProject?.id !== project.id) setCurrentProject(project);
     else handleResetChat();
   };
+  const contextVisible = contextOpen && !projectWorkspace.panelProject;
   const isNewChat =
     messages.length === 0 &&
     !isSending &&
@@ -1021,7 +1041,7 @@ export default function AssistantPage() {
           }}
         />
       </Suspense>
-      <div className="relative flex h-full min-h-0 w-full overflow-hidden chat-canvas">
+      <div className="relative flex h-full min-h-0 w-full overflow-hidden chat-canvas chat-session-shell">
         <section
           aria-label="Assistant conversation"
           className="flex min-w-0 flex-1 flex-col overflow-hidden chat-canvas"
@@ -1045,6 +1065,25 @@ export default function AssistantPage() {
                 </span>
               )}
             </div>
+            <button
+              ref={contextTrigger}
+              type="button"
+              className="workspace-icon-button"
+              aria-label={
+                contextVisible ? "Hide chat context" : "Show chat context"
+              }
+              title="Skills, plugins, and files"
+              aria-expanded={contextVisible}
+              aria-controls="chat-context-rail"
+              onClick={() => {
+                if (projectWorkspace.panelProject) {
+                  projectWorkspace.closePanel();
+                  setContextOpen(true);
+                } else setContextOpen((open) => !open);
+              }}
+            >
+              <PanelRight size={18} />
+            </button>
           </header>
 
           {/* Messages Stream / Hero Canvas */}
@@ -1550,6 +1589,19 @@ export default function AssistantPage() {
           />
           {isNewChat && <div className="flex-1 min-h-0" />}
         </section>
+        {contextVisible && (
+          <ChatContextRail
+            projectId={activeConv?.projectId || currentProject?.id}
+            conversationId={activeConv?.id}
+            messages={isLoadingMessages || messagesError ? [] : messages}
+            runs={work.runs}
+            runError={work.error}
+            busy={isSending || work.active}
+            onInspect={setInspectingCitation}
+            onClose={closeContext}
+            wide={contextWide}
+          />
+        )}
       </div>
 
       {/* Confirmation Modal for Conversation Deletion */}

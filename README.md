@@ -239,3 +239,24 @@ The app root opens chat; sign-in uses a centered form with no demo prefill.
 Reference scope, measured values, implementation and verification are recorded in
 [the Grok UI reference](docs/UI_REFERENCE_GROK.md). Signed-in-only Grok screens
 were not available to scrape; the supplied screenshot guides that part of the UI.
+
+## Conversation context rail (2026-10-23)
+
+Chat has a collapsible right rail with Skills, Plugins, and Files. Skills lists
+the skills attached to the conversation, available for use. Plugins shows saved
+Hermes runs, T3/Paperclip handoffs, and GitHub source citations; installed tools
+alone do not appear. Files lists completed answer citations and recorded Hermes
+file reads, excluding messages removed from context. Project uploads without a
+conversation citation/read are not treated as used files. Cited files open the
+existing source inspector.
+
+The rail uses existing authenticated, conversation-scoped APIs. It opens beside
+the narrower 15px chat feed on desktop and as a dismissible drawer below 1200px.
+Project settings and chat context share the right-hand space. No backend schema
+or API changes are required.
+
+Verified with lint, TypeScript, 32 frontend tests, and a production build. Isolated
+synthetic browser fixtures covered populated/empty conversations, resource counts,
+conversation switching, mobile source inspection, and Escape/focus restoration.
+Desktop 1440px and mobile 393px layouts were inspected; mobile had no horizontal
+page overflow. The running local app was also checked without creating chat data.

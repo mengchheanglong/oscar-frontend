@@ -3249,3 +3249,178 @@ html[data-workspace-theme] .team-workspace > div:first-child > button {
     margin-bottom: 24px;
   }
 }
+
+/* Conversation context stays separate from project settings and uses recorded chat resources. */
+.chat-session-shell .chat-message,
+.chat-session-shell .chat-composer-inner,
+.chat-session-shell .chat-welcome {
+  max-width: 720px;
+}
+.chat-session-shell .chat-bubble,
+.chat-session-shell .answer-markdown {
+  font-size: 15px;
+  line-height: 1.7;
+}
+.chat-session-shell .chat-bubble-user > p {
+  font-size: 15px;
+}
+.chat-session-shell .answer-markdown h1 {
+  font-size: 23px;
+}
+.chat-session-shell .answer-markdown h2 {
+  font-size: 19px;
+}
+.chat-session-shell .answer-markdown :is(h3, h4, h5, h6) {
+  font-size: 17px;
+}
+.chat-context-rail {
+  display: flex;
+  flex-direction: column;
+  width: 272px;
+  flex: 0 0 272px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--ws-border);
+  background: var(--ws-bg);
+  color: var(--ws-text);
+}
+.chat-context-rail > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 52px;
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.chat-context-rail > header .workspace-icon-button {
+  width: 26px;
+  height: 26px;
+}
+.chat-context-rail > header .workspace-icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+.chat-context-scroll {
+  padding: 10px 14px 24px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.chat-context-intro {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ws-muted);
+  margin: 0 2px 18px;
+}
+.chat-context-section {
+  border: 1px solid var(--ws-border);
+  border-radius: 14px;
+  background: var(--ws-surface);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.chat-context-section > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 12px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+.chat-context-section > summary::-webkit-details-marker {
+  display: none;
+}
+.chat-context-section > summary > svg {
+  color: var(--ws-muted);
+  flex-shrink: 0;
+}
+.chat-context-section > summary small {
+  color: var(--ws-muted);
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+}
+.chat-context-section[open] > summary > svg:last-child {
+  transform: rotate(180deg);
+}
+.chat-context-items {
+  padding: 0 12px 12px;
+}
+.chat-context-caption {
+  color: var(--ws-soft);
+  font-size: 10px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+.chat-context-row {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 8px 0;
+  min-width: 0;
+}
+.chat-context-row > svg {
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: var(--ws-muted);
+}
+.chat-context-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.chat-context-row :is(span, button) {
+  display: block;
+  max-width: 100%;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-context-row button:hover {
+  text-decoration: underline;
+}
+.chat-context-row small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--ws-muted);
+  overflow-wrap: anywhere;
+}
+.chat-context-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-context-empty {
+  color: var(--ws-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 4px 0;
+}
+.chat-context-notice {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ws-muted);
+  margin: 0 0 8px;
+}
+@media (max-width: 1199px) {
+  .chat-context-rail {
+    width: 100%;
+    flex: auto;
+  }
+}
+@media (min-width: 1200px) {
+  .chat-session-shell:has(.chat-context-rail) > section > .chat-header {
+    padding-right: 16px;
+  }
+}
+[data-oscar-modal]:has(> .chat-context-rail) {
+  max-width: 320px;
+}
