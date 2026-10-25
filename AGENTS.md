@@ -1,6 +1,6 @@
 # Continuum workflow
 
-- Work only on `develop`. Reconcile newer `main` changes into `develop`; do not commit or merge into `main`.
+- Work on `main` during active development, as requested by the user. Keep it synchronized with `origin/main`; do not create or use a separate `develop` workflow unless the user requests it.
 - Commit completed, verified changes locally. Do not push unless the user explicitly requests it.
 
 - Local manual testing uses the frontend on port 43100, backend on port 43101, and isolated `oscar` database on `127.0.0.1:43104`. Do not connect the local testing UI to the deployment API/database. Keep credentials and machine-local MCP configuration untracked.
