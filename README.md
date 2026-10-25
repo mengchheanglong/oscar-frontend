@@ -29,7 +29,7 @@ preserved. The original AI Workspace repositories remain separate.
 
 - Frontend: https://github.com/mengchheanglong/oscar-frontend
 - Backend: https://github.com/mengchheanglong/oscar-backend
-- Working branch: `develop`; GitHub default branch: `main`.
+- Working branch: `main`; GitHub default branch: `main`.
 - Local frontend: `http://localhost:43100`; local API: `http://127.0.0.1:43101`.
 - Environment files, access tokens, uploaded content, and machine MCP settings
   stay local and are not part of this repository.
