@@ -260,3 +260,18 @@ synthetic browser fixtures covered populated/empty conversations, resource count
 conversation switching, mobile source inspection, and Escape/focus restoration.
 Desktop 1440px and mobile 393px layouts were inspected; mobile had no horizontal
 page overflow. The running local app was also checked without creating chat data.
+
+# Private reference knowledge
+
+In Assistant, enable **Reference knowledge** and choose MBA, Personal Library,
+Social Systems or All permitted references. Private availability comes from the
+authenticated backend; unavailable scopes are disabled. Counts include HTML
+sections and are labeled references. Citation previews show book metadata and
+physical PDF pages, with OCR/partial-coverage warnings. Local sources point to the
+library catalog; the app does not serve private PDF downloads.
+
+The default remains opted out. See sibling
+`oscar-knowledge/docs/LOCAL_KNOWLEDGE_LIBRARY_INTEGRATION.md` for ingestion, scope
+configuration, verified counts and remaining compilation ranges. Verified locally:
+lint, typecheck, production build and 34 tests passed; browser citation preview
+and All permitted references selection passed.

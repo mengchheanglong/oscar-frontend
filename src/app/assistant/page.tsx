@@ -82,6 +82,14 @@ const getSourceLink = (
 };
 
 interface CitationItem {
+  collectionId?: string;
+  bookId?: string;
+  author?: string;
+  edition?: string;
+  chapter?: string;
+  extraction?: string;
+  reviewRequired?: boolean;
+  coverageNote?: string;
   sourceUrl?: string;
   courseCode?: string;
   institution?: string;
@@ -249,6 +257,27 @@ export default function AssistantPage() {
   const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
   const [useTools, setUseTools] = useState(false);
   const [includeKnowledge, setIncludeKnowledge] = useState(false);
+  const [knowledgeScope, setKnowledgeScope] = useState<
+    "mba" | "social-systems" | "personal-library" | "all"
+  >("mba");
+  const [knowledgeCollections, setKnowledgeCollections] = useState<
+    { id: "personal-library" | "social-systems"; indexed_books: number }[]
+  >([]);
+  useEffect(() => {
+    let cancelled = false;
+    setKnowledgeScope("mba");
+    setKnowledgeCollections([]);
+    if (user?.id)
+      api.assistant
+        .knowledgeCollections()
+        .then((data) => {
+          if (!cancelled) setKnowledgeCollections(data);
+        })
+        .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, includeKnowledge]);
   const [useT3, setUseT3] = useState(false);
   const [handoffPrompt, setHandoffPrompt] = useState<string | null>(null);
   const [handoffPlatform, setHandoffPlatform] = useState<
@@ -866,6 +895,7 @@ export default function AssistantPage() {
           selectedMode,
           conv.includeAllWorkspaces === true || !currentProject,
           includeKnowledge,
+          knowledgeScope,
         ]);
         if (chatRequest.current?.signature !== signature) {
           chatRequest.current = {
@@ -882,6 +912,7 @@ export default function AssistantPage() {
         const res = await api.assistant.postMessage(postProjId, conv.id, {
           clientRequestId: chatRequest.current.key,
           includeKnowledge,
+          knowledgeScope,
           content: text,
           goalId: reviewGoalId.current,
           mode: selectedMode,
@@ -941,6 +972,7 @@ export default function AssistantPage() {
       selectedMode,
       useTools,
       includeKnowledge,
+      knowledgeScope,
       useT3,
       usePaperclip,
       work,
@@ -1392,18 +1424,24 @@ export default function AssistantPage() {
                                         >
                                           <Eye className="h-3.5 w-3.5" />
                                         </button>
-                                        <Link
-                                          href={getSourceLink(
-                                            citation.sourceType,
-                                            citation.title,
-                                            citation.sourceId,
+                                        {(citation.sourceType !==
+                                          "EXTERNAL_KNOWLEDGE" ||
+                                          knowledgeCitationUrl(
                                             citation.sourceUrl,
-                                          )}
-                                          aria-label={`Open source: ${citation.title}`}
-                                          className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-white hover:text-codex-accent"
-                                        >
-                                          <ArrowUpRight className="h-3.5 w-3.5" />
-                                        </Link>
+                                          )) && (
+                                          <Link
+                                            href={getSourceLink(
+                                              citation.sourceType,
+                                              citation.title,
+                                              citation.sourceId,
+                                              citation.sourceUrl,
+                                            )}
+                                            aria-label={`Open source: ${citation.title}`}
+                                            className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-white hover:text-codex-accent"
+                                          >
+                                            <ArrowUpRight className="h-3.5 w-3.5" />
+                                          </Link>
+                                        )}
                                       </div>
                                       {expanded && (
                                         <div className="space-y-2 border-t border-slate-200 bg-white p-3">
@@ -1581,6 +1619,9 @@ export default function AssistantPage() {
             onSend={() => void handleSendMessage()}
             useTools={useTools}
             includeKnowledge={includeKnowledge}
+            knowledgeScope={knowledgeScope}
+            onKnowledgeScopeChange={setKnowledgeScope}
+            knowledgeCollections={knowledgeCollections}
             onIncludeKnowledgeChange={setIncludeKnowledge}
             useT3={useT3}
             onUseT3Change={setUseT3}
@@ -1690,7 +1731,7 @@ export default function AssistantPage() {
                     ) : (
                       <span className="font-bold text-[10px] uppercase tracking-wider font-mono px-2 py-0.5 rounded bg-blue-100/80 text-blue-800">
                         {inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE"
-                          ? "Course knowledge"
+                          ? "Reference knowledge"
                           : inspectingCitation.sourceType}
                       </span>
                     )}
@@ -1712,11 +1753,26 @@ export default function AssistantPage() {
                   {inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE" && (
                     <p className="mt-1 text-xs text-slate-500">
                       {[
+                        inspectingCitation.author,
+                        inspectingCitation.edition,
+                        inspectingCitation.collectionId,
                         inspectingCitation.institution,
                         inspectingCitation.courseCode,
                       ]
                         .filter(Boolean)
                         .join(" · ")}
+                    </p>
+                  )}
+                  {inspectingCitation.reviewRequired && (
+                    <p className="mt-1 text-xs text-amber-700">
+                      {inspectingCitation.extraction === "LOCAL_TESSERACT_OCR"
+                        ? "Machine OCR: verify formulas against the original PDF page."
+                        : "Verify extracted formulas and tables against the original PDF page."}
+                    </p>
+                  )}
+                  {inspectingCitation.coverageNote && (
+                    <p className="mt-1 text-xs text-amber-700">
+                      {inspectingCitation.coverageNote}
                     </p>
                   )}
                 </div>
@@ -1897,18 +1953,25 @@ export default function AssistantPage() {
 
             {/* Footer */}
             <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/60">
-              <Link
-                href={getSourceLink(
-                  inspectingCitation.sourceType,
-                  inspectingCitation.title,
-                  inspectingCitation.sourceId,
-                  inspectingCitation.sourceUrl,
-                )}
-                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium hover:underline"
-              >
-                <span>Open source</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </Link>
+              {inspectingCitation.sourceType !== "EXTERNAL_KNOWLEDGE" ||
+              knowledgeCitationUrl(inspectingCitation.sourceUrl) ? (
+                <Link
+                  href={getSourceLink(
+                    inspectingCitation.sourceType,
+                    inspectingCitation.title,
+                    inspectingCitation.sourceId,
+                    inspectingCitation.sourceUrl,
+                  )}
+                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium hover:underline"
+                >
+                  <span>Open source</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
+              ) : (
+                <span className="text-xs text-slate-500">
+                  Local reference · see your library catalog
+                </span>
+              )}
 
               <button
                 type="button"

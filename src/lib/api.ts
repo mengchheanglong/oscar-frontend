@@ -567,6 +567,10 @@ export const api = {
   },
 
   assistant: {
+    knowledgeCollections: async () =>
+      apiRequest<
+        { id: "personal-library" | "social-systems"; indexed_books: number }[]
+      >(`/knowledge/collections`),
     listConversations: async (projectId: string) =>
       apiRequest<any[]>(`/projects/${projectId}/ai/conversations`),
     createConversation: async (
@@ -625,6 +629,7 @@ export const api = {
       conversationId: string,
       data: {
         includeKnowledge?: boolean;
+        knowledgeScope?: "mba" | "social-systems" | "personal-library" | "all";
         clientRequestId?: string;
         content: string;
         mode?: string;

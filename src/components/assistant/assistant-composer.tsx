@@ -16,6 +16,14 @@ import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { ChatSkills } from "./chat-skills";
 
 interface ComposerProps {
+  knowledgeScope?: "mba" | "social-systems" | "personal-library" | "all";
+  onKnowledgeScopeChange?: (
+    value: "mba" | "social-systems" | "personal-library" | "all",
+  ) => void;
+  knowledgeCollections?: {
+    id: "personal-library" | "social-systems";
+    indexed_books: number;
+  }[];
   includeKnowledge?: boolean;
   onIncludeKnowledgeChange?: (value: boolean) => void;
   conversationId?: string;
@@ -46,6 +54,9 @@ interface ComposerProps {
 }
 
 export function AssistantComposer({
+  knowledgeScope,
+  onKnowledgeScopeChange,
+  knowledgeCollections,
   includeKnowledge,
   onIncludeKnowledgeChange,
   conversationId,
@@ -352,7 +363,7 @@ export function AssistantComposer({
             <div className="chat-composer-controls">
               <label
                 className="flex items-center gap-1.5 text-xs text-slate-600"
-                title="Use curated external course sources for this turn"
+                title="Use permitted reference sources for this turn"
               >
                 <input
                   type="checkbox"
@@ -362,8 +373,41 @@ export function AssistantComposer({
                   }
                   disabled={sending}
                 />
-                Course knowledge
+                Reference knowledge
               </label>
+              {includeKnowledge && (
+                <select
+                  aria-label="Reference collection"
+                  value={knowledgeScope ?? "mba"}
+                  disabled={sending}
+                  className="text-xs bg-transparent max-w-48"
+                  onChange={(event) =>
+                    onKnowledgeScopeChange?.(
+                      event.target.value as
+                        "mba" | "social-systems" | "personal-library" | "all",
+                    )
+                  }
+                >
+                  <option value="mba">MBA</option>
+                  {(knowledgeCollections ?? []).some(
+                    (c) => c.indexed_books > 0,
+                  ) && <option value="all">All permitted references</option>}
+                  {(knowledgeCollections ?? []).map((collection) => (
+                    <option
+                      key={collection.id}
+                      value={collection.id}
+                      disabled={!collection.indexed_books}
+                    >
+                      {collection.id === "social-systems"
+                        ? "Social Systems"
+                        : "Personal Library"}
+                      {collection.indexed_books
+                        ? ` (${collection.indexed_books} references)`
+                        : " — not indexed"}
+                    </option>
+                  ))}
+                </select>
+              )}
               <DropdownSelect
                 value={
                   usePaperclip
