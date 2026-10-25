@@ -16,6 +16,8 @@ import { DropdownSelect } from "@/components/ui/dropdown-select";
 import { ChatSkills } from "./chat-skills";
 
 interface ComposerProps {
+  includeKnowledge?: boolean;
+  onIncludeKnowledgeChange?: (value: boolean) => void;
   conversationId?: string;
   projectId?: string;
   projectName?: string;
@@ -44,6 +46,8 @@ interface ComposerProps {
 }
 
 export function AssistantComposer({
+  includeKnowledge,
+  onIncludeKnowledgeChange,
   conversationId,
   projectId,
   projectName,
@@ -346,6 +350,20 @@ export function AssistantComposer({
               </button>
             )}
             <div className="chat-composer-controls">
+              <label
+                className="flex items-center gap-1.5 text-xs text-slate-600"
+                title="Use curated external course sources for this turn"
+              >
+                <input
+                  type="checkbox"
+                  checked={includeKnowledge ?? false}
+                  onChange={(event) =>
+                    onIncludeKnowledgeChange?.(event.target.checked)
+                  }
+                  disabled={sending}
+                />
+                Course knowledge
+              </label>
               <DropdownSelect
                 value={
                   usePaperclip

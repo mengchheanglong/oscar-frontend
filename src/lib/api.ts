@@ -624,6 +624,7 @@ export const api = {
       projectId: string,
       conversationId: string,
       data: {
+        includeKnowledge?: boolean;
         clientRequestId?: string;
         content: string;
         mode?: string;

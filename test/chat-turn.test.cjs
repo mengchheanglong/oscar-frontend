@@ -52,6 +52,52 @@ test("reuses a persisted unfinished turn after reload, but treats edits and comp
     undefined,
   );
 });
+
+test("changing course knowledge after a failed request uses a fresh key while identical retries reuse it", () => {
+  const saved = [
+    {
+      role: "user",
+      status: "COMPLETED",
+      content: "Question",
+      mode: "WORKSPACE",
+      clientRequestId: "failed-key",
+    },
+  ];
+  const previous = { signature: "knowledge-off", key: "failed-key" };
+  assert.equal(
+    lib.chatRequestKey(
+      previous,
+      "knowledge-off",
+      saved,
+      "Question",
+      "WORKSPACE",
+      () => "new-key",
+    ),
+    "failed-key",
+  );
+  assert.equal(
+    lib.chatRequestKey(
+      previous,
+      "knowledge-on",
+      saved,
+      "Question",
+      "WORKSPACE",
+      () => "new-key",
+    ),
+    "new-key",
+  );
+  assert.equal(
+    lib.chatRequestKey(
+      null,
+      "knowledge-off",
+      saved,
+      "Question",
+      "WORKSPACE",
+      () => "new-key",
+    ),
+    "failed-key",
+  );
+});
 test("replaces optimistic and previously saved copies of the same turn while preserving older messages", () => {
   const old = { id: "older" },
     user = { id: "saved-user" },

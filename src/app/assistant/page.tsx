@@ -19,7 +19,7 @@ import { useProjectWorkspace } from "@/components/project-workspace";
 import type { Project } from "@/context/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { api } from "@/lib/api";
-import { mergeChatTurn, retryRequestKey } from "@/lib/chat-turn";
+import { mergeChatTurn, chatRequestKey } from "@/lib/chat-turn";
 import {
   Sparkles,
   Bot,
@@ -42,6 +42,7 @@ import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { ChatContextRail } from "@/components/assistant/chat-context-rail";
 import { ListTree } from "lucide-react";
 import { AssistantComposer } from "@/components/assistant/assistant-composer";
+import { knowledgeCitationUrl } from "@/lib/knowledge-citation";
 import { PlatformHandoffPanel } from "@/components/assistant/platform-handoff-panel";
 import {
   useConversationWork,
@@ -52,7 +53,10 @@ const getSourceLink = (
   sourceType: string,
   title: string,
   sourceId?: string,
+  sourceUrl?: string,
 ) => {
+  if (sourceType === "EXTERNAL_KNOWLEDGE")
+    return knowledgeCitationUrl(sourceUrl) ?? "#";
   const cleanTitle = title.replace(/\s*\([^)]*\)$/, "").trim();
   const params = new URLSearchParams();
   if (sourceId) {
@@ -78,6 +82,9 @@ const getSourceLink = (
 };
 
 interface CitationItem {
+  sourceUrl?: string;
+  courseCode?: string;
+  institution?: string;
   evidenceNumber?: number;
   chunkId: string;
   sourceId: string;
@@ -241,6 +248,7 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
   const [useTools, setUseTools] = useState(false);
+  const [includeKnowledge, setIncludeKnowledge] = useState(false);
   const [useT3, setUseT3] = useState(false);
   const [handoffPrompt, setHandoffPrompt] = useState<string | null>(null);
   const [handoffPlatform, setHandoffPlatform] = useState<
@@ -354,6 +362,10 @@ export default function AssistantPage() {
     setInspectError(null);
 
     const loadDetails = async () => {
+      if (inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE") {
+        setLoadingInspectDetails(false);
+        return;
+      }
       if (["REQUIREMENT", "MEETING"].includes(inspectingCitation.sourceType)) {
         setInspectError("This source belongs to a retired feature.");
         setLoadingInspectDetails(false);
@@ -853,17 +865,23 @@ export default function AssistantPage() {
           text,
           selectedMode,
           conv.includeAllWorkspaces === true || !currentProject,
+          includeKnowledge,
         ]);
         if (chatRequest.current?.signature !== signature) {
           chatRequest.current = {
             signature,
-            key:
-              retryRequestKey(messages, text, selectedMode) ||
-              crypto.randomUUID(),
+            key: chatRequestKey(
+              chatRequest.current,
+              signature,
+              messages,
+              text,
+              selectedMode,
+            ),
           };
         }
         const res = await api.assistant.postMessage(postProjId, conv.id, {
           clientRequestId: chatRequest.current.key,
+          includeKnowledge,
           content: text,
           goalId: reviewGoalId.current,
           mode: selectedMode,
@@ -922,6 +940,7 @@ export default function AssistantPage() {
       isLoadingMessages,
       selectedMode,
       useTools,
+      includeKnowledge,
       useT3,
       usePaperclip,
       work,
@@ -1378,6 +1397,7 @@ export default function AssistantPage() {
                                             citation.sourceType,
                                             citation.title,
                                             citation.sourceId,
+                                            citation.sourceUrl,
                                           )}
                                           aria-label={`Open source: ${citation.title}`}
                                           className="shrink-0 rounded-md p-2 text-slate-400 hover:bg-white hover:text-codex-accent"
@@ -1393,6 +1413,12 @@ export default function AssistantPage() {
                                           </p>
                                           <p className="text-[10px] text-slate-400">
                                             Revision {citation.revision}
+                                            {citation.courseCode
+                                              ? ` · ${citation.courseCode}`
+                                              : ""}
+                                            {citation.institution
+                                              ? ` · ${citation.institution}`
+                                              : ""}
                                             {citation.locator
                                               ? " · " + citation.locator
                                               : ""}
@@ -1554,6 +1580,8 @@ export default function AssistantPage() {
             }}
             onSend={() => void handleSendMessage()}
             useTools={useTools}
+            includeKnowledge={includeKnowledge}
+            onIncludeKnowledgeChange={setIncludeKnowledge}
             useT3={useT3}
             onUseT3Change={setUseT3}
             usePaperclip={usePaperclip}
@@ -1661,7 +1689,9 @@ export default function AssistantPage() {
                       </span>
                     ) : (
                       <span className="font-bold text-[10px] uppercase tracking-wider font-mono px-2 py-0.5 rounded bg-blue-100/80 text-blue-800">
-                        {inspectingCitation.sourceType}
+                        {inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE"
+                          ? "Course knowledge"
+                          : inspectingCitation.sourceType}
                       </span>
                     )}
                     <span className="text-[11px] font-mono text-slate-400">
@@ -1679,6 +1709,16 @@ export default function AssistantPage() {
                   >
                     {inspectingCitation.title}
                   </h3>
+                  {inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE" && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      {[
+                        inspectingCitation.institution,
+                        inspectingCitation.courseCode,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1862,6 +1902,7 @@ export default function AssistantPage() {
                   inspectingCitation.sourceType,
                   inspectingCitation.title,
                   inspectingCitation.sourceId,
+                  inspectingCitation.sourceUrl,
                 )}
                 className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium hover:underline"
               >
