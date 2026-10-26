@@ -1767,7 +1767,7 @@ export default function AssistantPage() {
                     <p className="mt-1 text-xs text-amber-700">
                       {inspectingCitation.extraction === "LOCAL_TESSERACT_OCR"
                         ? "Machine OCR: verify formulas against the original PDF page."
-                        : "Verify extracted formulas and tables against the original PDF page."}
+                        : "Verify extracted content, formulas and diagrams against the original PDF page."}
                     </p>
                   )}
                   {inspectingCitation.coverageNote && (

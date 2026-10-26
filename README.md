@@ -272,6 +272,9 @@ library catalog; the app does not serve private PDF downloads.
 
 The default remains opted out. See sibling
 `oscar-knowledge/docs/LOCAL_KNOWLEDGE_LIBRARY_INTEGRATION.md` for ingestion, scope
-configuration, verified counts and remaining compilation ranges. Verified locally:
+configuration; the continuation guide `docs/LIBRARY_COMPLETION_2026_10_26.md` in
+that repository describes full-source coverage checks and mixed compilation
+attribution. Visual descriptions and extracted diagrams retain an original-page
+verification notice. Verified locally:
 lint, typecheck, production build and 34 tests passed; browser citation preview
 and All permitted references selection passed.
