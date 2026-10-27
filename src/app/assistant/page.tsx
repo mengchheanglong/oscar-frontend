@@ -96,12 +96,16 @@ interface CitationItem {
   evidenceNumber?: number;
   chunkId: string;
   sourceId: string;
+  documentId?: string;
   sourceType: string;
   title: string;
   revision: number;
   locator?: string | null;
   score?: number;
   snippet?: string;
+  fullTextLength?: number;
+  isTruncated?: boolean;
+  exactExcerpt?: string;
   projectName?: string;
   projectKey?: string;
 }
@@ -395,12 +399,49 @@ export default function AssistantPage() {
     setInspectError(null);
 
     const loadDetails = async () => {
-      if (
-        ["EXTERNAL_KNOWLEDGE", "CHAT_ATTACHMENT"].includes(
-          inspectingCitation.sourceType,
-        )
-      ) {
+      if (inspectingCitation.sourceType === "CHAT_ATTACHMENT") {
         setLoadingInspectDetails(false);
+        return;
+      }
+      if (inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE") {
+        const docId =
+          inspectingCitation.documentId || inspectingCitation.sourceId;
+        if (!docId || !inspectingCitation.chunkId) {
+          setLoadingInspectDetails(false);
+          return;
+        }
+        try {
+          const passage = await api.assistant.inspectPassage({
+            chunkId: inspectingCitation.chunkId,
+            documentId: docId,
+            revision: inspectingCitation.revision,
+          });
+          if (!isCancelled && passage) setInspectingDetails(passage);
+        } catch (err: any) {
+          if (!isCancelled) {
+            const status = err?.status;
+            const code = err?.error?.code || err?.code;
+            if (status === 409 || code === "STALE_REVISION") {
+              setInspectError(
+                "Passage revision mismatch: this citation references a stale revision of the library document.",
+              );
+            } else if (status === 403 || code === "FORBIDDEN") {
+              setInspectError(
+                "Access denied: your account is not authorized to inspect full passages from this private library document.",
+              );
+            } else if (status === 410 || code === "PASSAGE_EXCLUDED") {
+              setInspectError(
+                "This passage was excluded from citation indexing during quality review.",
+              );
+            } else {
+              setInspectError(
+                "The full source record couldn't be loaded. You can still review the evidence excerpt or open the source.",
+              );
+            }
+          }
+        } finally {
+          if (!isCancelled) setLoadingInspectDetails(false);
+        }
         return;
       }
       if (["REQUIREMENT", "MEETING"].includes(inspectingCitation.sourceType)) {
@@ -1453,6 +1494,16 @@ export default function AssistantPage() {
                                       </div>
                                       {expanded && (
                                         <div className="space-y-2 border-t border-slate-200 bg-white p-3">
+                                          {citation.isTruncated && (
+                                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded w-fit">
+                                              <span>[Truncated preview]</span>
+                                              {citation.fullTextLength ? (
+                                                <span className="font-mono text-amber-600">
+                                                  ({citation.snippet?.length ?? 0}/{citation.fullTextLength} chars)
+                                                </span>
+                                              ) : null}
+                                            </div>
+                                          )}
                                           <p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-600">
                                             {citation.snippet ||
                                               "No preview is available. Open the source to review the full record."}
@@ -1820,23 +1871,61 @@ export default function AssistantPage() {
 
             {/* Body */}
             <div className="p-5 overflow-y-auto space-y-4 flex-1 text-slate-700 text-xs">
-              {/* Grounded Evidence Snippet Callout */}
+              {/* Preview Truncation Notice */}
+              {inspectingCitation.isTruncated && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                  <span className="font-semibold px-1.5 py-0.5 rounded bg-amber-200/80 text-[10px] uppercase tracking-wide">
+                    Truncated preview
+                  </span>
+                  <span>
+                    Preview was truncated ({inspectingCitation.snippet?.length ?? 0} chars) relative to the full indexed passage ({inspectingCitation.fullTextLength ?? (inspectingDetails?.charCount ?? "unknown")} chars).
+                  </span>
+                </div>
+              )}
+
+              {/* Exact Excerpt Supplied to Model */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   <span className="flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Evidence excerpt</span>
+                    <span>Exact excerpt supplied to model</span>
                   </span>
+                  {inspectingCitation.exactExcerpt && (
+                    <span className="font-mono text-[10px] text-slate-400">
+                      {inspectingCitation.exactExcerpt.length} chars
+                    </span>
+                  )}
                 </div>
                 <div className="whitespace-pre-wrap rounded-xl border border-blue-100 bg-blue-50/60 p-4 text-sm leading-relaxed text-slate-800">
-                  {inspectingCitation.snippet ||
-                    "No preview is available. Open the source to review the full record."}
+                  {inspectingCitation.exactExcerpt ? (
+                    inspectingCitation.exactExcerpt
+                  ) : (
+                    <span className="italic text-slate-500">
+                      Exact model-used text: Unavailable for this historical citation (not captured when generated).
+                    </span>
+                  )}
                 </div>
               </div>
+
+              {/* Evidence preview (if different from exactExcerpt and available) */}
+              {Boolean(
+                inspectingCitation.snippet &&
+                  inspectingCitation.snippet !== inspectingCitation.exactExcerpt,
+              ) && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                    <span>Evidence preview</span>
+                  </div>
+                  <div className="whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs leading-relaxed text-slate-700">
+                    {inspectingCitation.snippet}
+                  </div>
+                </div>
+              )}
+
               {inspectError && (
                 <p
                   role="alert"
-                  className="rounded-lg bg-amber-50 p-3 text-xs leading-relaxed text-amber-700"
+                  className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs leading-relaxed text-amber-700 font-medium"
                 >
                   {inspectError}
                 </p>
@@ -1976,6 +2065,29 @@ export default function AssistantPage() {
                       </div>
                     </div>
                   )}
+                  {/* EXTERNAL KNOWLEDGE PASSAGE DETAILS */}
+                  {inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE" &&
+                    inspectingDetails?.text && (
+                      <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-semibold text-emerald-900">
+                            Full permitted indexed passage · Revision{" "}
+                            {inspectingDetails.revision}
+                          </span>
+                          <span className="font-mono text-emerald-800 text-[10px]">
+                            {inspectingDetails.charCount} chars
+                          </span>
+                        </div>
+                        <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-white p-3 font-mono text-xs text-slate-800 border border-emerald-100">
+                          {inspectingDetails.text}
+                        </pre>
+                        {inspectingDetails.reviewRequired && (
+                          <p className="text-[11px] text-amber-700">
+                            Verify extracted content, formulas and diagrams against the original PDF page.
+                          </p>
+                        )}
+                      </div>
+                    )}
                 </div>
               ) : null}
             </div>
@@ -1997,7 +2109,11 @@ export default function AssistantPage() {
                   )}
                   className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium hover:underline"
                 >
-                  <span>Open source</span>
+                  <span>
+                    {inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE"
+                      ? "Open original PDF / source page"
+                      : "Open source"}
+                  </span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </Link>
               ) : (

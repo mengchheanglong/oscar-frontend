@@ -573,6 +573,37 @@ export const api = {
       apiRequest<
         { id: "personal-library" | "social-systems"; indexed_books: number }[]
       >(`/knowledge/collections`),
+    inspectPassage: async (data: {
+      chunkId: string;
+      documentId: string;
+      revision: number;
+    }) =>
+      apiRequest<{
+        chunkId: string;
+        documentId: string;
+        collectionId: string;
+        title: string;
+        bookId?: string;
+        author?: string;
+        edition?: string;
+        chapter?: string;
+        locator?: string;
+        pageStart?: number;
+        pageEnd?: number;
+        startMs?: number;
+        endMs?: number;
+        revision: number;
+        text: string;
+        charCount: number;
+        extraction?: string;
+        reviewRequired: boolean;
+        coverageNote?: string;
+        sourceUrl?: string;
+        isTruncated: boolean;
+      }>("/knowledge/passage", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     listConversations: async (projectId: string) =>
       apiRequest<any[]>(`/projects/${projectId}/ai/conversations`),
     createConversation: async (
