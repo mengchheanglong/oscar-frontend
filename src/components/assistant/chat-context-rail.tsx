@@ -1,4 +1,5 @@
 "use client";
+import { ChatAttachments } from "./chat-attachments";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Box,
@@ -63,6 +64,7 @@ export function ChatContextRail({
   onInspect,
   onClose,
   wide,
+  onFilesChanged,
 }: {
   projectId?: string;
   conversationId?: string;
@@ -73,7 +75,10 @@ export function ChatContextRail({
   onInspect: (citation: ContextCitation) => void;
   onClose: () => void;
   wide: boolean;
+  onFilesChanged?: () => void;
 }) {
+  const [attachmentCount, setAttachmentCount] = useState(0);
+  useEffect(() => setAttachmentCount(0), [projectId, conversationId]);
   const scope = `${projectId}:${conversationId}`;
   const [data, setData] = useState<{
     scope: string;
@@ -234,10 +239,21 @@ export function ChatContextRail({
         </ContextSection>
         <ContextSection
           title="Files"
-          count={context.files.length}
+          count={context.files.length + attachmentCount}
           icon={<FileText size={16} />}
         >
-          <p className="chat-context-caption">Cited or read in this chat</p>
+          {projectId && conversationId && (
+            <ChatAttachments
+              key={`${projectId}:${conversationId}`}
+              projectId={projectId}
+              conversationId={conversationId}
+              onCount={setAttachmentCount}
+              onChanged={onFilesChanged}
+            />
+          )}
+          <p className="chat-context-caption mt-4">
+            Other sources cited or read in this chat
+          </p>
           {context.files.map((f) => (
             <div className="chat-context-row" key={f.key}>
               <FileText size={15} />

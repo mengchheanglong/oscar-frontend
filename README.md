@@ -1,5 +1,11 @@
 # OSCAR — Frontend
 
+Composer uploads belong to one private chat and appear in Chat context → Files.
+Use the file actions to download, review a proposed memory, explicitly add a copy
+to shared project knowledge, or remove it. Existing uploads remain under
+Knowledge → Project knowledge; Knowledge now opens on Memories. Apply the sibling
+backend attachment migration and run the rebuilt backend with this frontend.
+
 ## OSCAR & MAVIS foundation
 
 The new product plan and Phase 0 baseline are documented in the sibling backend:

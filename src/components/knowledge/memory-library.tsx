@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useToast } from "@/context/toast-context";
 import { AppLayout } from "@/components/app-layout";
+import { SavedMemorySettings } from "@/components/assistant/saved-memory-settings";
 import { KnowledgeNavigation } from "./knowledge-navigation";
 import { CollectionEmptyState } from "@/components/collection-empty-state";
 import { Modal } from "@/components/ui/modal";
@@ -244,6 +245,22 @@ function MemoriesWorkspace() {
     <AppLayout>
       <div className="collection-workspace space-y-6">
         <KnowledgeNavigation active="memories" />
+        {currentProject && (
+          <details className="rounded-xl border border-border p-4">
+            <summary className="cursor-pointer text-sm font-medium">
+              Reviewed chat memories
+            </summary>
+            <div className="mt-4">
+              <SavedMemorySettings
+                key={currentProject.id}
+                projectId={currentProject.id}
+                projectLabel={currentProject.name}
+                draft={null}
+              />
+            </div>
+          </details>
+        )}
+
         {/* Header */}
         <div className="collection-header">
           <div>

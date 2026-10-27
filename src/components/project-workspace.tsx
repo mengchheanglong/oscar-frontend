@@ -824,7 +824,7 @@ export function ProjectSidePanel() {
           <button
             role="tab"
             aria-selected={panelTab === "files"}
-            aria-label="Project files"
+            aria-label="Project knowledge"
             onClick={() => setPanelTab("files")}
           >
             <FileText size={18} />
@@ -1020,7 +1020,7 @@ function ProjectFilesContent({ project }: { project: Project }) {
   return (
     <>
       <div className="project-panel-row">
-        <h2>{project.name} · Files</h2>
+        <h2>{project.name} · Project knowledge</h2>
         <button
           type="button"
           className="workspace-pill"
@@ -1057,7 +1057,7 @@ function ProjectFilesContent({ project }: { project: Project }) {
         }}
       >
         <FilePlus2 size={26} />
-        <span>Drag and drop files here</span>
+        <span>Add shared project references here</span>
       </button>
       {error && (
         <p role="alert" className="workspace-form-error">

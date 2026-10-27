@@ -1,1 +1,5 @@
-export { default } from "@/components/knowledge/file-library";
+import { redirect } from "next/navigation";
+
+export default function DocumentsPage() {
+  redirect("/knowledge?view=files");
+}

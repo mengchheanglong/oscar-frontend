@@ -391,7 +391,11 @@ export default function AssistantPage() {
     setInspectError(null);
 
     const loadDetails = async () => {
-      if (inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE") {
+      if (
+        ["EXTERNAL_KNOWLEDGE", "CHAT_ATTACHMENT"].includes(
+          inspectingCitation.sourceType,
+        )
+      ) {
         setLoadingInspectDetails(false);
         return;
       }
@@ -1598,8 +1602,26 @@ export default function AssistantPage() {
             }}
           />
           <AssistantComposer
+            ensureConversation={async () => {
+              if (activeConv) return activeConv.id;
+              const project = currentProject || projects[0];
+              if (!project) throw new Error("Create a project first.");
+              const conv = await api.assistant.createConversation(project.id, {
+                title: "New Conversation",
+                defaultMode: selectedMode,
+                includeAllWorkspaces: !currentProject,
+              });
+              currentView.current.conversationId = conv.id;
+              skipLoadMessagesRef.current = conv.id;
+              setActiveConv(conv);
+              setConversations((previous) => [conv, ...previous]);
+              return conv.id;
+            }}
+            onAttachmentsUploaded={() => setContextOpen(true)}
             conversationId={activeConv?.id}
-            projectId={activeConv?.projectId || currentProject?.id}
+            projectId={
+              activeConv?.projectId || currentProject?.id || projects[0]?.id
+            }
             projectName={currentProject?.name}
             onProjectFiles={() =>
               currentProject &&
@@ -1661,6 +1683,10 @@ export default function AssistantPage() {
             runs={work.runs}
             runError={work.error}
             busy={isSending || work.active}
+            onFilesChanged={() => {
+              if (activeConv)
+                void loadMessages(activeConv.id, activeConv.projectId);
+            }}
             onInspect={setInspectingCitation}
             onClose={closeContext}
             wide={contextWide}
@@ -1953,8 +1979,12 @@ export default function AssistantPage() {
 
             {/* Footer */}
             <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/60">
-              {inspectingCitation.sourceType !== "EXTERNAL_KNOWLEDGE" ||
-              knowledgeCitationUrl(inspectingCitation.sourceUrl) ? (
+              {inspectingCitation.sourceType === "CHAT_ATTACHMENT" ? (
+                <span className="text-xs text-muted-foreground">
+                  Chat attachment - manage in Chat context
+                </span>
+              ) : inspectingCitation.sourceType !== "EXTERNAL_KNOWLEDGE" ||
+                knowledgeCitationUrl(inspectingCitation.sourceUrl) ? (
                 <Link
                   href={getSourceLink(
                     inspectingCitation.sourceType,

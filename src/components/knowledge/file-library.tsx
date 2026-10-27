@@ -598,11 +598,11 @@ function FilesWorkspace() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Files & sources</h2>
+            <h2 className="text-lg font-semibold">Project knowledge</h2>
             <p className="files-subtitle">
               {currentProject
-                ? `Files and folders in ${currentProject.name}.`
-                : "Files across all your projects."}
+                ? `Shared references for ${currentProject.name}. Chat attachments stay in their chats.`
+                : "Shared references across your projects."}
             </p>
           </div>
 
@@ -614,7 +614,7 @@ function FilesWorkspace() {
             className="files-primary-button"
           >
             <Upload className="w-4 h-4 stroke-[2.2]" />
-            <span>Upload file</span>
+            <span>Add project knowledge</span>
           </button>
         </div>
 
@@ -632,7 +632,7 @@ function FilesWorkspace() {
           </div>
         )}
         <div className="files-section-heading">
-          <h2>Uploaded files</h2>
+          <h2>Shared references</h2>
           <span>{filteredDocuments.length}</span>
         </div>
         {/* FILTER TOOLBAR & VIEW SWITCHER */}

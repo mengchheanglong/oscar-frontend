@@ -5,11 +5,7 @@ import FileLibrary from "@/components/knowledge/file-library";
 import MemoryLibrary from "@/components/knowledge/memory-library";
 function KnowledgeView() {
   const params = useSearchParams();
-  return params.get("view") === "memories" ? (
-    <MemoryLibrary />
-  ) : (
-    <FileLibrary />
-  );
+  return params.get("view") !== "files" ? <MemoryLibrary /> : <FileLibrary />;
 }
 export default function KnowledgePage() {
   return (

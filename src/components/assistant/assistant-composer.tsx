@@ -8,7 +8,7 @@ import React, {
   useState,
 } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { chatAttachments, attachmentsChanged } from "@/lib/chat-attachments";
 import { WorkspaceIcon } from "@/components/workspace-icons";
 import { AlertCircle, Filter, Loader2, X } from "lucide-react";
 import { DropdownSelect } from "@/components/ui/dropdown-select";
@@ -27,6 +27,8 @@ interface ComposerProps {
   includeKnowledge?: boolean;
   onIncludeKnowledgeChange?: (value: boolean) => void;
   conversationId?: string;
+  ensureConversation?: () => Promise<string>;
+  onAttachmentsUploaded?: () => void;
   projectId?: string;
   projectName?: string;
   onProjectFiles?: () => void;
@@ -60,6 +62,8 @@ export function AssistantComposer({
   includeKnowledge,
   onIncludeKnowledgeChange,
   conversationId,
+  ensureConversation,
+  onAttachmentsUploaded,
   projectId,
   projectName,
   onProjectFiles,
@@ -91,12 +95,21 @@ export function AssistantComposer({
   const attachRef = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const uploadRequest = useRef(0);
+  const visibleScope = useRef({ projectId, conversationId });
+  visibleScope.current = { projectId, conversationId };
+  const uploadingChat = useRef<string | undefined>();
   useEffect(() => {
     uploadRequest.current++;
     setUploadNotice(null);
     setUploading(false);
     setAttachOpen(false);
   }, [projectId]);
+  useEffect(() => {
+    if (conversationId !== uploadingChat.current) {
+      setUploadNotice(null);
+      setAttachOpen(false);
+    }
+  }, [conversationId]);
   useEffect(() => {
     if (!attachOpen) return;
     const close = (event: PointerEvent) => {
@@ -129,24 +142,37 @@ export function AssistantComposer({
     setUploadNotice(null);
     let completed = 0;
     try {
+      const targetChat = conversationId || (await ensureConversation?.());
+      if (!targetChat) throw new Error("Start a chat before uploading files.");
+      uploadingChat.current = targetChat;
       for (const file of files) {
         const form = new FormData();
         form.append("file", file);
         form.append("title", file.name);
-        await api.documents.upload(targetProject, form);
+        await chatAttachments.upload(targetProject, targetChat, form);
+        attachmentsChanged();
         completed++;
       }
-      if (request === uploadRequest.current)
+      if (visibleScope.current.conversationId === targetChat)
+        onAttachmentsUploaded?.();
+      if (
+        request === uploadRequest.current &&
+        visibleScope.current.conversationId === uploadingChat.current
+      )
         setUploadNotice(
-          `${completed} ${completed === 1 ? "file" : "files"} saved to project Files. Processing may take a moment.`,
+          `${completed} ${completed === 1 ? "file" : "files"} attached to this chat.`,
         );
     } catch (error) {
-      if (request === uploadRequest.current)
+      if (
+        request === uploadRequest.current &&
+        visibleScope.current.conversationId === uploadingChat.current
+      )
         setUploadNotice(
           `${completed ? `${completed} saved. ` : ""}${error instanceof Error ? error.message : "Could not upload files."}`,
         );
     } finally {
       if (request === uploadRequest.current) setUploading(false);
+      uploadingChat.current = undefined;
       if (fileInput.current) fileInput.current.value = "";
     }
   };
@@ -250,8 +276,9 @@ export function AssistantComposer({
             ref={fileInput}
             type="file"
             multiple
+            accept=".pdf,.docx,.txt,.md,.markdown,.csv"
             className="hidden"
-            aria-label="Upload project files"
+            aria-label="Attach files to this chat"
             onChange={(event) =>
               void uploadFiles(Array.from(event.target.files || []))
             }
@@ -326,11 +353,11 @@ export function AssistantComposer({
                     onClick={() => fileInput.current?.click()}
                   >
                     <WorkspaceIcon name="plus" className="h-5 w-5" />
-                    Upload project files
+                    Attach files to this chat
                   </button>
                   <Link href="/knowledge?view=files">
                     <WorkspaceIcon name="files" className="h-5 w-5" />
-                    Browse project files
+                    Browse project knowledge
                   </Link>
                   {!projectId && (
                     <p className="px-3 pb-2 text-xs text-slate-400">
@@ -354,7 +381,7 @@ export function AssistantComposer({
                 type="button"
                 onClick={onProjectFiles}
                 className="composer-project-pill"
-                aria-label="Open project files"
+                aria-label="Open project knowledge"
               >
                 <WorkspaceIcon name="folder" />
                 <span>{projectName}</span>
