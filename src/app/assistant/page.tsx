@@ -42,6 +42,10 @@ import { DeleteConfirmModal } from "@/components/delete-confirm-modal";
 import { ChatContextRail } from "@/components/assistant/chat-context-rail";
 import { ListTree } from "lucide-react";
 import { AssistantComposer } from "@/components/assistant/assistant-composer";
+import {
+  citationPreviewState,
+  characterCount,
+} from "@/lib/citation-inspection";
 import { knowledgeCitationUrl } from "@/lib/knowledge-citation";
 import { PlatformHandoffPanel } from "@/components/assistant/platform-handoff-panel";
 import {
@@ -367,6 +371,14 @@ export default function AssistantPage() {
     useState<boolean>(false);
   const [inspectError, setInspectError] = useState<string | null>(null);
   const inspectorRef = useRef<HTMLDialogElement>(null);
+  const inspectPreview = inspectingCitation
+    ? citationPreviewState(
+        inspectingCitation,
+        inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE"
+          ? inspectingDetails
+          : null,
+      )
+    : null;
 
   useEffect(() => {
     if (
@@ -416,6 +428,8 @@ export default function AssistantPage() {
             documentId: docId,
             revision: inspectingCitation.revision,
           });
+          if (!citationPreviewState(inspectingCitation, passage).passageMatches)
+            throw new Error("PASSAGE_IDENTITY_MISMATCH");
           if (!isCancelled && passage) setInspectingDetails(passage);
         } catch (err: any) {
           if (!isCancelled) {
@@ -1499,7 +1513,10 @@ export default function AssistantPage() {
                                               <span>[Truncated preview]</span>
                                               {citation.fullTextLength ? (
                                                 <span className="font-mono text-amber-600">
-                                                  ({citation.snippet?.length ?? 0}/{citation.fullTextLength} chars)
+                                                  (
+                                                  {characterCount(citation.snippet ?? "")}
+                                                  /{citation.fullTextLength}{" "}
+                                                  chars)
                                                 </span>
                                               ) : null}
                                             </div>
@@ -1872,13 +1889,15 @@ export default function AssistantPage() {
             {/* Body */}
             <div className="p-5 overflow-y-auto space-y-4 flex-1 text-slate-700 text-xs">
               {/* Preview Truncation Notice */}
-              {inspectingCitation.isTruncated && (
+              {inspectPreview?.isTruncated && (
                 <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
                   <span className="font-semibold px-1.5 py-0.5 rounded bg-amber-200/80 text-[10px] uppercase tracking-wide">
                     Truncated preview
                   </span>
                   <span>
-                    Preview was truncated ({inspectingCitation.snippet?.length ?? 0} chars) relative to the full indexed passage ({inspectingCitation.fullTextLength ?? (inspectingDetails?.charCount ?? "unknown")} chars).
+                    Preview was truncated ({inspectPreview?.previewLength ?? 0}{" "}
+                    chars) relative to the full indexed passage (
+                    {inspectPreview?.fullLength ?? "unknown"} chars).
                   </span>
                 </div>
               )}
@@ -1892,7 +1911,7 @@ export default function AssistantPage() {
                   </span>
                   {inspectingCitation.exactExcerpt && (
                     <span className="font-mono text-[10px] text-slate-400">
-                      {inspectingCitation.exactExcerpt.length} chars
+                      {characterCount(inspectingCitation.exactExcerpt)} chars
                     </span>
                   )}
                 </div>
@@ -1901,7 +1920,8 @@ export default function AssistantPage() {
                     inspectingCitation.exactExcerpt
                   ) : (
                     <span className="italic text-slate-500">
-                      Exact model-used text: Unavailable for this historical citation (not captured when generated).
+                      Exact model-used text was not captured for this citation.
+                      It cannot be reconstructed from the current source.
                     </span>
                   )}
                 </div>
@@ -1910,7 +1930,7 @@ export default function AssistantPage() {
               {/* Evidence preview (if different from exactExcerpt and available) */}
               {Boolean(
                 inspectingCitation.snippet &&
-                  inspectingCitation.snippet !== inspectingCitation.exactExcerpt,
+                inspectingCitation.snippet !== inspectingCitation.exactExcerpt,
               ) && (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -2067,7 +2087,8 @@ export default function AssistantPage() {
                   )}
                   {/* EXTERNAL KNOWLEDGE PASSAGE DETAILS */}
                   {inspectingCitation.sourceType === "EXTERNAL_KNOWLEDGE" &&
-                    inspectingDetails?.text && (
+                    inspectingDetails?.text &&
+                    inspectPreview?.passageMatches && (
                       <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3.5">
                         <div className="flex items-center justify-between text-[11px]">
                           <span className="font-semibold text-emerald-900">
@@ -2083,7 +2104,8 @@ export default function AssistantPage() {
                         </pre>
                         {inspectingDetails.reviewRequired && (
                           <p className="text-[11px] text-amber-700">
-                            Verify extracted content, formulas and diagrams against the original PDF page.
+                            Verify extracted content, formulas and diagrams
+                            against the original PDF page.
                           </p>
                         )}
                       </div>

@@ -142,6 +142,7 @@ docs/           Navigation, design references, and verification notes
 - [Navigation and compatibility](docs/NAVIGATION.md)
 - [Response design research](docs/RESPONSE_DESIGN_RESEARCH.md)
 - [Feature retirement](docs/FEATURE_RETIREMENT.md)
+- [Citation inspection and completeness boundaries](docs/CITATION_INSPECTION.md)
 - [Backend documentation map](https://github.com/mengchheanglong/oscar-backend/blob/main/docs/README.md)
 - [Chat attachments](https://github.com/mengchheanglong/oscar-backend/blob/main/docs/product/CHAT_ATTACHMENTS.md)
 - [Shared skills](https://github.com/mengchheanglong/oscar-backend/blob/main/docs/product/SHARED_SKILLS.md)
