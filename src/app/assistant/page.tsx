@@ -256,28 +256,8 @@ export default function AssistantPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
   const [useTools, setUseTools] = useState(false);
-  const [includeKnowledge, setIncludeKnowledge] = useState(false);
-  const [knowledgeScope, setKnowledgeScope] = useState<
-    "mba" | "social-systems" | "personal-library" | "all"
-  >("mba");
-  const [knowledgeCollections, setKnowledgeCollections] = useState<
-    { id: "personal-library" | "social-systems"; indexed_books: number }[]
-  >([]);
-  useEffect(() => {
-    let cancelled = false;
-    setKnowledgeScope("mba");
-    setKnowledgeCollections([]);
-    if (user?.id)
-      api.assistant
-        .knowledgeCollections()
-        .then((data) => {
-          if (!cancelled) setKnowledgeCollections(data);
-        })
-        .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id, includeKnowledge]);
+  const [includeKnowledge, setIncludeKnowledge] = useState(true);
+  const knowledgeScope = "all" as const;
   const [useT3, setUseT3] = useState(false);
   const [handoffPrompt, setHandoffPrompt] = useState<string | null>(null);
   const [handoffPlatform, setHandoffPlatform] = useState<
@@ -1641,9 +1621,6 @@ export default function AssistantPage() {
             onSend={() => void handleSendMessage()}
             useTools={useTools}
             includeKnowledge={includeKnowledge}
-            knowledgeScope={knowledgeScope}
-            onKnowledgeScopeChange={setKnowledgeScope}
-            knowledgeCollections={knowledgeCollections}
             onIncludeKnowledgeChange={setIncludeKnowledge}
             useT3={useT3}
             onUseT3Change={setUseT3}
