@@ -1,294 +1,154 @@
-# OSCAR — Frontend
+# OSCAR Frontend
 
-The chat composer starts with one **Knowledge** checkbox enabled. It includes
-all permitted reference-library sources alongside project context, without a
-category selector. Source provenance and extraction notices remain in citations.
-When the server enables required-source mode, the composer displays a locked
-**Sources required** control. Ordinary Assistant answers need current source
-citations; evidence gaps are reported instead of an unsourced answer. In optional
-mode, switch Knowledge off to omit reference-library retrieval for that turn.
+The web interface for OSCAR, a personal AI chief of staff for project planning,
+research, and supervised execution. Conversations, reviewed memory, project
+knowledge, and connected agents share one workspace.
 
-Composer uploads belong to one private chat and appear in Chat context → Files.
-Use the file actions to download, review a proposed memory, explicitly add a copy
-to shared project knowledge, or remove it. Existing uploads remain under
-Knowledge → Project knowledge; Knowledge now opens on Memories. Apply the sibling
-backend attachment migration and run the rebuilt backend with this frontend.
+Built with **Next.js 14 App Router, React 18, TypeScript, and Tailwind CSS**.
 
-## OSCAR & MAVIS foundation
+## Repository responsibilities
 
-The new product plan and Phase 0 baseline are documented in the sibling backend:
-[vision and architecture](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/product/OSCAR_MAVIS_Vision_and_Architecture.md)
-and [foundation](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/product/OSCAR_MAVIS_FOUNDATION.md).
-In a new sibling checkout, these are under `../oscar-backend/docs/`; the existing
-local `../continuum-backend/docs/` path remains supported.
-Continuum remains the engineering foundation. Goals, reviewed MAVIS memory and
-supervised Hermes/T3/Paperclip handoffs are implemented; their runtime readiness
-still depends on local services and current authorization.
+| Repository                                                            | Responsibility                                                                |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **oscar-frontend**                                                    | Chat, navigation, source inspection, review flows, and workspace UI           |
+| [oscar-backend](https://github.com/mengchheanglong/oscar-backend)     | Authentication, project data, memory, retrieval, MCP, and agent orchestration |
+| [oscar-knowledge](https://github.com/mengchheanglong/oscar-knowledge) | Independent reference ingestion and evidence retrieval                        |
 
-Use Node 24.14.0 and pnpm 10.32.1. Run `pnpm lint`, `pnpm typecheck`, `pnpm test`,
-and `pnpm build` here, or run `pnpm verify:foundation` from the sibling backend
-to verify both repositories together. Frontend CI runs the same four checks.
+The frontend uses the backend API. It does not hold generation credentials, run
+agent processes, or connect directly to either PostgreSQL database.
 
-The sibling backend repository owns Compose. From `../oscar-backend` (or the
-existing local `../continuum-backend` folder), use
-`pnpm stack:up` for the full Docker app on port 43100 with API port 43101. See its
-`docs/DOCKER_LOCAL.md` for migrations, existing-data mounts, and Hermes limitations.
-The frontend Docker build accepts `BACKEND_INTERNAL_URL` (default `http://api:43101`)
-and uses `/api/v1` in the browser. Local environment files stay outside the image.
+## Capabilities
 
-Continuum is a personal, chat-first workspace for business, finance, research,
-project files, tasks, decisions, and AI-assisted work. This is an independent
-repository derived from AI Workspace's develop branch, with its Git history
-preserved. The original AI Workspace repositories remain separate.
+- **Conversations:** Project-specific and all-project chats, saved history,
+  Markdown responses, citations, and context exclusions.
+- **Chat attachments:** Upload files into one private chat. Download originals,
+  review a proposed memory, explicitly share a copy with project knowledge, or
+  remove access through the context rail.
+- **Memory and knowledge:** Manage reviewed memories, shared project references,
+  and private folder copies. Existing project uploads remain project knowledge.
+- **Goals and tasks:** Goal-linked work, task boards, delegated-work status,
+  outcome review, and optional briefing and spending views.
+- **Customize:** Manage plugins and a personal skill library. Attach guidance
+  with `/skill-name`; the conversation retains it for later turns and supported
+  agent handoffs.
+- **Connected work:** Inspect Hermes, T3, Paperclip, GitHub, and MCP configuration.
+  Execution depends on the backend, upstream runtime, and authorization.
+- **Workspace controls:** Global search, project membership and instructions,
+  account settings, and dark/light/system appearance.
 
-- Frontend: https://github.com/mengchheanglong/oscar-frontend
-- Backend: https://github.com/mengchheanglong/oscar-backend
-- Working branch: `main`; GitHub default branch: `main`.
-- Local frontend: `http://localhost:43100`; local API: `http://127.0.0.1:43101`.
-- Environment files, access tokens, uploaded content, and machine MCP settings
-  stay local and are not part of this repository.
+The context rail shows attachments, attached skills, and recorded plugin or
+source activity. Installing an integration alone does not mean it was used.
+The knowledge graph remains planned and marked **Coming soon**.
 
-The inherited implementation guide and verification notes describe the original
-foundation. The OSCAR & MAVIS blueprint defines the new product direction.
-Legacy `aiw_*` storage keys, API environment names, database migration identifiers,
-and the existing isolated development database remain compatible with current
-local data. Repository branding changes do not migrate or reset that data.
+## Local development
 
-Next.js 14 App Router frontend for Continuum, connected to its NestJS API.
+### Requirements
 
-## Navigation
+- Node.js **24.14.0** and pnpm **10.32.1**, matching the repository pins.
+- A configured OSCAR backend on `http://127.0.0.1:43101`.
+- Docker for the backend databases; the frontend dev server runs on the host.
 
-Chat, Goals, Tasks, Knowledge, and Customize form the main workspace. Files and
-memories share Knowledge; project menus retain decisions. Customize opens a
-secondary sidebar for Plugins and Skills, while Settings → Integrations retains
-its existing connection controls. Tasks includes recent delegated work. See [navigation and
-compatibility](docs/NAVIGATION.md).
+Run from this repository. PowerShell examples are shown.
 
-**Customize → Skills** manages your private central library. Start a chat message
-with `/skill-name` to attach guidance to that conversation; later turns and
-Hermes/T3/Paperclip handoffs inherit it. Typing `/` offers matching commands. The
-empty library offers an optional Clear plan example. Connected workspaces can
-read skills through OSCAR MCP. See the sibling backend’s
-`docs/product/SHARED_SKILLS.md` for versioning and execution boundaries.
-
-Goals includes **Briefing & spending**: current progress, blockers, agent outcomes,
-opt-in daily/weekly briefings and a monthly reporting threshold. **Tasks → Agent
-work → Review outcome** records a human check and optionally proposes a MAVIS
-lesson for separate approval. Spending is user-reported USD execution cost;
-unknown costs remain explicit and the threshold is not a hard spending cap.
-Schedules run while the backend is online. See the backend's
-[workflow guide](https://github.com/mengchheanglong/oscar-backend/blob/develop/docs/product/CHIEF_OF_STAFF_WORKFLOW.md).
-
-## Features
-
-- **Chat and citations**: Chat across the workspace or within a selected project, with grounded answers and source citations.
-- **Agent work**: Project-scoped Hermes runs with persisted progress, Markdown reports, cancellation, explicit retries, and task proposals in the existing review dialog. Requires the backend run migration and a prepared/enabled Hermes runtime; configuration is documented in the backend's `docs/HERMES_RUNTIME.md`.
-- **Copilot Memory**: Save, review, edit, and remove private preferences and useful lessons for future conversations.
-- **Authentication & Sessions**: Server-side cookie sessions with CSRF synchronizer tokens and persistent auth state.
-- **Global Search**: Search knowledge across every project from one workspace-wide view.
-- **Decisions and Tasks**: Review architecture decisions and manage work in project context or across all projects.
-- **Files**: Upload and search project documents, and manage private folder copies with resumable uploads.
-- **Knowledge Graph**: A visual map of workspace knowledge is planned and currently marked “Coming soon.”
-- **Projects, settings, and integrations**: Manage project context, membership, account preferences, GitHub, MCP, and Hermes connections.
-- **Non-blocking Toast Feedback**: Smooth notifications for all asynchronous user interactions.
-
-## Getting Started
-
-### 1. Install Dependencies
-
-```bash
-pnpm install
-```
-
-### 2. Configure Environment
-
-```bash
-cp .env.example .env.local
-```
-
-The default local backend endpoint is `http://127.0.0.1:43101/api/v1`.
-
-### 3. Run Development Server
-
-```bash
+```powershell
+pnpm install --frozen-lockfile
+if (!(Test-Path .env.local)) { Copy-Item .env.example .env.local }
 pnpm dev
 ```
 
-Opens on [http://127.0.0.1:43100](http://127.0.0.1:43100).
+Open [OSCAR](http://localhost:43100). Start and migrate the backend first using
+its [local development guide](https://github.com/mengchheanglong/oscar-backend/blob/main/docs/operations/LOCAL_DEVELOPMENT.md).
+Use an origin permitted by the backend's `APP_ORIGIN` configuration.
 
-### 4. Build for Production
+### Environment
 
-```bash
+| Variable               | Local value              | Purpose                                         |
+| ---------------------- | ------------------------ | ----------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`  | `/api/v1`                | Same-origin browser API path                    |
+| `BACKEND_INTERNAL_URL` | `http://127.0.0.1:43101` | Server-side rewrite destination; omit `/api/v1` |
+
+Next.js proxies `/api/v1/*` to the backend, keeping browser sessions on the web
+origin. Rebuild after changing a production rewrite or public environment value.
+Never put provider keys, personal access tokens, or service secrets in
+`NEXT_PUBLIC_*` variables. The optional Supabase fields in the template are not
+required for the normal local backend-session flow.
+
+### Production build
+
+```powershell
 pnpm build
 pnpm start
 ```
 
-Local Windows builds use regular Next.js output to avoid standalone dependency
-links interfering with repeated build cleanup. Linux production builds retain
-standalone output for the existing container deployment.
+The host server uses port **43100**. Windows builds use regular Next.js output;
+production builds on other platforms use the existing standalone configuration.
 
-## Hermes integration
+For the local container stack, keep the frontend and backend in sibling folders
+and run Compose from the backend. Follow its
+[Docker guide](https://github.com/mengchheanglong/oscar-backend/blob/main/docs/operations/DOCKER_LOCAL.md),
+including the explicit migration step. Host and container instances must not
+compete for the same ports.
 
-Integrations includes Hermes Agent in the AI agents category. Search for Hermes
-or open `/integrations?app=hermes` to inspect its configuration for the selected
-project. The status comes from the authenticated project runtime endpoint;
-configuration availability does not guarantee model-provider availability.
-Configured projects can open Copilot and use Agent work for evidence research,
-pricing calculations, and task drafts requiring review. Runtime configuration
-and credentials remain on the backend.
+## Chat, files, and source policy
 
-Verified on develop with TypeScript, lint, a production build, and local browser
-checks for configured status, catalog search, and simulated unconfigured/error
-responses. These checks do not start model runs.
+Composer uploads stay in their owning chat. Saving an edited memory is explicit;
+uploading alone does not save memory or expose the original to other chats.
+**Add to project knowledge** creates a shared reference copy. Removing an
+attachment presents linked memories for review and invalidates earlier assistant
+context that may contain its contents.
 
-## Folder workspace
+Chat attachments support text-based PDF, DOCX, TXT, Markdown, and CSV. Private
+folder copies use their separate upload and preparation workflow; they are not
+live synchronization with the user's computer.
 
-Documents > **Folders > Upload folder** opens the browser folder chooser. Files
-of any format are stored as private originals with their relative paths. The
-local connection and snapshot panels have been removed, leaving one folder flow.
-The existing legacy data/endpoints remain intact.
+The composer starts with **Knowledge** enabled for permitted reference sources.
+Optional mode allows it to be switched off for a turn. A backend-required policy
+shows a locked **Sources required** control. Source previews preserve provenance
+and extraction notices. Citation identity is not a guarantee that every claim is
+supported or every source page was fully understood.
 
-Upload progress is saved on the backend. **Pause** leaves an incomplete copy;
-after reopening the page, select **Resume** and choose the same unchanged folder.
-Saved files are verified in bounded blocks and skipped; interrupted files restart
-from their beginning. Changed files require discarding the copy and uploading a
-new one. Browser file handles are not retained after a reload.
+## Verification
 
-Backend settings control the account-wide original storage quota (20 GiB by
-default), per-file size (1 GiB), folder file count (100,000) and source count (100).
-There is no separate 2 GiB folder limit. Expand **Upload details** for the current
-policy and usage. Originals upload first; text is prepared by a durable background
-worker. The folder row shows pending preparation. Copilot searches prepared
-content; Hermes discovers and reads completed folder copies as needed, including
-bounded pages of large UTF-8 originals. Unsupported formats retain original
-downloads and an explicit metadata-only preview. Relevant read content may be
-sent to the AI provider.
+```powershell
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
 
-These are copies, without background synchronization. Deleting a copy removes
-its stored originals and index without changing the computer's source folder.
-Cross-device access needs a reachable authenticated backend with persistent
-storage. No hosting or cloud service is provisioned. Local testing uses
-[Continuum](http://localhost:43100/documents) with
-`NEXT_PUBLIC_API_URL=/api/v1` and `BACKEND_INTERNAL_URL=http://127.0.0.1:43101`.
-The frontend proxies API requests to the isolated local backend. Login cookies
-stay on the frontend's origin, so both localhost and 127.0.0.1 work. The explicit
-IPv4 backend address avoids another app's localhost IPv6 listener.
+Focused checks include `pnpm test:markdown`, `pnpm test:chat-turn`,
+`pnpm test:global-search`, `pnpm test:folder-resume`, and `pnpm test:github-sync`.
+From the sibling backend, `pnpm verify:foundation` checks both application
+repositories; it does not include the independent Knowledge test suite.
 
-Checks: `pnpm test:folder-resume` verifies fingerprint compatibility, block
-boundaries, changed content and pause handling. The legacy scanner checks remain
-available with `pnpm test:local-folders`.
+Check runtime availability and account access separately when validating an
+integration. Documentation-only changes do not require provider calls or live
+agent runs.
 
-## One Copilot conversation
+## Source layout
 
-The assistant page now offers one general assistant rather than seven personas.
-Use tools in the composer enables Hermes for a selected project. Its progress,
-cancel control, report, sources and proposed-change review appear in the same
-thread. Requests and results are saved as canonical messages, so a normal answer
-can refer to a previous Hermes report. Reloading retains the work status/result.
-The separate Agent work header/dialog is no longer used. Existing saved mode
-values remain readable; new messages use Workspace behavior. Memory and context
-exclusion controls remain available.
+```text
+src/
+  app/          Routes, page composition, and global styles
+  components/   Chat, workspace, integrations, and reusable UI
+  context/      Authentication, preferences, and workspace state
+  lib/          API clients, citations, and client utilities
+test/           Client behavior and rendering tests
+docs/           Navigation, design references, and verification notes
+```
 
-Hermes is still a bounded runtime with its existing tool allowlist. It receives
-bounded recent conversation context; full private-history tools are future work.
-Existing unthreaded runs remain available through the project API. They are not
-silently copied into chat histories or rerun. Tools require a specific project;
-ordinary All Workspaces questions remain supported. See the backend
-`docs/UNIFIED_COPILOT.md` for the new migration/API and privacy behavior.
+## Documentation
 
-Verified with lint, TypeScript, production build, eight existing file tests,
-desktop/mobile inspection, and a real calculator run followed by a normal answer
-in the same thread after reload. The temporary QA conversation was hidden through
-the normal deletion API. No project records or proposals were created by this QA.
+- [Navigation and compatibility](docs/NAVIGATION.md)
+- [Response design research](docs/RESPONSE_DESIGN_RESEARCH.md)
+- [Feature retirement](docs/FEATURE_RETIREMENT.md)
+- [Backend documentation map](https://github.com/mengchheanglong/oscar-backend/blob/main/docs/README.md)
+- [Chat attachments](https://github.com/mengchheanglong/oscar-backend/blob/main/docs/product/CHAT_ATTACHMENTS.md)
+- [Shared skills](https://github.com/mengchheanglong/oscar-backend/blob/main/docs/product/SHARED_SKILLS.md)
 
-## Task board refinement (2026-10-16)
+## Development conventions
 
-Tasks is restored to the sidebar. Cards move between
-statuses by dragging or with Space and arrow keys; Enter opens the editor.
-Moving to Blocked asks for a reason before saving. Status changes are persisted;
-manual card ordering within a column is not persisted by the API. Board/list
-preference is remembered on this browser. All-project loading follows pagination.
-
-The sidebar uses quieter neutral styling. The repeated project tab bar has been
-removed at user request; project overview links and Settings still provide access
-to project features. Copilot behavior is unchanged.
-
-Verification: frontend lint, TypeScript and production build; local browser QA
-covered creation, keyboard movement, edit/save and reload persistence, review and
-blocked states, list preference persistence, and confirmed deletion of the temporary
-QA task. Desktop and 390px mobile layouts were inspected; mobile page width stayed
-at 390px while the board scrolls independently. AIW decision lookup returned no
-architectural decisions. No assigned task was supplied or marked complete.
-
-## Chat-first workspace (2026-10-16)
-
-Sign-in and public Open Workspace links lead to /assistant. The app opens with a
-new chat; previous conversations stay available in the sidebar. Projects and chat
-history share one sidebar on the assistant page instead of two separate columns.
-New chats use a centered composer; existing threads retain the scrolling transcript,
-sources, memory and inline Hermes work controls. The suggestion-card grid is removed.
-
-Tasks/Kanban, Files and Search remain direct sidebar links. Selecting a project
-opens its chat context; its overview and decisions are available beneath the selected
-project. Settings stays at the bottom. On other pages, Open chat returns to the
-assistant; chat history is loaded when the assistant page is open. Mobile navigation
-includes Escape dismissal, focus containment and focus restoration.
-
-Verification: lint, TypeScript, production build, and browser checks of new-chat
-entry, opening an existing thread, chat search, composer input/tools toggle,
-Files and Kanban navigation, and mobile menu dismissal/focus restoration. Desktop
-and 390px screenshots were inspected with no page overflow. No AI generation or
-record deletion was performed. AIW accepted-decision lookup returned no decisions;
-no assigned task was supplied or marked complete. Changes are frontend-only.
-
-## Grok visual direction (2026-10-16)
-
-The workspace now uses Grok's measured warm dark palette, muted chrome, rounded
-composer, matching common icons, collapsible sidebar, and dark/light/system
-appearance controls. Theme tokens reach existing workspace pages and dialogs.
-Chat engines remain Assistant/Hermes. The composer plus menu uploads project
-documents or opens Files, with drag-and-drop using the same upload service.
-The app root opens chat; sign-in uses a centered form with no demo prefill.
-
-Reference scope, measured values, implementation and verification are recorded in
-[the Grok UI reference](docs/UI_REFERENCE_GROK.md). Signed-in-only Grok screens
-were not available to scrape; the supplied screenshot guides that part of the UI.
-
-## Conversation context rail (2026-10-23)
-
-Chat has a collapsible right rail with Skills, Plugins, and Files. Skills lists
-the skills attached to the conversation, available for use. Plugins shows saved
-Hermes runs, T3/Paperclip handoffs, and GitHub source citations; installed tools
-alone do not appear. Files lists completed answer citations and recorded Hermes
-file reads, excluding messages removed from context. Project uploads without a
-conversation citation/read are not treated as used files. Cited files open the
-existing source inspector.
-
-The rail uses existing authenticated, conversation-scoped APIs. It opens beside
-the narrower 15px chat feed on desktop and as a dismissible drawer below 1200px.
-Project settings and chat context share the right-hand space. No backend schema
-or API changes are required.
-
-Verified with lint, TypeScript, 32 frontend tests, and a production build. Isolated
-synthetic browser fixtures covered populated/empty conversations, resource counts,
-conversation switching, mobile source inspection, and Escape/focus restoration.
-Desktop 1440px and mobile 393px layouts were inspected; mobile had no horizontal
-page overflow. The running local app was also checked without creating chat data.
-
-# Private reference knowledge
-
-In Assistant, enable **Reference knowledge** and choose MBA, Personal Library,
-Social Systems or All permitted references. Private availability comes from the
-authenticated backend; unavailable scopes are disabled. Counts include HTML
-sections and are labeled references. Citation previews show book metadata and
-physical PDF pages, with OCR/partial-coverage warnings. Local sources point to the
-library catalog; the app does not serve private PDF downloads.
-
-The default remains opted out. See sibling
-`oscar-knowledge/docs/LOCAL_KNOWLEDGE_LIBRARY_INTEGRATION.md` for ingestion, scope
-configuration; the continuation guide `docs/LIBRARY_COMPLETION_2026_10_26.md` in
-that repository describes full-source coverage checks and mixed compilation
-attribution. Visual descriptions and extracted diagrams retain an original-page
-verification notice. Verified locally:
-lint, typecheck, production build and 34 tests passed; browser citation preview
-and All permitted references selection passed.
+Active development uses `main`. Keep environment files, credentials, uploads,
+and machine-specific MCP configuration outside Git. Historical Continuum/AI
+Workspace identifiers remain for compatibility. Deployment requires separate
+hosting, transport security, authentication, and persistent-storage configuration.
