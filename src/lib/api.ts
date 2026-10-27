@@ -567,6 +567,8 @@ export const api = {
   },
 
   assistant: {
+    knowledgePolicy: async () =>
+      apiRequest<{ enabled: boolean; required: boolean }>(`/knowledge/policy`),
     knowledgeCollections: async () =>
       apiRequest<
         { id: "personal-library" | "social-systems"; indexed_books: number }[]

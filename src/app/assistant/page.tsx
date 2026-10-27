@@ -257,6 +257,30 @@ export default function AssistantPage() {
   const [selectedMode, setSelectedMode] = useState<string>("WORKSPACE");
   const [useTools, setUseTools] = useState(false);
   const [includeKnowledge, setIncludeKnowledge] = useState(true);
+  const [knowledgePolicy, setKnowledgePolicy] = useState<{
+    required: boolean;
+  } | null>(null);
+  useEffect(() => {
+    let active = true;
+    setKnowledgePolicy(null);
+    setIncludeKnowledge(true);
+    if (user?.id) {
+      void api.assistant
+        .knowledgePolicy()
+        .then((policy) => {
+          if (!active) return;
+          setKnowledgePolicy(policy);
+          if (policy.required) setIncludeKnowledge(true);
+        })
+        .catch(() => {
+          // Keep retrieval on and the toggle locked while policy is unknown.
+          if (active) setIncludeKnowledge(true);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
   const knowledgeScope = "all" as const;
   const [useT3, setUseT3] = useState(false);
   const [handoffPrompt, setHandoffPrompt] = useState<string | null>(null);
@@ -1621,6 +1645,8 @@ export default function AssistantPage() {
             onSend={() => void handleSendMessage()}
             useTools={useTools}
             includeKnowledge={includeKnowledge}
+            knowledgeRequired={knowledgePolicy?.required === true}
+            knowledgePolicyPending={knowledgePolicy === null}
             onIncludeKnowledgeChange={setIncludeKnowledge}
             useT3={useT3}
             onUseT3Change={setUseT3}

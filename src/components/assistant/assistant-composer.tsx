@@ -17,6 +17,8 @@ import { ChatSkills } from "./chat-skills";
 
 interface ComposerProps {
   includeKnowledge?: boolean;
+  knowledgeRequired?: boolean;
+  knowledgePolicyPending?: boolean;
   onIncludeKnowledgeChange?: (value: boolean) => void;
   conversationId?: string;
   ensureConversation?: () => Promise<string>;
@@ -49,6 +51,8 @@ interface ComposerProps {
 
 export function AssistantComposer({
   includeKnowledge,
+  knowledgeRequired,
+  knowledgePolicyPending,
   onIncludeKnowledgeChange,
   conversationId,
   ensureConversation,
@@ -379,17 +383,29 @@ export function AssistantComposer({
             <div className="chat-composer-controls">
               <label
                 className="flex items-center gap-1.5 text-xs text-slate-600"
-                title="Search all permitted library sources alongside project knowledge"
+                title={
+                  knowledgeRequired
+                    ? "Assistant answers require source evidence. Missing support is reported instead of an unsourced answer."
+                    : knowledgePolicyPending
+                      ? "Checking the server source policy. Knowledge stays enabled."
+                      : "Search all permitted library sources alongside project knowledge"
+                }
               >
                 <input
                   type="checkbox"
-                  checked={includeKnowledge ?? true}
+                  checked={
+                    knowledgeRequired ||
+                    knowledgePolicyPending ||
+                    (includeKnowledge ?? true)
+                  }
                   onChange={(event) =>
                     onIncludeKnowledgeChange?.(event.target.checked)
                   }
-                  disabled={sending}
+                  disabled={
+                    sending || knowledgeRequired || knowledgePolicyPending
+                  }
                 />
-                Knowledge
+                {knowledgeRequired ? "Sources required" : "Knowledge"}
               </label>
               <DropdownSelect
                 value={

@@ -3,7 +3,10 @@
 The chat composer starts with one **Knowledge** checkbox enabled. It includes
 all permitted reference-library sources alongside project context, without a
 category selector. Source provenance and extraction notices remain in citations.
-Switch Knowledge off to omit reference-library retrieval for that turn.
+When the server enables required-source mode, the composer displays a locked
+**Sources required** control. Ordinary Assistant answers need current source
+citations; evidence gaps are reported instead of an unsourced answer. In optional
+mode, switch Knowledge off to omit reference-library retrieval for that turn.
 
 Composer uploads belong to one private chat and appear in Chat context → Files.
 Use the file actions to download, review a proposed memory, explicitly add a copy
