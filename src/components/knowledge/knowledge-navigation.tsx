@@ -6,7 +6,7 @@ import { useAuth } from "@/context/auth-context";
 export function KnowledgeNavigation({
   active,
 }: {
-  active: "files" | "memories" | "graph";
+  active: "files" | "memories";
 }) {
   const { currentProject } = useAuth();
   return (
@@ -23,14 +23,14 @@ export function KnowledgeNavigation({
         aria-label="Knowledge views"
         className="flex flex-wrap items-center gap-1 border-b border-border pb-3"
       >
-        {(["files", "memories", "graph"] as const).map((view) => (
+        {(["files", "memories"] as const).map((view) => (
           <Link
             key={view}
             href={`/knowledge?view=${view}`}
             aria-current={active === view ? "page" : undefined}
             className={`rounded-xl px-4 py-2 text-sm transition-colors ${active === view ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-muted"}`}
           >
-            {view === "files" ? "Project knowledge" : view === "graph" ? "Knowledge map" : "Memories"}
+            {view === "files" ? "Project knowledge" : "Memories"}
           </Link>
         ))}
         <Link

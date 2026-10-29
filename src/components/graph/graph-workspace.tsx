@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { apiRequest } from "@/lib/api";
 import { AppLayout } from "@/components/app-layout";
-import { KnowledgeNavigation } from "./knowledge-navigation";
 
 type PassageKey = { chunk_id: string; document_id: string; revision: number };
 type Topic = {
@@ -45,7 +44,7 @@ type Graph = {
   };
 };
 
-export default function KnowledgeGraph() {
+export default function GraphWorkspace() {
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const [topic, setTopic] = useState<string | null>("customer-discovery");
@@ -161,12 +160,9 @@ export default function KnowledgeGraph() {
   return (
     <AppLayout>
       <div className="collection-workspace space-y-5">
-        <KnowledgeNavigation active="graph" />
         <div className="flex flex-wrap justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold">
-              Connections across your library
-            </h2>
+            <h1 className="text-2xl font-semibold tracking-tight">Graph</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Follow a topic to discover other books and files, then inspect the
               source passages.

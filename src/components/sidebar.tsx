@@ -75,11 +75,12 @@ export function Sidebar({
   const navLinks: Array<{
     label: string;
     href: string;
-    icon: "goals" | "knowledge" | "decisions" | "tasks" | "files" | "platforms";
+    icon: "goals" | "knowledge" | "graph" | "decisions" | "tasks" | "files" | "platforms";
   }> = [
     { label: "Goals", href: "/goals", icon: "goals" },
     { label: "Tasks", href: "/tasks", icon: "tasks" },
     { label: "Knowledge", href: "/knowledge", icon: "knowledge" },
+    { label: "Graph", href: "/graph", icon: "graph" },
     { label: "Customize", href: "/customize", icon: "platforms" },
   ];
   const displayName =
@@ -334,6 +335,7 @@ export function Sidebar({
                         "/memories",
                         "/platforms",
                         "/knowledge",
+                        "/graph",
                       ].includes(pathname)
                     )
                       router.push("/assistant");
@@ -398,6 +400,7 @@ export function Sidebar({
                                 "/memories",
                                 "/platforms",
                                 "/knowledge",
+                                "/graph",
                               ].includes(pathname)
                             )
                               router.push("/assistant");

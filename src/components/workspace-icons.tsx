@@ -16,6 +16,7 @@ type IconName =
   | "chat"
   | "overview"
   | "knowledge"
+  | "graph"
   | "decisions"
   | "search"
   | "panel"
@@ -118,6 +119,16 @@ export function WorkspaceIcon({
         <circle cx="6" cy="17" r="3" />
         <circle cx="17" cy="11" r="3" />
         <circle cx="19" cy="20" r="2" />
+      </>
+    ),
+    graph: (
+      <>
+        <path d="m7 7 3 3m4 4 3 3M7 17l3-3m4-4 3-3" />
+        <circle cx="12" cy="12" r="3" />
+        <circle cx="5" cy="5" r="2" />
+        <circle cx="19" cy="5" r="2" />
+        <circle cx="5" cy="19" r="2" />
+        <circle cx="19" cy="19" r="2" />
       </>
     ),
     chevron: <path d="m7 10 5 5 5-5" />,
