@@ -1,5 +1,13 @@
 # OSCAR Frontend
 
+The **Knowledge map** view at `/knowledge?view=graph` connects permitted reference
+books/files through starter-topic mentions. Search, follow topics or sources,
+page through references, and inspect original indexed passages. The diagram
+shows at most ten sources/topics; the paginated list shows twenty sources.
+Unmapped references remain browsable. Links are discovery hints rather than
+proof of author agreement or factual support. This first map covers the
+independent reference corpus; project files retain their normal Knowledge view.
+
 The web interface for OSCAR, a personal AI chief of staff for project planning,
 research, and supervised execution. Conversations, reviewed memory, project
 knowledge, and connected agents share one workspace.
